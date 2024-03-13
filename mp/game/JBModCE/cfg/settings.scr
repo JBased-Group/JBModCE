@@ -80,7 +80,7 @@ DESCRIPTION SERVER_OPTIONS
 	{
 		"Cheats"
 		{ NUMBER 0 -1 }
-		{ "0" }
+		{ "1" } // Better performance in some cases
 	}
 
 	"sv_infinite_aux_power"
