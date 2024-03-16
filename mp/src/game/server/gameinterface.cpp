@@ -753,6 +753,14 @@ bool CServerGameDLL::DLLInit( CreateInterfaceFn appSystemFactory,
 		{
 			g_pLua = (ILua*)gamepaduiFactory(INTERFACELUA_VERSION, NULL);
 		}
+		else
+		{
+			return false;
+		}
+	}
+	else
+	{
+		return false;
 	}
 
 	return true;
@@ -1473,10 +1481,10 @@ void CServerGameDLL::GameFrame( bool simulating )
 
 	gpGlobals->frametime = oldframetime;
 
-	for (int i = 0; i < luascripts.Count(); i++)
-	{
-		g_pLua->CallFunction(luascripts[i], "OnGameFrame", "");
-	}
+	//for (int i = 0; i < luascripts.Count(); i++)
+//	{
+	//	g_pLua->CallFunction(luascripts[i], "OnGameFrame", "");
+	//}
 }
 
 //-----------------------------------------------------------------------------
@@ -3003,10 +3011,10 @@ void CServerGameClients::ClientCommand( edict_t *pEntity, const CCommand &args )
 
 	
 	::ClientCommand( pPlayer, args );
-	for (int i = 0; i < luascripts.Count(); i++)
-	{
-		g_pLua->CallFunction(luascripts[i], "OnClientExecCmd", "");
-	}
+	//for (int i = 0; i < luascripts.Count(); i++)
+	//{
+	//	g_pLua->CallFunction(luascripts[i], "OnClientExecCmd", "");
+	//}
 }
 
 //-----------------------------------------------------------------------------

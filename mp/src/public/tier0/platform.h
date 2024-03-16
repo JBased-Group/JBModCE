@@ -481,7 +481,7 @@ typedef void * HINSTANCE;
 #define ALIGN16_POST
 #define ALIGN32_POST
 #define ALIGN128_POST
-#elif defined( GNUC )
+#elif defined( __GNUC__ )
 // gnuc has the align decoration at the end
 #define ALIGN4
 #define ALIGN8 
@@ -1191,7 +1191,7 @@ inline uint64 Plat_Rdtsc()
 	return ( uint64 )__mftb32();
 #elif defined( _WIN64 )
 	return ( uint64 )__rdtsc();
-#elif defined( _WIN32 )
+#elif defined( _WIN32 ) && !defined(__GNUC__)
   #if defined( _MSC_VER ) && ( _MSC_VER >= 1400 )
 	return ( uint64 )__rdtsc();
   #else

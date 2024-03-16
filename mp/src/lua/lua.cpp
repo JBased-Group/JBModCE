@@ -1,13 +1,16 @@
+extern "C"
+{
 #include "lua.h"
 #include "lualib.h"
 #include "lauxlib.h"
+}
 #include "../public/lua/lua.h"
 #include "tier1/interface.h"
 
 class CLua : public ILua
 {
 public:
-	virtual LuaScript LoadScript(const char* script);
+	virtual LuaScript LoadScript(const char* script, LuaAllocator allocator);
 	virtual LuaValue CallFunction(LuaScript script, const char* fun, const char* types, ...);
 	virtual void ShutdownScript(LuaScript script);
 	virtual void AddFunction(LuaScript script, const char* name, LuaFunction fun);
@@ -15,9 +18,9 @@ public:
 	virtual void PushValue(LuaScript script, LuaValue val);
 };
 
-LuaScript CLua::LoadScript(const char* script)
+LuaScript CLua::LoadScript(const char* script, LuaAllocator allocator)
 {
-	lua_State* L = luaL_newstate();
+	lua_State* L = lua_newstate((lua_Alloc)allocator,0);
 	luaL_openlibs(L);
 	luaL_loadstring(L,script);
 	if (lua_pcall(L, 0, 0, 0))
@@ -42,6 +45,8 @@ LuaValue CLua::CallFunction(LuaScript script, const char* fun, const char* types
 	va_start(args, types);
 	
 	int count = strlen(types);
+	bool b;
+	float f;
 	for (int i = 0; i < count; ++i)
 	{
 		switch (types[i])
@@ -50,13 +55,15 @@ LuaValue CLua::CallFunction(LuaScript script, const char* fun, const char* types
 			lua_pushinteger(L, va_arg(args, int));
 			break;
 		case 'b':
-			lua_pushboolean(L, va_arg(args, bool));
+			b = va_arg(args, int);
+			lua_pushboolean(L, b);
 			break;
 		case 's':
 			lua_pushstring(L, va_arg(args, const char*));
 			break;
 		case 'f':
-			lua_pushnumber(L, va_arg(args, float));
+			f = va_arg(args, double);
+			lua_pushnumber(L, f);
 			break;
 		default:
 			lua_pushnil(L);
@@ -193,6 +200,44 @@ void CLua::PushValue(LuaScript script, LuaValue val)
 		lua_pushnil(L);
 		break;
 	}
+}
+
+InterfaceReg* InterfaceReg::s_pInterfaceRegs = NULL;
+
+InterfaceReg::InterfaceReg(InstantiateInterfaceFn fn, const char* pName) :
+	m_pName(pName)
+{
+	m_CreateFn = fn;
+	m_pNext = s_pInterfaceRegs;
+	s_pInterfaceRegs = this;
+}
+
+void* CreateInterfaceInternal(const char* pName, int* pReturnCode)
+{
+	InterfaceReg* pCur;
+
+	for (pCur = InterfaceReg::s_pInterfaceRegs; pCur; pCur = pCur->m_pNext)
+	{
+		if (strcmp(pCur->m_pName, pName) == 0)
+		{
+			if (pReturnCode)
+			{
+				*pReturnCode = IFACE_OK;
+			}
+			return pCur->m_CreateFn();
+		}
+	}
+
+	if (pReturnCode)
+	{
+		*pReturnCode = IFACE_FAILED;
+	}
+	return NULL;
+}
+
+void* CreateInterface(const char* pName, int* pReturnCode)
+{
+	return CreateInterfaceInternal(pName, pReturnCode);
 }
 
 EXPOSE_SINGLE_INTERFACE(CLua, ILua, INTERFACELUA_VERSION);
