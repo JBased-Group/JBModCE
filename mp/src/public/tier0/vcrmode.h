@@ -32,7 +32,7 @@ tchar *GetCommandLine();
 #ifdef _X360
 #define NO_VCR 1
 #endif
-
+#define NO_VCR 1
 
 // Enclose lines of code in this if you don't want anything in them written to or read from the VCR file.
 #ifndef NO_VCR

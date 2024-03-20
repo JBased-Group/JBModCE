@@ -911,10 +911,6 @@ const char *Panel::GetClassName()
 //-----------------------------------------------------------------------------
 void Panel::SetPos(int x, int y)
 {
-	if ( !HushAsserts() )
-	{
-		Assert( abs(x) < 32768 && abs(y) < 32768 );
-	}
 	ipanel()->SetPos(GetVPanel(), x, y);
 }
 

@@ -32,6 +32,25 @@ enum InitReturnVal_t
 	INIT_LAST_VAL,
 };
 
+//-----------------------------------------------------------------------------
+// Specifies a module + interface name for initialization
+//-----------------------------------------------------------------------------
+struct AppSystemInfo_t
+{
+	const char* m_pModuleName;
+	const char* m_pInterfaceName;
+};
+
+
+enum AppSystemTier_t
+{
+	APP_SYSTEM_TIER0 = 0,
+	APP_SYSTEM_TIER1,
+	APP_SYSTEM_TIER2,
+	APP_SYSTEM_TIER3,
+
+	APP_SYSTEM_TIER_OTHER,
+};
 
 abstract_class IAppSystem
 {
@@ -47,6 +66,15 @@ public:
 	// Init, shutdown
 	virtual InitReturnVal_t Init() = 0;
 	virtual void Shutdown() = 0;
+
+	// Returns all dependent libraries
+	virtual const AppSystemInfo_t* GetDependencies() = 0;
+
+	// Returns the tier
+	virtual AppSystemTier_t GetTier() = 0;
+
+	// Reconnect to a particular interface
+	virtual void Reconnect(CreateInterfaceFn factory, const char* pInterfaceName) = 0;
 };
 
 
@@ -68,6 +96,13 @@ public:
 	// Init, shutdown
 	virtual InitReturnVal_t Init() { return INIT_OK; }
 	virtual void Shutdown() {}
+	virtual const AppSystemInfo_t* GetDependencies() { return NULL; }
+	virtual AppSystemTier_t GetTier() { return APP_SYSTEM_TIER_OTHER; }
+
+	virtual void Reconnect(CreateInterfaceFn factory, const char* pInterfaceName)
+	{
+		ReconnectInterface(factory, pInterfaceName);
+	}
 };
 
 

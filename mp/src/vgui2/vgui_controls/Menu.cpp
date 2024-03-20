@@ -1815,13 +1815,6 @@ private:
 // Singleton helper class
 static CMenuManager g_MenuMgr;
 
-void ValidateMenuGlobals( CValidator &validator )
-{
-#ifdef DBGFLAG_VALIDATE
-	g_MenuMgr.Validate( validator, "g_MenuMgr" );
-#endif
-}
-
 }  // end namespace vgui
 
 //-----------------------------------------------------------------------------

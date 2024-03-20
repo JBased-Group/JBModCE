@@ -233,7 +233,7 @@ HMODULE Sys_LoadLibrary( const char *pLibraryName, Sys_Flags flags )
 #endif
 
 	unsigned int nTimeout = 0;
-	while( ThreadWaitForObject( h, true, nTimeout ) == TW_TIMEOUT )
+	while( WaitForSingleObject( h, nTimeout ) == WAIT_TIMEOUT )
 	{
 		nTimeout = threadFunc();
 	}

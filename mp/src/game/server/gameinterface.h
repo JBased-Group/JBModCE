@@ -67,7 +67,6 @@ public:
 										CreateInterfaceFn fileSystemFactory, CGlobalVars *pGlobals) OVERRIDE;
 	virtual void			DLLShutdown( void ) OVERRIDE;
 	// Get the simulation interval (must be compiled with identical values into both client and game .dll for MOD!!!)
-	virtual bool			ReplayInit( CreateInterfaceFn fnReplayFactory ) OVERRIDE;
 	virtual float			GetTickInterval( void ) const OVERRIDE;
 	virtual bool			GameInit( void ) OVERRIDE;
 	virtual void			GameShutdown( void ) OVERRIDE;
@@ -76,6 +75,8 @@ public:
 	virtual void			LevelShutdown( void ) OVERRIDE;
 	virtual void			GameFrame( bool simulating ) OVERRIDE; // could be called multiple times before sending data to clients
 	virtual void			PreClientUpdate( bool simulating ) OVERRIDE; // called after all GameFrame() calls, before sending data to clients
+	virtual bool			SupportsSaveRestore() { return false; }
+	virtual void			PostToolsInit() {};
 
 	virtual ServerClass*	GetAllServerClasses( void ) OVERRIDE;
 	virtual const char     *GetGameDescription( void ) OVERRIDE;

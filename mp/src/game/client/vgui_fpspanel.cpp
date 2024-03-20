@@ -231,6 +231,16 @@ void GetCPUColor( float cpuPercentage, unsigned char ucColor[3] )
 	}
 }
 
+CPUFrequencyResults GetCPUFrequencyResults2()
+{
+	CPUFrequencyResults p;
+	p.m_GHz = 4.0;
+	p.m_percentage = 10.0;
+	p.m_lowestPercentage = 1.0;
+	p.m_timeStamp = 0.01;
+	return p;
+}
+
 //-----------------------------------------------------------------------------
 // Purpose: 
 // Input  : 
@@ -296,7 +306,7 @@ void CFPSPanel::Paint()
 				g_pMatSystemSurface->DrawColoredText( m_hFont, x, 2, ucColor[0], ucColor[1], ucColor[2], 255, "%3i fps on %s", nFps, engine->GetLevelName() );
 			}
 
-			const CPUFrequencyResults frequency = GetCPUFrequencyResults();
+			const CPUFrequencyResults frequency = GetCPUFrequencyResults2();
 			double currentTime = Plat_FloatTime();
 			const double displayTime = 5.0f; // Display frequency results for this long.
 			if ( frequency.m_GHz > 0 && frequency.m_timeStamp + displayTime > currentTime )

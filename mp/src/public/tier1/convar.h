@@ -120,6 +120,10 @@ public:
 	virtual bool				IsFlagSet( int flag ) const;
 	// Set flag
 	virtual void				AddFlags( int flags );
+	// Clear flag
+	virtual void				RemoveFlags(int flags);
+
+	virtual int					GetFlags() const;
 
 	// Return name of cvar
 	virtual const char			*GetName( void ) const;
@@ -341,11 +345,16 @@ public:
 	virtual const char*			GetHelpText( void ) const;
 	virtual bool				IsRegistered( void ) const;
 	virtual const char			*GetName( void ) const;
+	virtual const char*			GetBaseName(void) const;
+	virtual int					GetSplitScreenPlayerSlot() const;
 	virtual void				AddFlags( int flags );
 	virtual	bool				IsCommand( void ) const;
 
 	// Install a change callback (there shouldn't already be one....)
 	void InstallChangeCallback( FnChangeCallback_t callback );
+
+	int GetChangeCallbackCount() const { return m_pParent->m_fnChangeCallbacks.Count(); }
+	FnChangeCallback_t GetChangeCallback(int slot) const { return m_pParent->m_fnChangeCallbacks[slot]; }
 
 	// Retrieve value
 	FORCEINLINE_CVAR float			GetFloat( void ) const;
@@ -360,13 +369,26 @@ public:
 	virtual void				SetValue( const char *value );
 	virtual void				SetValue( float value );
 	virtual void				SetValue( int value );
-	
+	virtual void				SetValue(Color value);
+
 	// Reset to default value
 	void						Revert( void );
+
 
 	// True if it has a min/max setting
 	bool						GetMin( float& minVal ) const;
 	bool						GetMax( float& maxVal ) const;
+
+	struct CVValue_t
+	{
+		char* m_pszString;
+		int							m_StringLength;
+
+		// Values
+		float						m_fValue;
+		int							m_nValue;
+	};
+
 	const char					*GetDefault( void ) const;
 	void						SetDefault( const char *pszDefault );
 
@@ -376,6 +398,7 @@ private:
 	// For CVARs marked FCVAR_NEVER_AS_STRING
 	virtual void				InternalSetFloatValue( float fNewValue );
 	virtual void				InternalSetIntValue( int nValue );
+	virtual void				InternalSetColorValue(Color value);
 
 	virtual bool				ClampValue( float& value );
 	virtual void				ChangeStringValue( const char *tempVal, float flOldValue );
@@ -395,25 +418,18 @@ private:
 	ConVar						*m_pParent;
 
 	// Static data
-	const char					*m_pszDefaultValue;
-	
-	// Value
-	// Dynamically allocated
-	char						*m_pszString;
-	int							m_StringLength;
+	const char* m_pszDefaultValue;
 
-	// Values
-	float						m_fValue;
-	int							m_nValue;
+	CVValue_t					m_Value;
 
 	// Min/Max values
 	bool						m_bHasMin;
 	float						m_fMinVal;
 	bool						m_bHasMax;
 	float						m_fMaxVal;
-	
+
 	// Call this function when ConVar changes
-	FnChangeCallback_t			m_fnChangeCallback;
+	CUtlVector< FnChangeCallback_t > m_fnChangeCallbacks;
 };
 
 
@@ -423,7 +439,7 @@ private:
 //-----------------------------------------------------------------------------
 FORCEINLINE_CVAR float ConVar::GetFloat( void ) const
 {
-	return m_pParent->m_fValue;
+	return m_pParent->m_Value.m_fValue;
 }
 
 //-----------------------------------------------------------------------------
@@ -432,7 +448,7 @@ FORCEINLINE_CVAR float ConVar::GetFloat( void ) const
 //-----------------------------------------------------------------------------
 FORCEINLINE_CVAR int ConVar::GetInt( void ) const 
 {
-	return m_pParent->m_nValue;
+	return m_pParent->m_Value.m_nValue;
 }
 
 
@@ -445,7 +461,7 @@ FORCEINLINE_CVAR const char *ConVar::GetString( void ) const
 	if ( m_nFlags & FCVAR_NEVER_AS_STRING )
 		return "FCVAR_NEVER_AS_STRING";
 
-	return ( m_pParent->m_pszString ) ? m_pParent->m_pszString : "";
+	return ( m_pParent->m_Value.m_pszString ) ? m_pParent->m_Value.m_pszString : "";
 }
 
 
@@ -510,7 +526,7 @@ FORCEINLINE_CVAR const char *ConVarRef::GetName() const
 //-----------------------------------------------------------------------------
 FORCEINLINE_CVAR float ConVarRef::GetFloat( void ) const
 {
-	return m_pConVarState->m_fValue;
+	return m_pConVarState->m_Value.m_fValue;
 }
 
 //-----------------------------------------------------------------------------
@@ -518,7 +534,7 @@ FORCEINLINE_CVAR float ConVarRef::GetFloat( void ) const
 //-----------------------------------------------------------------------------
 FORCEINLINE_CVAR int ConVarRef::GetInt( void ) const 
 {
-	return m_pConVarState->m_nValue;
+	return m_pConVarState->m_Value.m_nValue;
 }
 
 //-----------------------------------------------------------------------------
@@ -527,7 +543,7 @@ FORCEINLINE_CVAR int ConVarRef::GetInt( void ) const
 FORCEINLINE_CVAR const char *ConVarRef::GetString( void ) const 
 {
 	Assert( !IsFlagSet( FCVAR_NEVER_AS_STRING ) );
-	return m_pConVarState->m_pszString;
+	return m_pConVarState->m_Value.m_pszString;
 }
 
 

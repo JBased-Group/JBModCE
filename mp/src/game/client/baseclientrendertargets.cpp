@@ -52,15 +52,17 @@ ITexture* CBaseClientRenderTargets::CreateCameraTexture( IMaterialSystem* pMater
 // Input  : pMaterialSystem - the engine's material system (our singleton is not yet inited at the time this is called)
 //			pHardwareConfig - the user hardware config, useful for conditional render target setup
 //-----------------------------------------------------------------------------
-void CBaseClientRenderTargets::InitClientRenderTargets( IMaterialSystem* pMaterialSystem, IMaterialSystemHardwareConfig* pHardwareConfig, int iWaterTextureSize, int iCameraTextureSize )
+void CBaseClientRenderTargets::InitClientRenderTargets( IMaterialSystem* pMaterialSystem, IMaterialSystemHardwareConfig* pHardwareConfig )
 {
 	// Water effects
-	m_WaterReflectionTexture.Init( CreateWaterReflectionTexture( pMaterialSystem, iWaterTextureSize ) );
-	m_WaterRefractionTexture.Init( CreateWaterRefractionTexture( pMaterialSystem, iWaterTextureSize ) );
+	//m_WaterReflectionTexture.Init( CreateWaterReflectionTexture( pMaterialSystem, 1024 ) );
+	//m_WaterRefractionTexture.Init( CreateWaterRefractionTexture( pMaterialSystem, 1024) );
 
 	// Monitors
-	m_CameraTexture.Init( CreateCameraTexture( pMaterialSystem, iCameraTextureSize ) );
+	//m_CameraTexture.Init( CreateCameraTexture( pMaterialSystem, 256 ) );
 }
+
+
 
 //-----------------------------------------------------------------------------
 // Purpose: Shut down each CTextureReference we created in InitClientRenderTargets.
@@ -76,3 +78,7 @@ void CBaseClientRenderTargets::ShutdownClientRenderTargets()
 	// Monitors
 	m_CameraTexture.Shutdown();
 }
+
+static CBaseClientRenderTargets g_BaseClientRenderTargets;
+EXPOSE_SINGLE_INTERFACE_GLOBALVAR(CBaseClientRenderTargets, IClientRenderTargets,
+	CLIENTRENDERTARGETS_INTERFACE_VERSION, g_BaseClientRenderTargets);

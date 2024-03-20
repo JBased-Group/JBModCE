@@ -1,9 +1,11 @@
 #include "squirrel.h"
 #include "../public/squirrel/squirrel.h"
+#include "platform.h"
 #include "tier1/interface.h"
 #include <stdarg.h>
 #include "sqstdstring.h"
 #include "sqstdmath.h"
+
 
 class CSquirrel : public ISquirrel
 {

@@ -75,7 +75,7 @@ typedef struct player_info_s player_info_t;
 
 #define INTERFACEVERSION_VENGINESERVER_VERSION_21	"VEngineServer021"
 #define INTERFACEVERSION_VENGINESERVER_VERSION_22	"VEngineServer022"
-#define INTERFACEVERSION_VENGINESERVER				"VEngineServer023"
+#define INTERFACEVERSION_VENGINESERVER				"VEngineServer022"
 #define INTERFACEVERSION_VENGINESERVER_INT			23
 
 struct bbox_t
@@ -452,7 +452,7 @@ typedef IVEngineServer IVEngineServer022;
 
 #define INTERFACEVERSION_SERVERGAMEDLL_VERSION_8	"ServerGameDLL008"
 #define INTERFACEVERSION_SERVERGAMEDLL_VERSION_9	"ServerGameDLL009"
-#define INTERFACEVERSION_SERVERGAMEDLL				"ServerGameDLL010"
+#define INTERFACEVERSION_SERVERGAMEDLL				"ServerGameDLL005"
 #define INTERFACEVERSION_SERVERGAMEDLL_INT			10
 
 class IServerGCLobby;
@@ -470,8 +470,6 @@ public:
 										CreateInterfaceFn fileSystemFactory, 
 										CGlobalVars *pGlobals) = 0;
 
-	// Setup replay interfaces on the server
-	virtual bool			ReplayInit( CreateInterfaceFn fnReplayFactory ) = 0;
 
 	// This is called when a new game is started. (restart, map)
 	virtual bool			GameInit( void ) = 0;
@@ -527,6 +525,7 @@ public:
 	virtual void			ReadRestoreHeaders( CSaveRestoreData * ) = 0;
 	virtual void			Restore( CSaveRestoreData *, bool ) = 0;
 	virtual bool			IsRestoring() = 0;
+	virtual bool			SupportsSaveRestore() = 0;
 
 	// Returns the number of entities moved across the transition
 	virtual int				CreateEntityTransitionList( CSaveRestoreData *, int ) = 0;
@@ -563,6 +562,7 @@ public:
 	// Added with version 2 of the interface.
 	virtual void			OnQueryCvarValueFinished( QueryCvarCookie_t iCookie, edict_t *pPlayerEntity, EQueryCvarValueStatus eStatus, const char *pCvarName, const char *pCvarValue ) = 0;
 
+	virtual void			PostToolsInit() = 0;
 	// Called after the steam API has been activated post-level startup
 	virtual void			GameServerSteamAPIActivated( void ) = 0;
 

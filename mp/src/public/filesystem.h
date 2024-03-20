@@ -531,12 +531,14 @@ public:
 	virtual bool			UnzipFile( const char *pFileName, const char *pPath, const char *pDestination ) = 0;
 };
 
+typedef void (*FSAsyncScanAddFunc_t)(void* pContext, char* pFoundPath, char* pFoundFile);
+typedef void (*FSAsyncScanCompleteFunc_t)(void* pContext, FSAsyncStatus_t err);
 
 //-----------------------------------------------------------------------------
 // Main file system interface
 //-----------------------------------------------------------------------------
 
-#define FILESYSTEM_INTERFACE_VERSION			"VFileSystem022"
+#define FILESYSTEM_INTERFACE_VERSION			"VFileSystem017"
 
 abstract_class IFileSystem : public IAppSystem, public IBaseFileSystem
 {
@@ -705,12 +707,6 @@ public:
 	virtual bool			AsyncSuspend() = 0;
 	virtual bool			AsyncResume() = 0;
 
-	/// Add async fetcher interface.  This gives apps a hook to intercept async requests and
-	/// pull the data from a source of their choosing.  The immediate use case is to load
-	/// assets from the CDN via HTTP.
-	virtual void AsyncAddFetcher( IAsyncFileFetch *pFetcher ) = 0;
-	virtual void AsyncRemoveFetcher( IAsyncFileFetch *pFetcher ) = 0;
-
 	//------------------------------------
 	// Functions to hold a file open if planning on doing mutiple reads. Use is optional,
 	// and is taken only as a hint
@@ -801,19 +797,19 @@ public:
 		NUM_PRELOAD_TYPES
 	};
 
-	virtual void		LoadCompiledKeyValues( KeyValuesPreloadType_t type, char const *archiveFile ) = 0;
 
 	// If the "PreloadedData" hasn't been purged, then this'll try and instance the KeyValues using the fast path of compiled keyvalues loaded during startup.
 	// Otherwise, it'll just fall through to the regular KeyValues loading routines
 	virtual KeyValues	*LoadKeyValues( KeyValuesPreloadType_t type, char const *filename, char const *pPathID = 0 ) = 0;
 	virtual bool		LoadKeyValues( KeyValues& head, KeyValuesPreloadType_t type, char const *filename, char const *pPathID = 0 ) = 0;
-	virtual bool		ExtractRootKeyName( KeyValuesPreloadType_t type, char *outbuf, size_t bufsize, char const *filename, char const *pPathID = 0 ) = 0;
 
 	virtual FSAsyncStatus_t	AsyncWrite(const char *pFileName, const void *pSrc, int nSrcBytes, bool bFreeMemory, bool bAppend = false, FSAsyncControl_t *pControl = NULL ) = 0;
 	virtual FSAsyncStatus_t	AsyncWriteFile(const char *pFileName, const CUtlBuffer *pSrc, int nSrcBytes, bool bFreeMemory, bool bAppend = false, FSAsyncControl_t *pControl = NULL ) = 0;
 	// Async read functions with memory blame
 	FSAsyncStatus_t			AsyncReadCreditAlloc( const FileAsyncRequest_t &request, const char *pszFile, int line, FSAsyncControl_t *phControl = NULL )	{ return AsyncReadMultipleCreditAlloc( &request, 1, pszFile, line, phControl ); 	}
 	virtual FSAsyncStatus_t	AsyncReadMultipleCreditAlloc( const FileAsyncRequest_t *pRequests, int nRequests, const char *pszFile, int line, FSAsyncControl_t *phControls = NULL ) = 0;
+
+	virtual FSAsyncStatus_t AsyncDirectoryScan(const char* pSearchSpec, bool recurseFolders, void* pContext, FSAsyncScanAddFunc_t pfnAdd, FSAsyncScanCompleteFunc_t pfnDone, FSAsyncControl_t* pControl = NULL) = 0;
 
 	virtual bool			GetFileTypeForFullPath( char const *pFullPath, OUT_Z_BYTECAP(bufSizeInBytes) wchar_t *buf, size_t bufSizeInBytes ) = 0;
 

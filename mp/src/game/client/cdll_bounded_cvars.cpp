@@ -133,10 +133,7 @@ float GetClientInterpAmount()
 	}
 	else
 	{
-		if ( !HushAsserts() )
-		{
-			AssertMsgOnce( false, "GetInterpolationAmount: can't get cl_updaterate cvar." );
-		}
+		AssertMsgOnce( false, "GetInterpolationAmount: can't get cl_updaterate cvar." );
 	
 		return 0.1;
 	}

@@ -315,30 +315,31 @@ PLATFORM_INTERFACE void ThreadNotifySyncReleasing(void *p);
 
 #ifndef __AFXTLS_H__ // not compatible with some Windows headers
 #ifndef NO_THREAD_LOCAL
-
-class PLATFORM_CLASS CThreadLocalBase
+namespace GenericThreadLocals
+{
+	class PLATFORM_CLASS CThreadLocalBase
 	{
-public:
+	public:
 		CThreadLocalBase();
 		~CThreadLocalBase();
 
-		void * Get() const;
-		void   Set(void *);
+		void* Get() const;
+		void   Set(void*);
 
-private:
+	private:
 #ifdef _WIN32
-	uint32 m_index;
+		uint32 m_index;
 #elif POSIX
 		pthread_key_t m_index;
 #endif
 	};
-
+}
 	//---------------------------------------------------------
 
 #ifndef __AFXTLS_H__
 
 	template <class T>
-	class CThreadLocal : public CThreadLocalBase
+	class CThreadLocal : public GenericThreadLocals::CThreadLocalBase
 	{
 	public:
 		CThreadLocal()
@@ -384,7 +385,7 @@ template <class T = intp>
 	//---------------------------------------------------------
 
 	template <class T>
-	class CThreadLocalPtr : private CThreadLocalBase
+	class CThreadLocalPtr : private GenericThreadLocals::CThreadLocalBase
 	{
 	public:
 		CThreadLocalPtr() {}
@@ -1050,6 +1051,9 @@ public:
 
 	bool Wait( uint32 dwTimeout = TT_INFINITE );
 
+	static uint32 WaitForMultiple(int nObjects, CThreadEvent** ppObjects, bool bWaitAll, uint32 dwTimeout = TT_INFINITE);
+	static uint32 WaitForMultiple(int nObjects, CThreadEvent* ppObjects, bool bWaitAll, uint32 dwTimeout = TT_INFINITE);
+
 private:
 	CThreadEvent( const CThreadEvent & );
 	CThreadEvent &operator=( const CThreadEvent & );
@@ -1065,7 +1069,7 @@ public:
 	}
 };
 
-inline int ThreadWaitForEvents( int nEvents, CThreadEvent * const *pEvents, bool bWaitAll = true, unsigned timeout = TT_INFINITE )
+inline int ThreadWaitForEvents( int nEvents, CThreadEvent **pEvents, bool bWaitAll = true, unsigned timeout = TT_INFINITE )
 {
 #ifdef POSIX
   Assert( nEvents == 1);
@@ -1074,10 +1078,7 @@ inline int ThreadWaitForEvents( int nEvents, CThreadEvent * const *pEvents, bool
   else
 	return WAIT_TIMEOUT;
 #else
-	HANDLE handles[64];
-	for ( unsigned int i = 0; i < min( nEvents, ARRAYSIZE(handles) ); i++ )
-		handles[i] = pEvents[i]->GetHandle();
-	return ThreadWaitForObjects( nEvents, handles, bWaitAll, timeout );
+	return CThreadEvent::WaitForMultiple(nEvents, pEvents, bWaitAll, timeout);
 #endif
 }
 
@@ -1194,7 +1195,6 @@ public:
 
 #ifdef _WIN32
 	// Access the thread handle directly
-	HANDLE GetThreadHandle();
 	uint GetThreadId();
 #elif defined( LINUX )
 	uint GetThreadId();
@@ -1278,10 +1278,6 @@ protected:
 
 	bool WaitForCreateComplete( CThreadEvent *pEvent );
 
-	// "Virtual static" facility
-	typedef unsigned (__stdcall *ThreadProc_t)( void * );
-	virtual ThreadProc_t GetThreadProc();
-	virtual bool IsThreadRunning();
 
 	CThreadMutex m_Lock;
 
@@ -1382,7 +1378,7 @@ public:
 	//-----------------------------------------------------
 
 	// Master: Signal the thread, and block for a response
-	int CallWorker( unsigned, unsigned timeout = TT_INFINITE, bool fBoostWorkerPriorityToMaster = true, CFunctor *pParamFunctor = NULL );
+	int CallWorker( unsigned, unsigned timeout = TT_INFINITE, bool fBoostWorkerPriorityToMaster = true );
 
 	// Worker: Signal the thread, and block for a response
 	int CallMaster( unsigned, unsigned timeout = TT_INFINITE );

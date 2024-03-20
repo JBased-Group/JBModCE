@@ -57,6 +57,8 @@ private:
 	IMaterial* m_pMaterial;
 };
 
+
+
 //-----------------------------------------------------------------------------
 // Little utility class to deal with texture references
 //-----------------------------------------------------------------------------
@@ -93,7 +95,7 @@ public:
 	ITexture* operator->() { return m_pTexture; }
 
 	// Assignment operator
-	void operator=( CTextureReference &ref );
+	void operator=(CTextureReference& ref) { m_pTexture = ref.m_pTexture; };
 
 private:
 	ITexture* m_pTexture;

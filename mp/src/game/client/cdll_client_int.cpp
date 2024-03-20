@@ -210,6 +210,7 @@ IXboxSystem *xboxsystem = NULL;	// Xbox 360 only
 IMatchmaking *matchmaking = NULL;
 IUploadGameStats *gamestatsuploader = NULL;
 IClientReplayContext *g_pClientReplayContext = NULL;
+IVideoServices* g_pVideo = NULL;
 ISquirrel* g_pSquirrel = NULL;
 CUtlVector<SquirrelScript> squirrelscripts;
 CUtlMap<int, void*>* squirrelhandles[SPCOUNT] = {};
@@ -399,6 +400,12 @@ void ApplyShaderConstantHack()
 	Wrapper.PrintPixelConstants();
 }
 #endif
+
+
+void CMaterialReference::Shutdown()
+{
+
+}
 
 //-----------------------------------------------------------------------------
 // Purpose: interface for gameui to modify voice bans
@@ -655,8 +662,8 @@ class CHLClient : public IBaseClientDLL
 {
 public:
 	CHLClient();
-
-	virtual int						Init( CreateInterfaceFn appSystemFactory, CreateInterfaceFn physicsFactory, CGlobalVarsBase *pGlobals );
+	virtual int						Connect(CreateInterfaceFn appSystemFactory, CGlobalVarsBase* pGlobals);
+	virtual int						Init( CreateInterfaceFn appSystemFactory, CGlobalVarsBase *pGlobals );
 
 	virtual void					PostInit();
 	virtual void					Shutdown( void );
@@ -905,15 +912,19 @@ CHLClient::CHLClient()
 
 extern IGameSystem *ViewportClientSystem();
 
+int CHLClient::Connect(CreateInterfaceFn appSystemFactory, CGlobalVarsBase* pGlobals)
+{
+	return true;
+}
+
 
 //-----------------------------------------------------------------------------
 ISourceVirtualReality *g_pSourceVR = NULL;
-
 // Purpose: Called when the DLL is first loaded.
 // Input  : engineFactory - 
 // Output : int
 //-----------------------------------------------------------------------------
-int CHLClient::Init( CreateInterfaceFn appSystemFactory, CreateInterfaceFn physicsFactory, CGlobalVarsBase *pGlobals )
+int CHLClient::Init( CreateInterfaceFn appSystemFactory, CGlobalVarsBase *pGlobals )
 {
 	InitCRTMemDebug();
 	MathLib_Init( 2.2f, 2.2f, 0.0f, 2.0f );
@@ -1012,7 +1023,7 @@ int CHLClient::Init( CreateInterfaceFn appSystemFactory, CreateInterfaceFn physi
 
 	factorylist_t factories;
 	factories.appSystemFactory = appSystemFactory;
-	factories.physicsFactory = physicsFactory;
+	factories.physicsFactory = appSystemFactory;
 	FactoryList_Store( factories );
 
 	// Yes, both the client and game .dlls will try to Connect, the soundemittersystem.dll will handle this gracefully
@@ -1130,7 +1141,7 @@ int CHLClient::Init( CreateInterfaceFn appSystemFactory, CreateInterfaceFn physi
 		GetClientVoiceMgr()->Init( &g_VoiceStatusHelper, parent );
 	}
 
-	if ( !PhysicsDLLInit( physicsFactory ) )
+	if ( !PhysicsDLLInit(appSystemFactory) )
 		return false;
 
 	g_pGameSaveRestoreBlockSet->AddBlockHandler( GetEntitySaveRestoreBlockHandler() );

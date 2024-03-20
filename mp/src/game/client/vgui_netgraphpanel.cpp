@@ -698,6 +698,15 @@ void CNetGraphPanel::GetCommandInfo( INetChannelInfo *netchannel, cmdinfo_t *cmd
 		ci->size =	netchannel->GetPacketBytes( FLOW_OUTGOING, seqnr, INetChannelInfo::TOTAL);
 	}
 }
+CPUFrequencyResults GetCPUFrequencyResults()
+{
+	CPUFrequencyResults p;
+	p.m_GHz = 4.0;
+	p.m_percentage = 10.0;
+	p.m_lowestPercentage = 1.0;
+	p.m_timeStamp = 0.01;
+	return p;
+}
 
 //-----------------------------------------------------------------------------
 // Purpose: Draws overlay text fields showing framerate, latency, bandwidth breakdowns, 

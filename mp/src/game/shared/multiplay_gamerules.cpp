@@ -281,7 +281,7 @@ CMultiplayRules::CMultiplayRules()
 		{
 			char szCommand[MAX_PATH];
 
-			Log( "Executing dedicated server config file %s\n", cfgfile );
+			//Log( "Executing dedicated server config file %s\n", cfgfile );
 			Q_snprintf( szCommand,sizeof(szCommand), "exec %s\n", cfgfile );
 			engine->ServerCommand( szCommand );
 		}
@@ -295,7 +295,7 @@ CMultiplayRules::CMultiplayRules()
 		{
 			char szCommand[MAX_PATH];
 
-			Log( "Executing listen server config file %s\n", cfgfile );
+			//Log( "Executing listen server config file %s\n", cfgfile );
 			Q_snprintf( szCommand,sizeof(szCommand), "exec %s\n", cfgfile );
 			engine->ServerCommand( szCommand );
 		}
@@ -438,7 +438,7 @@ ConVarRef suitcharger( "sk_suitcharger" );
 			if ( iIdleSeconds >= mp_mapcycle_empty_timeout_seconds.GetInt() )
 			{
 
-				Log( "Server has been empty for %d seconds on this map, cycling map as per mp_mapcycle_empty_timeout_seconds\n", iIdleSeconds );
+				//Log( "Server has been empty for %d seconds on this map, cycling map as per mp_mapcycle_empty_timeout_seconds\n", iIdleSeconds );
 				ChangeLevel();
 			}
 		}

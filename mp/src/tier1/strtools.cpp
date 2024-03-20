@@ -92,7 +92,7 @@ static int FastToLower( char c )
 	return i;
 }
 
-void _V_memset (const char* file, int line, void *dest, int fill, int count)
+void _V_memset (void *dest, int fill, int count)
 {
 	Assert( count >= 0 );
 	AssertValidWritePtr( dest, count );
@@ -100,7 +100,7 @@ void _V_memset (const char* file, int line, void *dest, int fill, int count)
 	memset(dest,fill,count);
 }
 
-void _V_memcpy (const char* file, int line, void *dest, const void *src, int count)
+void _V_memcpy (void *dest, const void *src, int count)
 {
 	Assert( count >= 0 );
 	AssertValidReadPtr( src, count );
@@ -109,7 +109,7 @@ void _V_memcpy (const char* file, int line, void *dest, const void *src, int cou
 	memcpy( dest, src, count );
 }
 
-void _V_memmove(const char* file, int line, void *dest, const void *src, int count)
+void _V_memmove( void *dest, const void *src, int count)
 {
 	Assert( count >= 0 );
 	AssertValidReadPtr( src, count );
@@ -118,7 +118,7 @@ void _V_memmove(const char* file, int line, void *dest, const void *src, int cou
 	memmove( dest, src, count );
 }
 
-int _V_memcmp (const char* file, int line, const void *m1, const void *m2, int count)
+int _V_memcmp (const void *m1, const void *m2, int count)
 {
 	Assert( count >= 0 );
 	AssertValidReadPtr( m1, count );
@@ -127,13 +127,13 @@ int _V_memcmp (const char* file, int line, const void *m1, const void *m2, int c
 	return memcmp( m1, m2, count );
 }
 
-int	_V_strlen(const char* file, int line, const char *str)
+int	_V_strlen( const char *str)
 {
 	AssertValidStringPtr(str);
 	return strlen( str );
 }
 
-void _V_strcpy (const char* file, int line, char *dest, const char *src)
+void _V_strcpy ( char *dest, const char *src)
 {
 	AssertValidWritePtr(dest);
 	AssertValidStringPtr(src);
@@ -141,12 +141,12 @@ void _V_strcpy (const char* file, int line, char *dest, const char *src)
 	strcpy( dest, src );
 }
 
-int	_V_wcslen(const char* file, int line, const wchar_t *pwch)
+int	_V_wcslen( const wchar_t *pwch)
 {
 	return wcslen( pwch );
 }
 
-char *_V_strrchr(const char* file, int line, const char *s, char c)
+char *_V_strrchr( const char *s, char c)
 {
 	AssertValidStringPtr( s );
     int len = V_strlen(s);
@@ -156,7 +156,7 @@ char *_V_strrchr(const char* file, int line, const char *s, char c)
     return 0;
 }
 
-int _V_strcmp (const char* file, int line, const char *s1, const char *s2)
+int _V_strcmp ( const char *s1, const char *s2)
 {
 	AssertValidStringPtr( s1 );
 	AssertValidStringPtr( s2 );
@@ -164,7 +164,7 @@ int _V_strcmp (const char* file, int line, const char *s1, const char *s2)
 	return strcmp( s1, s2 );
 }
 
-int _V_wcscmp (const char* file, int line, const wchar_t *s1, const wchar_t *s2)
+int _V_wcscmp ( const wchar_t *s1, const wchar_t *s2)
 {
 	AssertValidReadPtr( s1 );
 	AssertValidReadPtr( s2 );
@@ -182,7 +182,7 @@ int _V_wcscmp (const char* file, int line, const wchar_t *s1, const wchar_t *s2)
 }
 
 
-char *_V_strstr(const char* file, int line,  const char *s1, const char *search )
+char *_V_strstr(  const char *s1, const char *search )
 {
 	AssertValidStringPtr( s1 );
 	AssertValidStringPtr( search );
@@ -194,13 +194,13 @@ char *_V_strstr(const char* file, int line,  const char *s1, const char *search 
 #endif
 }
 
-wchar_t *_V_wcsupr (const char* file, int line, wchar_t *start)
+wchar_t *_V_wcsupr ( wchar_t *start)
 {
 	return _wcsupr( start );
 }
 
 
-wchar_t *_V_wcslower (const char* file, int line, wchar_t *start)
+wchar_t *_V_wcslower ( wchar_t *start)
 {
 	return _wcslwr(start);
 }
@@ -220,6 +220,21 @@ char *V_strupr( char *start )
 	}
 	return start;
 }
+
+char* _V_strlower(char* start)
+{
+	unsigned char* str = (unsigned char*)start;
+	while (*str)
+	{
+		if ((unsigned char)(*str - 'A') <= ('Z' - 'A'))
+			*str += 'a' - 'A';
+		else if ((unsigned char)*str >= 0x80) // non-ascii, fall back to CRT
+			*str = tolower(*str);
+		str++;
+	}
+	return start;
+}
+
 
 char *V_strlower( char *start )
 {
@@ -255,6 +270,11 @@ char *V_strnlwr(char *s, size_t count)
 
 	*s = 0; // null-terminate original string at "count-1"
 	return pRet;
+}
+
+int _V_stricmp(const char* str1, const char* str2)
+{
+	return V_stricmp(str1, str2);
 }
 
 int V_stricmp( const char *str1, const char *str2 )
@@ -2078,9 +2098,12 @@ const char * V_GetFileName( const char * path )
 {
 	return V_UnqualifiedFileName( path );
 }
+bool V_RemoveDotSlashes(char* pFilename, char separator)
+{
+	return V_RemoveDotSlashes(pFilename, separator, true);
+}
 
-
-bool V_RemoveDotSlashes( char *pFilename, char separator, bool bRemoveDoubleSlashes /* = true */ )
+bool V_RemoveDotSlashes( char *pFilename, char separator, bool bRemoveDoubleSlashes)
 {
 	char *pIn = pFilename;
 	char *pOut = pFilename;
@@ -2340,7 +2363,7 @@ static bool CopyToMaxChars( char *pOut, int outSize, const char *pIn, int nChars
 void V_FixupPathName( char *pOut, size_t nOutLen, const char *pPath )
 {
 	V_strncpy( pOut, pPath, nOutLen );
-	V_RemoveDotSlashes( pOut, CORRECT_PATH_SEPARATOR, true );
+	V_RemoveDotSlashes( pOut, CORRECT_PATH_SEPARATOR );
 #ifdef WIN32
 	V_strlower( pOut );
 #endif

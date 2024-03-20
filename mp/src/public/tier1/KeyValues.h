@@ -310,7 +310,8 @@ private:
 	void FreeAllocatedValue();
 	void AllocateValueBlock(int size);
 
-	int m_iKeyName;	// keyname is a symbol defined in KeyValuesSystem
+	uint32 m_iKeyName : 24;	// keyname is a symbol defined in KeyValuesSystem
+	uint32 m_iKeyNameCaseSensitive1 : 8;	// 1st part of case sensitive symbol defined in KeyValueSystem
 
 	// These are needed out of the union because the API returns string pointers
 	char *m_sValue;
@@ -327,8 +328,7 @@ private:
 	
 	char	   m_iDataType;
 	char	   m_bHasEscapeSequences; // true, if while parsing this KeyValue, Escape Sequences are used (default false)
-	char	   m_bEvaluateConditionals; // true, if while parsing this KeyValue, conditionals blocks are evaluated (default true)
-	char	   unused[1];
+	uint16	   m_iKeyNameCaseSensitive2;	// 2nd part of case sensitive symbol defined in KeyValueSystem;
 
 	KeyValues *m_pPeer;	// pointer to next key in list
 	KeyValues *m_pSub;	// pointer to Start of a new sub key list

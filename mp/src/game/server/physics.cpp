@@ -165,19 +165,19 @@ IGameSystem* PhysicsGameSystem()
 bool CPhysicsHook::Init( void )
 {
 	factorylist_t factories;
-	
+	Assert(_heapchk() == _HEAPOK);
 	// Get the list of interface factories to extract the physics DLL's factory
 	FactoryList_Retrieve( factories );
 
 	if ( !factories.physicsFactory )
 		return false;
-
+	Assert(_heapchk() == _HEAPOK);
 	if ((physics = (IPhysics *)factories.physicsFactory( VPHYSICS_INTERFACE_VERSION, NULL )) == NULL ||
 		(physcollision = (IPhysicsCollision *)factories.physicsFactory( VPHYSICS_COLLISION_INTERFACE_VERSION, NULL )) == NULL ||
 		(physprops = (IPhysicsSurfaceProps *)factories.physicsFactory( VPHYSICS_SURFACEPROPS_INTERFACE_VERSION, NULL )) == NULL
 		)
 		return false;
-
+	Assert(_heapchk() == _HEAPOK);
 	PhysParseSurfaceData( physprops, filesystem );
 
 	m_isFinalTick = true;

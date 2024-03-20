@@ -187,7 +187,7 @@ inline ConCommandBase * ICvar::Iterator::Get( void )
 	return m_pIter->Get();
 }
 
-#define CVAR_INTERFACE_VERSION "VEngineCvar004"
+#define CVAR_INTERFACE_VERSION "VEngineCvar007"
 
 
 //-----------------------------------------------------------------------------

@@ -580,19 +580,16 @@ public:
 abstract_class IBaseClientDLL
 {
 public:
+	// Connect appsystem components, get global interfaces, don't run any other init code
+	virtual int				Connect(CreateInterfaceFn appSystemFactory, CGlobalVarsBase* pGlobals) = 0;
 	// Called once when the client DLL is loaded
-	virtual int				Init( CreateInterfaceFn appSystemFactory, 
-									CreateInterfaceFn physicsFactory,
-									CGlobalVarsBase *pGlobals ) = 0;
+	virtual int				Init( CreateInterfaceFn appSystemFactory, CGlobalVarsBase *pGlobals ) = 0;
 
 	virtual void			PostInit() = 0;
 
 	// Called once when the client DLL is being unloaded
 	virtual void			Shutdown( void ) = 0;
-	
-	// Called once the client is initialized to setup client-side replay interface pointers
-	virtual bool			ReplayInit( CreateInterfaceFn replayFactory ) = 0;
-	virtual bool			ReplayPostInit() = 0;
+
 
 	// Called at the start of each level change
 	virtual void			LevelInitPreEntity( char const* pMapName ) = 0;
@@ -787,7 +784,7 @@ public:
 	virtual bool IsConnectedUserInfoChangeAllowed( IConVar *pCvar ) = 0;
 };
 
-#define CLIENT_DLL_INTERFACE_VERSION		"VClient017"
+#define CLIENT_DLL_INTERFACE_VERSION		"VClient016"
 
 //-----------------------------------------------------------------------------
 // Purpose: Interface exposed from the client .dll back to the engine for specifying shared .dll IAppSystems (e.g., ISoundEmitterSystem)

@@ -65,7 +65,6 @@ public:
 		{
 			defvalue = ( ( ConVar * )pCommand)->GetDefault();
 		}
-
 		// Link to engine's list instead
 		cvar->RegisterConCommand( pCommand );
 

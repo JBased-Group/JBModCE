@@ -536,7 +536,9 @@ void AddSurfacepropFile( const char *pFileName, IPhysicsSurfaceProps *pProps, IF
 
 void PhysParseSurfaceData( IPhysicsSurfaceProps *pProps, IFileSystem *pFileSystem )
 {
+	Assert(_heapchk() == _HEAPOK);
 	KeyValues *manifest = new KeyValues( SURFACEPROP_MANIFEST_FILE );
+	Assert(_heapchk() == _HEAPOK);
 	if ( manifest->LoadFromFile( pFileSystem, SURFACEPROP_MANIFEST_FILE, "GAME" ) )
 	{
 		for ( KeyValues *sub = manifest->GetFirstSubKey(); sub != NULL; sub = sub->GetNextKey() )

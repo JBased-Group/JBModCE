@@ -108,7 +108,6 @@ void GetAppManifest(const char* appid, const char* path)
 	switch (Q_atoi(appid))
 	{
 	case 220: //hl2
-		PatchSearchPath(searchpaths, "hl2", appDir);
 		break;
 	case 240: //cs:s
 		PatchSearchPath(searchpaths, "cstrike/cstrike_pak.vpk", appDir);
@@ -203,10 +202,10 @@ int APIENTRY WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLi
 			{
 				GetAppManifest(appid, folder->GetString("path"));
 			}
-			if (Q_atoi(appid) == 243750)
+			if (Q_atoi(appid) == 563560)
 			{
 				strncpy(sdk2013dir, folder->GetString("path"), MAX_PATH);
-				strncat(sdk2013dir, "\\steamapps\\common\\Source SDK Base 2013 Multiplayer\\hl2.exe", MAX_PATH);
+				strncat(sdk2013dir, "\\steamapps\\common\\Alien Swarm Reactive Drop\\reactivedrop.exe", MAX_PATH);
 			}
 		}
 	}

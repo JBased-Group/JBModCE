@@ -11,6 +11,7 @@
 #pragma once
 #endif
 
+#define DISABLE_PROTECTED_THINGS
 
 // This header tries to prevent people from using potentially dangerous functions
 // (like the notorious non-null-terminating strncpy) and functions that will break

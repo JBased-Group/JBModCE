@@ -448,7 +448,7 @@ KeyValues::KeyValues( const char *setName, const char *firstKey, int firstValue,
 //-----------------------------------------------------------------------------
 void KeyValues::Init()
 {
-	m_iKeyName = INVALID_KEY_SYMBOL;
+	m_iKeyName = 0xffffff;
 	m_iDataType = TYPE_NONE;
 
 	m_pSub = NULL;
@@ -460,10 +460,7 @@ void KeyValues::Init()
 	m_pValue = NULL;
 	
 	m_bHasEscapeSequences = false;
-	m_bEvaluateConditionals = true;
 
-	// for future proof
-	memset( unused, 0, sizeof(unused) );
 }
 
 //-----------------------------------------------------------------------------
@@ -636,7 +633,7 @@ void KeyValues::UsesEscapeSequences(bool state)
 //-----------------------------------------------------------------------------
 void KeyValues::UsesConditionals(bool state)
 {
-	m_bEvaluateConditionals = state;
+	return;
 }
 
 
@@ -971,7 +968,7 @@ KeyValues *KeyValues::FindKey(int keySymbol) const
 {
 	for (KeyValues *dat = m_pSub; dat != NULL; dat = dat->m_pPeer)
 	{
-		if (dat->m_iKeyName == keySymbol)
+		if (dat->m_iKeyName == (uint32)keySymbol)
 			return dat;
 	}
 
@@ -1020,7 +1017,7 @@ KeyValues *KeyValues::FindKey(const char *keyName, bool bCreate)
 		lastItem = dat;	// record the last item looked at (for if we need to append to the end of the list)
 
 		// symbol compare
-		if (dat->m_iKeyName == iSearchStr)
+		if (dat->m_iKeyName == (uint32)iSearchStr)
 		{
 			break;
 		}
@@ -1041,7 +1038,6 @@ KeyValues *KeyValues::FindKey(const char *keyName, bool bCreate)
 //			Assert(dat != NULL);
 
 			dat->UsesEscapeSequences( m_bHasEscapeSequences != 0 );	// use same format as parent
-			dat->UsesConditionals( m_bEvaluateConditionals != 0 );
 
 			// insert new key at end of list
 			if (lastItem)
@@ -1120,7 +1116,6 @@ KeyValues* KeyValues::CreateKeyUsingKnownLastChild( const char *keyName, KeyValu
 	KeyValues* dat = new KeyValues( keyName );
 
 	dat->UsesEscapeSequences( m_bHasEscapeSequences != 0 ); // use same format as parent does
-	dat->UsesConditionals( m_bEvaluateConditionals != 0 );
 	
 	// add into subkey list
 	AddSubkeyUsingKnownLastChild( dat, pLastChild );
@@ -1916,7 +1911,6 @@ KeyValues *KeyValues::MakeCopy( void ) const
 	KeyValues *newKeyValue = new KeyValues(GetName());
 
 	newKeyValue->UsesEscapeSequences( m_bHasEscapeSequences != 0 );
-	newKeyValue->UsesConditionals( m_bEvaluateConditionals != 0 );
 
 	// copy data
 	newKeyValue->m_iDataType = m_iDataType;
@@ -2107,7 +2101,6 @@ void KeyValues::ParseIncludedKeys( char const *resourceName, const char *filetoi
 	// CUtlSymbol save = s_CurrentFileSymbol;	// did that had any use ???
 
 	newKV->UsesEscapeSequences( m_bHasEscapeSequences != 0 );	// use same format as parent
-	newKV->UsesConditionals( m_bEvaluateConditionals != 0 );
 
 	if ( newKV->LoadFromFile( pFileSystem, fullpath, pPathID ) )
 	{
@@ -2274,7 +2267,6 @@ bool KeyValues::LoadFromBuffer( char const *resourceName, CUtlBuffer &buf, IBase
 			Assert( pCurrentKey );
 
 			pCurrentKey->UsesEscapeSequences( m_bHasEscapeSequences != 0 ); // same format has parent use
-			pCurrentKey->UsesConditionals( m_bEvaluateConditionals != 0 );
 
 			if ( pPreviousKey )
 			{
@@ -2291,7 +2283,7 @@ bool KeyValues::LoadFromBuffer( char const *resourceName, CUtlBuffer &buf, IBase
 
 		if ( wasConditional )
 		{
-			bAccepted = !m_bEvaluateConditionals || EvaluateConditional( s );
+			bAccepted = true;
 
 			// Now get the '{'
 			s = ReadToken( buf, wasQuoted, wasConditional );
@@ -2435,7 +2427,7 @@ void KeyValues::RecursiveLoadFromBuffer( char const *resourceName, CUtlBuffer &b
 
 		if ( wasConditional && value )
 		{
-			bAccepted = !m_bEvaluateConditionals || EvaluateConditional( value );
+			bAccepted = true;
 
 			// get the real value
 			value = ReadToken( buf, wasQuoted, wasConditional );
@@ -2540,10 +2532,10 @@ void KeyValues::RecursiveLoadFromBuffer( char const *resourceName, CUtlBuffer &b
 
 			// Look ahead one token for a conditional tag
 			int prevPos = buf.TellGet();
-			const char *peek = ReadToken( buf, wasQuoted, wasConditional );
+			ReadToken( buf, wasQuoted, wasConditional );
 			if ( wasConditional )
 			{
-				bAccepted = !m_bEvaluateConditionals || EvaluateConditional( peek );
+				bAccepted = true;
 			}
 			else
 			{

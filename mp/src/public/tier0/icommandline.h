@@ -49,11 +49,7 @@ public:
 // NOTE: The #define trickery here is necessary for backwards compat:
 // this interface used to lie in the vstdlib library.
 //-----------------------------------------------------------------------------
-PLATFORM_INTERFACE ICommandLine *CommandLine_Tier0();
-
-#if !defined( VSTDLIB_BACKWARD_COMPAT )
-#define CommandLine CommandLine_Tier0
-#endif
+PLATFORM_INTERFACE ICommandLine *CommandLine();
 
 #endif // TIER0_ICOMMANDLINE_H
 

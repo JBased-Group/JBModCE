@@ -84,7 +84,7 @@ public:
 // change this when the new version is incompatable with the old
 #define VMODELINFO_CLIENT_INTERFACE_VERSION		"VModelInfoClient006"
 #define VMODELINFO_SERVER_INTERFACE_VERSION_3	"VModelInfoServer003"
-#define VMODELINFO_SERVER_INTERFACE_VERSION		"VModelInfoServer004"
+#define VMODELINFO_SERVER_INTERFACE_VERSION		"VModelInfoServer002"
 
 // MODEL INDEX RULES
 // If index >= 0, then index references the precached model string table

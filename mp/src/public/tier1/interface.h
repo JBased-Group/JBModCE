@@ -166,6 +166,8 @@ enum
 //-----------------------------------------------------------------------------
 DLL_EXPORT void* CreateInterface(const char *pName, int *pReturnCode);
 
+extern void ReconnectInterface(CreateInterfaceFn factory, const char* pInterfaceName);
+
 #if defined( _X360 )
 DLL_EXPORT void *CreateInterfaceThunk( const char *pName, int *pReturnCode );
 #endif

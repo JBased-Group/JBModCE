@@ -123,8 +123,8 @@ public:
 //-----------------------------------------------------------------------------
 // Interface the engine exposes to the game DLL
 //-----------------------------------------------------------------------------
-#define INTERFACEVERSION_ENGINETRACE_SERVER	"EngineTraceServer003"
-#define INTERFACEVERSION_ENGINETRACE_CLIENT	"EngineTraceClient003"
+#define INTERFACEVERSION_ENGINETRACE_SERVER	"EngineTraceServer004"
+#define INTERFACEVERSION_ENGINETRACE_CLIENT	"EngineTraceClient004"
 abstract_class IEngineTrace
 {
 public:
