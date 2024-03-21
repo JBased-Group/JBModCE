@@ -199,31 +199,25 @@ public:
 #endif
 
 #ifdef GAME_DLL
-	virtual void Event_PlayerKilled( CBasePlayer *pPlayer, const CTakeDamageInfo &info );	
-	virtual void Event_PlayerConnected( CBasePlayer *pBasePlayer );
-	virtual void Event_PlayerDisconnected( CBasePlayer *pBasePlayer );
-	virtual void Event_PlayerDamage( CBasePlayer *pBasePlayer, const CTakeDamageInfo &info );
-	virtual void Event_PlayerKilledOther( CBasePlayer *pAttacker, CBaseEntity *pVictim, const CTakeDamageInfo &info );
-	virtual void Event_PlayerSuicide( CBasePlayer* pPlayer ) {}
-	virtual void Event_Credits();
-	virtual void Event_Commentary();
-	virtual void Event_CrateSmashed();
-	virtual void Event_Punted( CBaseEntity *pObject );
-	virtual void Event_PlayerTraveled( CBasePlayer *pBasePlayer, float distanceInInches, bool bInVehicle, bool bSprinting );
-	virtual void Event_WeaponFired( CBasePlayer *pShooter, bool bPrimary, char const *pchWeaponName );
-	virtual void Event_WeaponHit( CBasePlayer *pShooter, bool bPrimary, char const *pchWeaponName, const CTakeDamageInfo &info );
-	virtual void Event_FlippedVehicle( CBasePlayer *pDriver, CPropVehicleDriveable *pVehicle );
-	virtual void Event_PreSaveGameLoaded( char const *pSaveName, bool bInGame );
-	virtual void Event_PlayerEnteredGodMode( CBasePlayer *pBasePlayer );
-	virtual void Event_PlayerEnteredNoClip( CBasePlayer *pBasePlayer );
-	virtual void Event_DecrementPlayerEnteredNoClip( CBasePlayer *pBasePlayer );
-	virtual void Event_IncrementCountedStatistic( const Vector& vecAbsOrigin, char const *pchStatisticName, float flIncrementAmount );
+	virtual void Event_PlayerKilled(CBasePlayer* pPlayer, const CTakeDamageInfo& info) { }
+	virtual void Event_PlayerConnected(CBasePlayer* pBasePlayer) { }
+	virtual void Event_PlayerDisconnected(CBasePlayer* pBasePlayer) { }
+	virtual void Event_PlayerDamage(CBasePlayer* pBasePlayer, const CTakeDamageInfo& info) { }
+	virtual void Event_PlayerKilledOther(CBasePlayer* pAttacker, CBaseEntity* pVictim, const CTakeDamageInfo& info) { }
+	virtual void Event_Credits() { }
+	virtual void Event_Commentary() { }
+	virtual void Event_CrateSmashed() { }
+	virtual void Event_Punted(CBaseEntity* pObject) { }
+	virtual void Event_PlayerTraveled(CBasePlayer* pBasePlayer, float distanceInInches, bool bInVehicle, bool bSprinting) { }
+	virtual void Event_WeaponFired(CBasePlayer* pShooter, bool bPrimary, char const* pchWeaponName) { }
+	virtual void Event_WeaponHit(CBasePlayer* pShooter, bool bPrimary, char const* pchWeaponName, const CTakeDamageInfo& info) { }
+	virtual void Event_FlippedVehicle(CBasePlayer* pDriver, CPropVehicleDriveable* pVehicle) { }
+	virtual void Event_PreSaveGameLoaded(char const* pSaveName, bool bInGame) { }
+	virtual void Event_PlayerEnteredGodMode(CBasePlayer* pBasePlayer) { }
+	virtual void Event_PlayerEnteredNoClip(CBasePlayer* pBasePlayer) { }
+	virtual void Event_DecrementPlayerEnteredNoClip(CBasePlayer* pBasePlayer) { }
+	virtual void Event_IncrementCountedStatistic(const Vector& vecAbsOrigin, char const* pchStatisticName, float flIncrementAmount) { }
 
-    //=============================================================================
-    // HPE_BEGIN
-    // [dwenger] Functions necessary for cs-specific stats
-    //=============================================================================
-    virtual void Event_WindowShattered( CBasePlayer *pPlayer );
     //=============================================================================
     // HPE_END
     //=============================================================================
@@ -232,11 +226,11 @@ public:
 	virtual void AppendCustomDataToSaveBuffer( CUtlBuffer &SaveBuffer ) { } //custom data you want thrown into the default save and upload path
 	virtual void LoadCustomDataFromBuffer( CUtlBuffer &LoadBuffer ) { }; //when loading the saved stats file, this will point to where you started saving data to the save buffer
 
-	virtual void LoadingEvent_PlayerIDDifferentThanLoadedStats( void ); //Only called if you use the base SaveToFileNOW() and LoadFromFile() functions. Used in case you want to keep/invalidate data that was just loaded. 
+	virtual void LoadingEvent_PlayerIDDifferentThanLoadedStats(void) {}; //Only called if you use the base SaveToFileNOW() and LoadFromFile() functions. Used in case you want to keep/invalidate data that was just loaded. 
 
-	virtual bool LoadFromFile( void ); //called just before Event_Init()
-	virtual bool SaveToFileNOW( bool bForceSyncWrite = false ); //saves buffers to their respective files now, returns success or failure
-	virtual bool UploadStatsFileNOW( void ); //uploads data to the CSER now, returns success or failure
+	virtual bool LoadFromFile(void) { return false; } //called just before Event_Init()
+	virtual bool SaveToFileNOW(bool bForceSyncWrite = false) { return false; } //saves buffers to their respective files now, returns success or failure
+	virtual bool UploadStatsFileNOW(void) { return false; } //uploads data to the CSER now, returns success or failure
 
 	static bool AppendLump( int nMaxLumpCount, CUtlBuffer &SaveBuffer, unsigned short iLump, unsigned short iLumpCount, size_t nSize, void *pData );
 	static bool GetLumpHeader( int nMaxLumpCount, CUtlBuffer &LoadBuffer, unsigned short &iLump, unsigned short &iLumpCount, bool bPermissive = false );

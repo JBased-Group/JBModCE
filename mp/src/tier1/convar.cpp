@@ -704,12 +704,17 @@ ConVar::~ConVar( void )
 //-----------------------------------------------------------------------------
 void ConVar::InstallChangeCallback( FnChangeCallback_t callback, bool bInvoke)
 {
+	if (!callback)
+	{
+		m_pParent->m_fnChangeCallbacks.RemoveAll();
+		return;
+	}
 	m_pParent->m_fnChangeCallbacks.AddToTail(callback);
 
-	if ( m_pParent->m_fnChangeCallbacks[0] && bInvoke)
+	if (bInvoke)
 	{
 		// Call it immediately to set the initial value...
-		m_pParent->m_fnChangeCallbacks[0]( this, m_Value.m_pszString, m_Value.m_fValue );
+		callback( this, m_Value.m_pszString, m_Value.m_fValue );
 	}
 }
 
@@ -722,6 +727,7 @@ bool ConVar::IsFlagSet( int flag ) const
 {
 	return ( flag & m_pParent->m_nFlags ) ? true : false;
 }
+
 
 const char *ConVar::GetHelpText( void ) const
 {
@@ -863,9 +869,9 @@ void ConVar::ChangeStringValue( const char *tempVal, float flOldValue )
 	if (V_strcmp(pszOldValue, m_Value.m_pszString) != 0)
 	{
 		// Invoke any necessary callback function
-		if ( m_fnChangeCallbacks[0])
+		for(int i = 0; i < m_fnChangeCallbacks.Count(); i++)
 		{
-			m_fnChangeCallbacks[0]( this, pszOldValue, flOldValue );
+			m_fnChangeCallbacks[i]( this, pszOldValue, flOldValue );
 		}
 
 		g_pCVar->CallGlobalChangeCallbacks( this, pszOldValue, flOldValue );
@@ -1007,7 +1013,8 @@ void ConVar::Create( const char *pName, const char *pDefaultValue, int flags /*=
 	m_bHasMax = bMax;
 	m_fMaxVal = fMax;
 	
-	m_fnChangeCallbacks.AddToHead(callback);
+	if(callback)
+		m_fnChangeCallbacks.AddToHead(callback);
 
 	m_Value.m_fValue = ( float )atof(m_Value.m_pszString );
 	m_Value.m_nValue = atoi(m_Value.m_pszString ); // dont convert from float to int and lose bits

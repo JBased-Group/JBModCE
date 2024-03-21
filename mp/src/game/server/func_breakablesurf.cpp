@@ -364,7 +364,6 @@ void CBreakableSurface::TraceAttack( const CTakeDamageInfo &info, const Vector &
     //=============================================================================
 
     // Make sure this pane has not already been shattered
-    bool bWasBroken = m_bIsBroken;
 
     //=============================================================================
     // HPE_END
@@ -395,12 +394,6 @@ void CBreakableSurface::TraceAttack( const CTakeDamageInfo &info, const Vector &
             // HPE_BEGIN:
             // [dwenger] Window break stat tracking
             //=============================================================================
-
-            CBasePlayer* pAttacker = ToBasePlayer(info.GetAttacker());
-            if ( ( pAttacker ) && ( !bWasBroken ) )
-            {
-                gamestats->Event_WindowShattered( pAttacker );
-            }
 
             //=============================================================================
             // HPE_END
@@ -497,11 +490,6 @@ void CBreakableSurface::TraceAttack( const CTakeDamageInfo &info, const Vector &
             // [pfreese] Window break stat tracking
             //=============================================================================
 
-            CBasePlayer* pAttacker = ToBasePlayer(info.GetAttacker());
-            if ( ( pAttacker ) && ( !bWasBroken ) )
-            {
-                gamestats->Event_WindowShattered( pAttacker );
-            }
 
             //=============================================================================
             // HPE_END

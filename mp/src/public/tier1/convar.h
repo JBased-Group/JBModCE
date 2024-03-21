@@ -340,7 +340,6 @@ public:
 									FnChangeCallback_t callback );
 
 	virtual						~ConVar( void );
-
 	virtual bool				IsFlagSet( int flag ) const;
 	virtual const char*			GetHelpText( void ) const;
 	virtual bool				IsRegistered( void ) const;

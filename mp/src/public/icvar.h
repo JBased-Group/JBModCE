@@ -75,9 +75,6 @@ public:
 	virtual ConCommand		*FindCommand( const char *name ) = 0;
 	virtual const ConCommand *FindCommand( const char *name ) const = 0;
 
-	// Get first ConCommandBase to allow iteration
-	virtual ConCommandBase	*GetCommands( void ) = 0;
-	virtual const ConCommandBase *GetCommands( void ) const = 0;
 
 	// Install a global change callback (to be called when any convar changes) 
 	virtual void			InstallGlobalChangeCallback( FnChangeCallback_t callback ) = 0;
@@ -102,6 +99,16 @@ public:
 #if defined( _X360 )
 	virtual void			PublishToVXConsole( ) = 0;
 #endif
+
+	virtual void			SetMaxSplitScreenSlots(int nSlots) = 0;
+	virtual int				GetMaxSplitScreenSlots() const = 0;
+
+	virtual void			AddSplitScreenConVars() = 0;
+	virtual void			RemoveSplitScreenConVars(CVarDLLIdentifier_t id) = 0;
+
+	virtual int				GetConsoleDisplayFuncCount() const = 0;
+	virtual void			GetConsoleText(int nDisplayFuncIndex, char* pchText, size_t bufSize) const = 0;
+
 	virtual bool			IsMaterialThreadSetAllowed( ) const = 0;
 	virtual void			QueueMaterialThreadSetValue( ConVar *pConVar, const char *pValue ) = 0;
 	virtual void			QueueMaterialThreadSetValue( ConVar *pConVar, int nValue ) = 0;
@@ -146,7 +153,6 @@ protected:
 	{
 	public:
 		// warning: delete called on 'ICvar::ICVarIteratorInternal' that is abstract but has non-virtual destructor [-Wdelete-non-virtual-dtor]
-		virtual ~ICVarIteratorInternal() {}
 		virtual void		SetFirst( void ) = 0;
 		virtual void		Next( void ) = 0;
 		virtual	bool		IsValid( void ) = 0;
@@ -164,7 +170,10 @@ inline ICvar::Iterator::Iterator(ICvar *icvar)
 
 inline ICvar::Iterator::~Iterator( void )
 {
+#pragma warning(push)
+#pragma warning(disable: 5205)
 	delete m_pIter;
+#pragma warning(pop)
 }
 
 inline void ICvar::Iterator::SetFirst( void )

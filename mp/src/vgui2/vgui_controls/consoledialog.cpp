@@ -501,12 +501,12 @@ void CConsolePanel::RebuildCompletionList(const char *text)
 	if ( bNormalBuild )
 	{
 		// look through the command list for all matches
-		ConCommandBase const *cmd = (ConCommandBase const *)cvar->GetCommands();
-		while (cmd)
+		ICvar::Iterator iter(g_pCVar);
+		for (iter.SetFirst(); iter.IsValid(); iter.Next())
 		{
-			if ( cmd->IsFlagSet( FCVAR_DEVELOPMENTONLY ) || cmd->IsFlagSet( FCVAR_HIDDEN ) )
+			ConCommandBase* cmd = iter.Get();
+			if (cmd->IsFlagSet(FCVAR_DEVELOPMENTONLY) || cmd->IsFlagSet(FCVAR_HIDDEN))
 			{
-				cmd = cmd->GetNext();
 				continue;
 			}
 
@@ -547,8 +547,6 @@ void CConsolePanel::RebuildCompletionList(const char *text)
 					item->m_pText = new CHistoryItem( tst );
 				}
 			}
-
-			cmd = cmd->GetNext();
 		}
 
 		// Now sort the list by command name

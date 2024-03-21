@@ -579,7 +579,6 @@ bool CServerGameDLL::DLLInit( CreateInterfaceFn appSystemFactory,
 		CreateInterfaceFn physicsFactory, CreateInterfaceFn fileSystemFactory, 
 		CGlobalVars *pGlobals)
 {
-	Assert(_heapchk() == _HEAPOK);
 	ConnectTier1Libraries( &appSystemFactory, 1 );
 	ConnectTier2Libraries( &appSystemFactory, 1 );
 	ConnectTier3Libraries( &appSystemFactory, 1 );
@@ -592,7 +591,6 @@ bool CServerGameDLL::DLLInit( CreateInterfaceFn appSystemFactory,
 	s_SteamAPIContext.Init();
 	s_SteamGameServerAPIContext.Init();
 #endif
-	Assert(_heapchk() == _HEAPOK);
 	// init each (seperated for ease of debugging)
 	if ( (engine = (IVEngineServer*)appSystemFactory(INTERFACEVERSION_VENGINESERVER, NULL)) == NULL )
 		return false;
@@ -606,7 +604,6 @@ bool CServerGameDLL::DLLInit( CreateInterfaceFn appSystemFactory,
 		return false;
 	if ( (enginesound = (IEngineSound *)appSystemFactory(IENGINESOUND_SERVER_INTERFACE_VERSION, NULL)) == NULL )
 		return false;
-	Assert(_heapchk() == _HEAPOK);
 	if ( (partition = (ISpatialPartition *)appSystemFactory(INTERFACEVERSION_SPATIALPARTITION, NULL)) == NULL )
 		return false;
 	if ( (modelinfo = (IVModelInfo *)appSystemFactory(VMODELINFO_SERVER_INTERFACE_VERSION, NULL)) == NULL )
@@ -619,7 +616,6 @@ bool CServerGameDLL::DLLInit( CreateInterfaceFn appSystemFactory,
 		return false;
 	if ( (datacache = (IDataCache*)appSystemFactory(DATACACHE_INTERFACE_VERSION, NULL )) == NULL )
 		return false;
-	Assert(_heapchk() == _HEAPOK);
 	if ( (soundemitterbase = (ISoundEmitterSystemBase *)appSystemFactory(SOUNDEMITTERSYSTEM_INTERFACE_VERSION, NULL)) == NULL )
 		return false;
 #ifndef _XBOX
@@ -649,7 +645,6 @@ bool CServerGameDLL::DLLInit( CreateInterfaceFn appSystemFactory,
 	// Yes, both the client and game .dlls will try to Connect, the soundemittersystem.dll will handle this gracefully
 	if ( !soundemitterbase->Connect( appSystemFactory ) )
 		return false;
-	Assert(_heapchk() == _HEAPOK);
 	// cache the globals
 	gpGlobals = pGlobals;
 
@@ -675,7 +670,6 @@ bool CServerGameDLL::DLLInit( CreateInterfaceFn appSystemFactory,
 	//{
 	//	return false;
 	//}
-	Assert(_heapchk() == _HEAPOK);
 	sv_cheats = g_pCVar->FindVar( "sv_cheats" );
 	if ( !sv_cheats )
 		return false;
@@ -685,7 +679,6 @@ bool CServerGameDLL::DLLInit( CreateInterfaceFn appSystemFactory,
 	g_pcv_hideServer = g_pCVar->FindVar( "hide_server" );
 
 	sv_maxreplay = g_pCVar->FindVar( "sv_maxreplay" );
-	Assert(_heapchk() == _HEAPOK);
 	g_pGameSaveRestoreBlockSet->AddBlockHandler( GetEntitySaveRestoreBlockHandler() );
 	g_pGameSaveRestoreBlockSet->AddBlockHandler( GetPhysSaveRestoreBlockHandler() );
 	g_pGameSaveRestoreBlockSet->AddBlockHandler( GetAISaveRestoreBlockHandler() );
@@ -694,7 +687,6 @@ bool CServerGameDLL::DLLInit( CreateInterfaceFn appSystemFactory,
 	g_pGameSaveRestoreBlockSet->AddBlockHandler( GetCommentarySaveRestoreBlockHandler() );
 	g_pGameSaveRestoreBlockSet->AddBlockHandler( GetEventQueueSaveRestoreBlockHandler() );
 	g_pGameSaveRestoreBlockSet->AddBlockHandler( GetAchievementSaveRestoreBlockHandler() );
-	Assert(_heapchk() == _HEAPOK);
 	// The string system must init first + shutdown last
 	IGameSystem::Add( GameStringSystem() );
 
@@ -703,7 +695,6 @@ bool CServerGameDLL::DLLInit( CreateInterfaceFn appSystemFactory,
 	
 	// Used to service deferred navigation queries for NPCs
 	IGameSystem::Add( (IGameSystem *) PostFrameNavigationSystem() );
-	Assert(_heapchk() == _HEAPOK);
 	// Add game log system
 	IGameSystem::Add( GameLogSystem() );
 #ifndef _XBOX
@@ -719,10 +710,8 @@ bool CServerGameDLL::DLLInit( CreateInterfaceFn appSystemFactory,
 #ifdef CSTRIKE_DLL // BOTPORT: TODO: move these ifdefs out
 	InstallBotControl();
 #endif
-	Assert(_heapchk() == _HEAPOK);
 	if ( !IGameSystem::InitAllSystems() )
 		return false;
-	Assert(_heapchk() == _HEAPOK);
 #if defined( REPLAY_ENABLED )
 	if ( gameeventmanager->LoadEventsFromFile( "resource/replayevents.res" ) <= 0 )
 	{

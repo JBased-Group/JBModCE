@@ -662,138 +662,123 @@ class CHLClient : public IBaseClientDLL
 {
 public:
 	CHLClient();
+
 	virtual int						Connect(CreateInterfaceFn appSystemFactory, CGlobalVarsBase* pGlobals);
-	virtual int						Init( CreateInterfaceFn appSystemFactory, CGlobalVarsBase *pGlobals );
+	virtual int						Init(CreateInterfaceFn appSystemFactory, CGlobalVarsBase* pGlobals);
 
 	virtual void					PostInit();
-	virtual void					Shutdown( void );
+	virtual void					Shutdown(void);
 
-	virtual bool					ReplayInit( CreateInterfaceFn fnReplayFactory );
-	virtual bool					ReplayPostInit();
-
-	virtual void					LevelInitPreEntity( const char *pMapName );
+	virtual void					LevelInitPreEntity(const char* pMapName);
 	virtual void					LevelInitPostEntity();
-	virtual void					LevelShutdown( void );
+	virtual void					LevelShutdown(void);
 
-	virtual ClientClass				*GetAllClasses( void );
+	virtual ClientClass* GetAllClasses(void);
 
-	virtual int						HudVidInit( void );
-	virtual void					HudProcessInput( bool bActive );
-	virtual void					HudUpdate( bool bActive );
-	virtual void					HudReset( void );
-	virtual void					HudText( const char * message );
+	virtual int						HudVidInit(void);
+	virtual void					HudProcessInput(bool bActive);
+	virtual void					HudUpdate(bool bActive);
+	virtual void					HudReset(void);
+	virtual void					HudText(const char* message);
 
 	// Mouse Input Interfaces
-	virtual void					IN_ActivateMouse( void );
-	virtual void					IN_DeactivateMouse( void );
-	virtual void					IN_Accumulate( void );
-	virtual void					IN_ClearStates( void );
-	virtual bool					IN_IsKeyDown( const char *name, bool& isdown );
-	virtual void					IN_OnMouseWheeled( int nDelta );
+	virtual void					IN_ActivateMouse(void);
+	virtual void					IN_DeactivateMouse(void);
+	virtual void					IN_Accumulate(void);
+	virtual void					IN_ClearStates(void);
+	virtual bool					IN_IsKeyDown(const char* name, bool& isdown);
 	// Raw signal
-	virtual int						IN_KeyEvent( int eventcode, ButtonCode_t keynum, const char *pszCurrentBinding );
-	virtual void					IN_SetSampleTime( float frametime );
+	virtual int						IN_KeyEvent(int eventcode, ButtonCode_t keynum, const char* pszCurrentBinding);
+	virtual void					IN_SetSampleTime(float frametime);
 	// Create movement command
-	virtual void					CreateMove ( int sequence_number, float input_sample_frametime, bool active );
-	virtual void					ExtraMouseSample( float frametime, bool active );
-	virtual bool					WriteUsercmdDeltaToBuffer( bf_write *buf, int from, int to, bool isnewcommand );	
-	virtual void					EncodeUserCmdToBuffer( bf_write& buf, int slot );
-	virtual void					DecodeUserCmdFromBuffer( bf_read& buf, int slot );
+	virtual void					CreateMove(int sequence_number, float input_sample_frametime, bool active);
+	virtual void					ExtraMouseSample(float frametime, bool active);
+	virtual bool					WriteUsercmdDeltaToBuffer(int nSlot, bf_write* buf, int from, int to, bool isnewcommand) { return input->WriteUsercmdDeltaToBuffer(buf, from, to, isnewcommand); };
+	virtual void					EncodeUserCmdToBuffer(int nSlot, bf_write& buf, int slot) { input->EncodeUserCmdToBuffer(buf, slot); };
+	virtual void					DecodeUserCmdFromBuffer(int nSlot, bf_read& buf, int slot) { input->DecodeUserCmdFromBuffer(buf, slot); };
 
 
-	virtual void					View_Render( vrect_t *rect );
-	virtual void					RenderView( const CViewSetup &view, int nClearFlags, int whatToDraw );
-	virtual void					View_Fade( ScreenFade_t *pSF );
-	
-	virtual void					SetCrosshairAngle( const QAngle& angle );
+	virtual void					View_Render(vrect_t* rect);
+	virtual void					RenderView(const CViewSetup& view, int nClearFlags, int whatToDraw);
+	virtual void					View_Fade(ScreenFade_t* pSF);
 
-	virtual void					InitSprite( CEngineSprite *pSprite, const char *loadname );
-	virtual void					ShutdownSprite( CEngineSprite *pSprite );
+	virtual void					SetCrosshairAngle(const QAngle& angle);
 
-	virtual int						GetSpriteSize( void ) const;
+	virtual void					InitSprite(CEngineSprite* pSprite, const char* loadname);
+	virtual void					ShutdownSprite(CEngineSprite* pSprite);
 
-	virtual void					VoiceStatus( int entindex, qboolean bTalking );
+	virtual int						GetSpriteSize(void) const;
 
-	virtual void					InstallStringTableCallback( const char *tableName );
+	virtual void					VoiceStatus(int entindex, int iSsSlot, qboolean bTalking) { GetClientVoiceMgr()->UpdateSpeakerStatus(entindex, !!bTalking); };
 
-	virtual void					FrameStageNotify( ClientFrameStage_t curStage );
+	virtual void					InstallStringTableCallback(const char* tableName);
 
-	virtual bool					DispatchUserMessage( int msg_type, bf_read &msg_data );
+	virtual void					FrameStageNotify(ClientFrameStage_t curStage);
+
+	virtual bool					DispatchUserMessage(int msg_type, bf_read& msg_data);
 
 	// Save/restore system hooks
-	virtual CSaveRestoreData  *SaveInit( int size );
-	virtual void			SaveWriteFields( CSaveRestoreData *, const char *, void *, datamap_t *, typedescription_t *, int );
-	virtual void			SaveReadFields( CSaveRestoreData *, const char *, void *, datamap_t *, typedescription_t *, int );
-	virtual void			PreSave( CSaveRestoreData * );
-	virtual void			Save( CSaveRestoreData * );
-	virtual void			WriteSaveHeaders( CSaveRestoreData * );
-	virtual void			ReadRestoreHeaders( CSaveRestoreData * );
-	virtual void			Restore( CSaveRestoreData *, bool );
+	virtual CSaveRestoreData* SaveInit(int size);
+	virtual void			SaveWriteFields(CSaveRestoreData*, const char*, void*, datamap_t*, typedescription_t*, int);
+	virtual void			SaveReadFields(CSaveRestoreData*, const char*, void*, datamap_t*, typedescription_t*, int);
+	virtual void			PreSave(CSaveRestoreData*);
+	virtual void			Save(CSaveRestoreData*);
+	virtual void			WriteSaveHeaders(CSaveRestoreData*);
+	virtual void			ReadRestoreHeaders(CSaveRestoreData*);
+	virtual void			Restore(CSaveRestoreData*, bool);
 	virtual void			DispatchOnRestore();
-	virtual void			WriteSaveGameScreenshot( const char *pFilename );
+	virtual void			WriteSaveGameScreenshot(const char* pFilename);
 
 	// Given a list of "S(wavname) S(wavname2)" tokens, look up the localized text and emit
 	//  the appropriate close caption if running with closecaption = 1
-	virtual void			EmitSentenceCloseCaption( char const *tokenstream );
-	virtual void			EmitCloseCaption( char const *captionname, float duration );
+	virtual void			EmitSentenceCloseCaption(char const* tokenstream);
+	virtual void			EmitCloseCaption(char const* captionname, float duration);
 
 	virtual CStandardRecvProxies* GetStandardRecvProxies();
 
-	virtual bool			CanRecordDemo( char *errorMsg, int length ) const;
+	virtual bool			CanRecordDemo(char* errorMsg, int length) const;
 
-	virtual void			OnDemoRecordStart( char const* pDemoBaseName );
+	virtual void			OnDemoRecordStart(char const* pDemoBaseName);
 	virtual void			OnDemoRecordStop();
-	virtual void			OnDemoPlaybackStart( char const* pDemoBaseName );
+	virtual void			OnDemoPlaybackStart(char const* pDemoBaseName);
 	virtual void			OnDemoPlaybackStop();
 
-	virtual bool			ShouldDrawDropdownConsole();
+	virtual void			RecordDemoPolishUserInput(int nCmdIndex) { Msg("IMPLEMENT " __FUNCTION__ " !!!\n"); };
 
-	// Get client screen dimensions
-	virtual int				GetScreenWidth();
-	virtual int				GetScreenHeight();
+	// Cache replay ragdolls
+	virtual bool			CacheReplayRagdolls(const char* pFilename, int nStartTick) { Msg("IMPLEMENT " __FUNCTION__ " !!!\n"); return true; };
 
 	// save game screenshot writing
-	virtual void			WriteSaveGameScreenshotOfSize( const char *pFilename, int width, int height, bool bCreatePowerOf2Padded/*=false*/, bool bWriteVTF/*=false*/ );
+	virtual void			WriteSaveGameScreenshotOfSize(const char* pFilename, int width, int height) { Msg("IMPLEMENT " __FUNCTION__ " !!!\n"); };
 
 	// Gets the location of the player viewpoint
-	virtual bool			GetPlayerView( CViewSetup &playerView );
+	virtual bool			GetPlayerView(CViewSetup& playerView);
 
-	// Matchmaking
-	virtual void			SetupGameProperties( CUtlVector< XUSER_CONTEXT > &contexts, CUtlVector< XUSER_PROPERTY > &properties );
-	virtual uint			GetPresenceID( const char *pIDName );
-	virtual const char		*GetPropertyIdString( const uint id );
-	virtual void			GetPropertyDisplayString( uint id, uint value, char *pOutput, int nBytes );
-	virtual void			StartStatsReporting( HANDLE handle, bool bArbitrated );
+	virtual bool			ShouldHideLoadingPlaque(void) { Msg("IMPLEMENT " __FUNCTION__ " !!!\n"); return true; };
 
 	virtual void			InvalidateMdlCache();
 
-	virtual void			ReloadFilesInList( IFileList *pFilesToReload );
+	virtual void			OnActiveSplitscreenPlayerChanged(int nNewSlot) { Msg("IMPLEMENT " __FUNCTION__ " !!!\n"); };
+	virtual void			OnSplitScreenStateChanged() { Msg("IMPLEMENT " __FUNCTION__ " !!!\n"); };
+	virtual void			CenterStringOff() { Msg("IMPLEMENT " __FUNCTION__ " !!!\n"); };;
 
-	// Let the client handle UI toggle - if this function returns false, the UI will toggle, otherwise it will not.
-	virtual bool			HandleUiToggle();
 
-	// Allow the console to be shown?
-	virtual bool			ShouldAllowConsole();
+	virtual void			OnScreenSizeChanged(int nOldWidth, int nOldHeight) { Msg("IMPLEMENT " __FUNCTION__ " !!!\n"); };
+	virtual IMaterialProxy* InstantiateMaterialProxy(const char* proxyName) { Msg("IMPLEMENT " __FUNCTION__ " !!!\n"); return 0; };
 
-	// Get renamed recv tables
-	virtual CRenamedRecvTableInfo	*GetRenamedRecvTableInfos();
+	virtual vgui::VPANEL	GetFullscreenClientDLLVPanel(void) { Msg("IMPLEMENT " __FUNCTION__ " !!!\n"); return 0; };
+	virtual void			MarkEntitiesAsTouching(IClientEntity* e1, IClientEntity* e2) { Msg("IMPLEMENT " __FUNCTION__ " !!!\n"); };
+	virtual void			OnKeyBindingChanged(ButtonCode_t buttonCode, char const* pchKeyName, char const* pchNewBinding) { Msg("IMPLEMENT " __FUNCTION__ " !!!\n"); };
+	virtual bool			HandleGameUIEvent(const InputEvent_t& event) { Msg("IMPLEMENT " __FUNCTION__ " !!!\n");  return true; };
 
-	// Get the mouthinfo for the sound being played inside UI panels
-	virtual CMouthInfo		*GetClientUIMouthInfo();
-
-	// Notify the client that a file has been received from the game server
-	virtual void			FileReceived( const char * fileName, unsigned int transferID );
-
-	virtual const char* TranslateEffectForVisionFilter( const char *pchEffectType, const char *pchEffectName );
-	
-	virtual void			ClientAdjustStartSoundParams( struct StartSoundParams_t& params );
-	
-	// Returns true if the disconnect command has been handled by the client
-	virtual bool DisconnectAttempt( void );
 public:
-	void PrecacheMaterial( const char *pMaterialName );
+	void PrecacheMaterial(const char* pMaterialName);
 
-	virtual bool IsConnectedUserInfoChangeAllowed( IConVar *pCvar );
+	virtual void			SetBlurFade(float scale) { Msg("IMPLEMENT " __FUNCTION__ " !!!\n"); };
+
+	virtual void			ResetHudCloseCaption() { Msg("IMPLEMENT " __FUNCTION__ " !!!\n"); };
+
+	virtual bool			SupportsRandomMaps() { Msg("IMPLEMENT " __FUNCTION__ " !!!\n"); return true; };
 
 private:
 	void UncacheAllMaterials( );
@@ -1180,41 +1165,6 @@ int CHLClient::Init( CreateInterfaceFn appSystemFactory, CGlobalVarsBase *pGloba
 	return true;
 }
 
-bool CHLClient::ReplayInit( CreateInterfaceFn fnReplayFactory )
-{
-#if defined( REPLAY_ENABLED )
-	if ( !IsPC() )
-		return false;
-	if ( (g_pReplay = (IReplaySystem *)fnReplayFactory( REPLAY_INTERFACE_VERSION, NULL ) ) == NULL )
-		return false;
-	if ( (g_pClientReplayContext = g_pReplay->CL_GetContext()) == NULL )
-		return false;
-
-	return true;
-#else
-	return false;
-#endif
-}
-
-bool CHLClient::ReplayPostInit()
-{
-#if defined( REPLAY_ENABLED )
-	if ( ( g_pReplayManager = g_pClientReplayContext->GetReplayManager() ) == NULL )
-		return false;
-	if ( ( g_pReplayScreenshotManager = g_pClientReplayContext->GetScreenshotManager() ) == NULL )
-		return false;
-	if ( ( g_pReplayPerformanceManager = g_pClientReplayContext->GetPerformanceManager() ) == NULL )
-		return false;
-	if ( ( g_pReplayPerformanceController = g_pClientReplayContext->GetPerformanceController() ) == NULL )
-		return false;
-	if ( ( g_pReplayMovieManager = g_pClientReplayContext->GetMovieManager() ) == NULL )
-		return false;
-	return true;
-#else
-	return false;
-#endif
-}
-
 //-----------------------------------------------------------------------------
 // Purpose: Called after client & server DLL are loaded and all systems initialized
 //-----------------------------------------------------------------------------
@@ -1401,23 +1351,6 @@ void CHLClient::HudText( const char * message )
 	DispatchHudText( message );
 }
 
-//-----------------------------------------------------------------------------
-// Purpose: 
-//-----------------------------------------------------------------------------
-bool CHLClient::ShouldDrawDropdownConsole()
-{
-#if defined( REPLAY_ENABLED )
-	extern ConVar hud_freezecamhide;
-	extern bool IsTakingAFreezecamScreenshot();
-
-	if ( hud_freezecamhide.GetBool() && IsTakingAFreezecamScreenshot() )
-	{
-		return false;
-	}
-#endif
-
-	return true;
-}
 
 //-----------------------------------------------------------------------------
 // Purpose: 
@@ -1483,22 +1416,6 @@ bool CHLClient::IN_IsKeyDown( const char *name, bool& isdown )
 // Input  : eventcode - 
 //			keynum - 
 //			*pszCurrentBinding - 
-void CHLClient::IN_OnMouseWheeled( int nDelta )
-{
-#if defined( REPLAY_ENABLED )
-	CReplayPerformanceEditorPanel *pPerfEditor = ReplayUI_GetPerformanceEditor();
-	if ( pPerfEditor )
-	{
-		pPerfEditor->OnInGameMouseWheelEvent( nDelta );
-	}
-#endif
-}
-
-//-----------------------------------------------------------------------------
-// Purpose: Engine can issue a key event
-// Input  : eventcode - 
-//			keynum - 
-//			*pszCurrentBinding - 
 // Output : int
 //-----------------------------------------------------------------------------
 int CHLClient::IN_KeyEvent( int eventcode, ButtonCode_t keynum, const char *pszCurrentBinding )
@@ -1544,38 +1461,6 @@ void CHLClient::CreateMove ( int sequence_number, float input_sample_frametime, 
 	input->CreateMove( sequence_number, input_sample_frametime, active );
 }
 
-//-----------------------------------------------------------------------------
-// Purpose: 
-// Input  : *buf - 
-//			from - 
-//			to - 
-//-----------------------------------------------------------------------------
-bool CHLClient::WriteUsercmdDeltaToBuffer( bf_write *buf, int from, int to, bool isnewcommand )
-{
-	return input->WriteUsercmdDeltaToBuffer( buf, from, to, isnewcommand );
-}
-
-//-----------------------------------------------------------------------------
-// Purpose: 
-// Input  : buf - 
-//			buffersize - 
-//			slot - 
-//-----------------------------------------------------------------------------
-void CHLClient::EncodeUserCmdToBuffer( bf_write& buf, int slot )
-{
-	input->EncodeUserCmdToBuffer( buf, slot );
-}
-
-//-----------------------------------------------------------------------------
-// Purpose: 
-// Input  : buf - 
-//			buffersize - 
-//			slot - 
-//-----------------------------------------------------------------------------
-void CHLClient::DecodeUserCmdFromBuffer( bf_read& buf, int slot )
-{
-	input->DecodeUserCmdFromBuffer( buf, slot );
-}
 
 //-----------------------------------------------------------------------------
 // Purpose: 
@@ -1600,34 +1485,6 @@ bool CHLClient::GetPlayerView( CViewSetup &playerView )
 {
 	playerView = *view->GetPlayerViewSetup();
 	return true;
-}
-
-//-----------------------------------------------------------------------------
-// Matchmaking
-//-----------------------------------------------------------------------------
-void CHLClient::SetupGameProperties( CUtlVector< XUSER_CONTEXT > &contexts, CUtlVector< XUSER_PROPERTY > &properties )
-{
-	presence->SetupGameProperties( contexts, properties );
-}
-
-uint CHLClient::GetPresenceID( const char *pIDName )
-{
-	return presence->GetPresenceID( pIDName );
-}
-
-const char *CHLClient::GetPropertyIdString( const uint id )
-{
-	return presence->GetPropertyIdString( id );
-}
-
-void CHLClient::GetPropertyDisplayString( uint id, uint value, char *pOutput, int nBytes )
-{
-	presence->GetPropertyDisplayString( id, value, pOutput, nBytes );
-}
-
-void CHLClient::StartStatsReporting( HANDLE handle, bool bArbitrated )
-{
-	presence->StartStatsReporting( handle, bArbitrated );
 }
 
 //-----------------------------------------------------------------------------
@@ -2510,17 +2367,6 @@ int CHLClient::GetSpriteSize( void ) const
 
 
 //-----------------------------------------------------------------------------
-// Purpose: 
-// Input  : entindex - 
-//			bTalking - 
-//-----------------------------------------------------------------------------
-void CHLClient::VoiceStatus( int entindex, qboolean bTalking )
-{
-	GetClientVoiceMgr()->UpdateSpeakerStatus( entindex, !!bTalking );
-}
-
-
-//-----------------------------------------------------------------------------
 // Called when the string table for materials changes
 //-----------------------------------------------------------------------------
 void OnMaterialStringTableChanged( void *object, INetworkStringTable *stringTable, int stringNumber, const char *newString, void const *newData )
@@ -3187,24 +3033,6 @@ void CHLClient::OnDemoPlaybackStop()
 #endif
 }
 
-int CHLClient::GetScreenWidth()
-{
-	return ScreenWidth();
-}
-
-int CHLClient::GetScreenHeight()
-{
-	return ScreenHeight();
-}
-
-// NEW INTERFACES
-// save game screenshot writing
-void CHLClient::WriteSaveGameScreenshotOfSize( const char *pFilename, int width, int height, bool bCreatePowerOf2Padded/*=false*/,
-											   bool bWriteVTF/*=false*/ )
-{
-	view->WriteSaveGameScreenshotOfSize( pFilename, width, height, bCreatePowerOf2Padded, bWriteVTF );
-}
-
 // See RenderViewInfo_t
 void CHLClient::RenderView( const CViewSetup &setup, int nClearFlags, int whatToDraw )
 {
@@ -3213,117 +3041,6 @@ void CHLClient::RenderView( const CViewSetup &setup, int nClearFlags, int whatTo
 }
 
 void ReloadSoundEntriesInList( IFileList *pFilesToReload );
-
-//-----------------------------------------------------------------------------
-// For sv_pure mode. The filesystem figures out which files the client needs to reload to be "pure" ala the server's preferences.
-//-----------------------------------------------------------------------------
-void CHLClient::ReloadFilesInList( IFileList *pFilesToReload )
-{
-	ReloadParticleEffectsInList( pFilesToReload );
-	ReloadSoundEntriesInList( pFilesToReload );
-}
-
-bool CHLClient::HandleUiToggle()
-{
-#if defined( REPLAY_ENABLED )
-	if ( !g_pEngineReplay || !g_pEngineReplay->IsSupportedModAndPlatform() )
-		return false;
-
-	CReplayPerformanceEditorPanel *pEditor = ReplayUI_GetPerformanceEditor();
-	if ( !pEditor )
-		return false;
-
-	pEditor->HandleUiToggle();
-
-	return true;
-
-#else
-	return false;
-#endif
-}
-
-bool CHLClient::ShouldAllowConsole()
-{
-	return true;
-}
-
-CRenamedRecvTableInfo *CHLClient::GetRenamedRecvTableInfos()
-{
-	return g_pRenamedRecvTableInfoHead;
-}
-
-CMouthInfo g_ClientUIMouth;
-// Get the mouthinfo for the sound being played inside UI panels
-CMouthInfo *CHLClient::GetClientUIMouthInfo()
-{
-	return &g_ClientUIMouth;
-}
-
-void CHLClient::FileReceived( const char * fileName, unsigned int transferID )
-{
-	if ( g_pGameRules )
-	{
-		g_pGameRules->OnFileReceived( fileName, transferID );
-	}
-}
-
-void CHLClient::ClientAdjustStartSoundParams( StartSoundParams_t& params )
-{
-#ifdef TF_CLIENT_DLL
-	CBaseEntity *pEntity = ClientEntityList().GetEnt( params.soundsource );
-
-	// A player speaking
-	if ( params.entchannel == CHAN_VOICE && GameRules() && pEntity && pEntity->IsPlayer() )
-	{
-		// Use high-pitched voices for other players if the local player has an item that allows them to hear it (Pyro Goggles)
-		if ( !GameRules()->IsLocalPlayer( params.soundsource ) && IsLocalPlayerUsingVisionFilterFlags( TF_VISION_FILTER_PYRO ) )
-		{
-			params.pitch *= 1.3f;
-		}
-		// Halloween voice futzery?
-		else
-		{
-			float flVoicePitchScale = 1.f;
-			CALL_ATTRIB_HOOK_FLOAT_ON_OTHER( pEntity, flVoicePitchScale, voice_pitch_scale );
-
-			int iHalloweenVoiceSpell = 0;
-			CALL_ATTRIB_HOOK_INT_ON_OTHER( pEntity, iHalloweenVoiceSpell, halloween_voice_modulation );
-			if ( iHalloweenVoiceSpell > 0 )
-			{
-				params.pitch *= 0.8f;
-			}
-			else if( flVoicePitchScale != 1.f )
-			{
-				params.pitch *= flVoicePitchScale;
-			}
-		}
-	}
-#endif
-}
-
-const char* CHLClient::TranslateEffectForVisionFilter( const char *pchEffectType, const char *pchEffectName )
-{
-	if ( !GameRules() )
-		return pchEffectName;
-
-	return GameRules()->TranslateEffectForVisionFilter( pchEffectType, pchEffectName );
-}
-
-bool CHLClient::DisconnectAttempt( void )
-{
-	bool bRet = false;
-
-#if defined( TF_CLIENT_DLL )
-	bRet = HandleDisconnectAttempt();
-#endif
-
-	return bRet;
-}
-
-bool CHLClient::IsConnectedUserInfoChangeAllowed( IConVar *pCvar )
-{
-	return GameRules() ? GameRules()->IsConnectedUserInfoChangeAllowed( NULL ) : true;
-}
 
 #ifndef NO_STEAM
 

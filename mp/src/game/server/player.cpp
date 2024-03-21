@@ -9366,10 +9366,6 @@ void CBasePlayer::Event_KilledOther( CBaseEntity *pVictim, const CTakeDamageInfo
 	{
 		gamestats->Event_PlayerKilledOther( this, pVictim, info );
 	}
-	else
-	{
-		gamestats->Event_PlayerSuicide( this );
-	}
 }
 
 void CBasePlayer::SetModel( const char *szModelName )
