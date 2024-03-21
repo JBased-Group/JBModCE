@@ -1312,6 +1312,8 @@ PLATFORM_INTERFACE bool Plat_VerifyHardwareKey();
 // and gives him an opportunity to correct the situation.
 PLATFORM_INTERFACE bool Plat_VerifyHardwareKeyPrompt();
 
+PLATFORM_INTERFACE double			Plat_FloatTime();		// Returns time in seconds since the module was loaded.
+
 // Can be called in real time, doesn't perform the verify every frame.  Mainly just
 // here to allow the game to drop out quickly when the key is removed, rather than
 // allowing the wrapper to pop up it's own blocking dialog, which the engine doesn't

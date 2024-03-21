@@ -309,7 +309,7 @@ void BitmapImage::SetBitmap( const Bitmap_t &bitmap )
 		m_bProcedural = true;
 	}
 
-	vgui::surface()->DrawSetTextureRGBA( m_nTextureId, bitmap.GetBits(), bitmap.Width(), bitmap.Height(), 1, true );
+	vgui::surface()->DrawSetTextureRGBA( m_nTextureId, bitmap.GetBits(), bitmap.Width(), bitmap.Height() );
 
 	// Initialize render size, if we don't already have one
 	if ( m_Size[0] == 0 )

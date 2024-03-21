@@ -124,11 +124,10 @@ public:
 };
 #endif // GAME_DLL
 
-class CBaseGameStats 
+class CBaseGameStats
 {
 public:
-	CBaseGameStats();
-
+	CBaseGameStats() { };
 	// override this to declare what format you want to send.  New products should use new format.
 	virtual bool UseOldFormat() 
 	{ 
@@ -163,13 +162,13 @@ public:
 #endif
 	}
 
-	virtual void Event_Init( void );
-	virtual void Event_Shutdown( void );
-	virtual void Event_MapChange( const char *szOldMapName, const char *szNewMapName );
-	virtual void Event_LevelInit( void );
-	virtual void Event_LevelShutdown( float flElapsed );
-	virtual void Event_SaveGame( void );
-	virtual void Event_LoadGame( void );
+	virtual void Event_Init(void) { };
+	virtual void Event_Shutdown( void ) { };
+	virtual void Event_MapChange( const char *szOldMapName, const char *szNewMapName ) { };
+	virtual void Event_LevelInit( void ) { };
+	virtual void Event_LevelShutdown( float flElapsed ) { };
+	virtual void Event_SaveGame( void ) { };
+	virtual void Event_LoadGame( void ) { };
 
 	void		CollectData( StatSendType_t sendType );
 	void		SendData();
@@ -180,7 +179,7 @@ public:
 	virtual CBaseGameStats *OnInit( CBaseGameStats *pCurrentGameStats, char const *gamedir ) { return pCurrentGameStats; }
 
 	// Frees up data from gamestats and resets it to a clean state.
-	virtual void Clear( void );
+	virtual void Clear( void ) { };
 
 	virtual bool StatTrackingEnabledForMod( void ) { return false; } //Override this to turn on the system. Stat tracking is disabled by default and will always be disabled at the user's request
 	static bool StatTrackingAllowed( void ); //query whether stat tracking is possible and warranted by the user
@@ -189,8 +188,8 @@ public:
 	virtual bool ShouldTrackStandardStats( void ) { return true; } //exactly what was tracked for EP1 release
 	
 	//Get mod specific strings used for tracking, defaults should work fine for most cases
-	virtual const char *GetStatSaveFileName( void );
-	virtual const char *GetStatUploadRegistryKeyName( void );
+	virtual const char* GetStatSaveFileName(void) { return ""; };
+	virtual const char* GetStatUploadRegistryKeyName(void) { return ""; };
 	const char *GetUserPseudoUniqueID( void );
 
 	virtual bool UserPlayedAllTheMaps( void ) { return false; } //be sure to override this to determine user completion time

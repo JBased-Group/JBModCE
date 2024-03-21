@@ -21,7 +21,7 @@
 
 class Vector;
 
-#define VDEBUG_OVERLAY_INTERFACE_VERSION	"VDebugOverlay003"
+#define VDEBUG_OVERLAY_INTERFACE_VERSION	"VDebugOverlay004"
 
 // When used as a duration by a server-side NDebugOverlay:: call, 
 // causes the overlay to persist until the next server update.

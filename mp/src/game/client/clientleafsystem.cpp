@@ -56,10 +56,63 @@ static void CallComputeFXBlend( IClientRenderable *&pRenderable )
 	pRenderable->ComputeFxBlend();
 }
 
+enum ClientAlphaDistanceFadeMode_t
+{
+	CLIENT_ALPHA_DISTANCE_FADE_USE_CENTER = 0,
+	CLIENT_ALPHA_DISTANCE_FADE_USE_NEAREST_BBOX,
+
+	CLIENT_ALPHA_DISTANCE_FADE_MODE_COUNT,
+};
+
+abstract_class IClientAlphaProperty
+{
+public:
+	// Gets at the containing class...
+	virtual IClientUnknown * GetIClientUnknown() = 0;
+
+	// Sets a constant alpha modulation value
+	virtual void SetAlphaModulation(uint8 a) = 0;
+
+	// Sets an FX function
+	// NOTE: kRenderFxFadeSlow, kRenderFxFadeFast, kRenderFxSolidSlow, kRenderFxSolidFast all need a start time only.
+	// kRenderFxFadeIn/kRenderFxFadeOut needs start time + duration
+	// All other render fx require no parameters
+	virtual void SetRenderFX(RenderFx_t nRenderFx, RenderMode_t nRenderMode, float flStartTime = FLT_MAX, float flDuration = 0.0f) = 0;
+
+	// Sets fade parameters
+	virtual void SetFade(float flGlobalFadeScale, float flDistFadeStart, float flDistFadeEnd) = 0;
+
+	// Sets desync offset, used to make sine waves not match
+	virtual void SetDesyncOffset(int nOffset) = 0;
+
+	// Allows the owner to override alpha.
+	// The method IClientRenderable::OverrideAlphaModulation will be called
+	// to allow the owner to optionally return a different alpha modulation
+	virtual void EnableAlphaModulationOverride(bool bEnable) = 0;
+
+	// Allows the owner to override projected shadow alpha.
+	// The method IClientRenderable::OverrideShadowAlphaModulation will be called
+	// to allow the owner to optionally return a different alpha modulation for the shadow
+	virtual void EnableShadowAlphaModulationOverride(bool bEnable) = 0;
+
+	// Sets the distance fade mode
+	virtual void SetDistanceFadeMode(ClientAlphaDistanceFadeMode_t nFadeMode) = 0;
+};
+
+
+
+abstract_class IClientAlphaPropertyMgr
+{
+public:
+	// Class factory
+	virtual IClientAlphaProperty * CreateClientAlphaProperty(IClientUnknown * pUnk) = 0;
+	virtual void DestroyClientAlphaProperty(IClientAlphaProperty* pAlphaProperty) = 0;
+};
+
 //-----------------------------------------------------------------------------
 // The client leaf system
 //-----------------------------------------------------------------------------
-class CClientLeafSystem : public IClientLeafSystem, public ISpatialLeafEnumerator
+class CClientLeafSystem : public IClientLeafSystem, public ISpatialLeafEnumerator, public IClientAlphaPropertyMgr
 {
 public:
 	virtual char const *Name() { return "CClientLeafSystem"; }
@@ -87,6 +140,10 @@ public:
 	virtual void OnSave() {}
 	virtual void OnRestore() {}
 	virtual void SafeRemoveIfDesired() {}
+	// Methods of IClientAlphaPropertyMgr
+public:
+	virtual IClientAlphaProperty* CreateClientAlphaProperty(IClientUnknown* pUnknown);
+	virtual void DestroyClientAlphaProperty(IClientAlphaProperty* pAlphaProperty);
 
 // Methods of IClientLeafSystem
 public:
@@ -324,7 +381,338 @@ private:
 	int	m_ShadowEnum;
 
 	CTSList<EnumResultList_t> m_DeferredInserts;
+
+	// Number of alpha properties out there
+	int m_nAlphaPropertyCount;
+
+	CUtlMemoryPool m_AlphaPropertyPool;
 };
+#define CLIENT_ALPHA_DISTANCE_FADE_MODE_BIT_COUNT 1
+//-----------------------------------------------------------------------------
+// Implementation class
+//-----------------------------------------------------------------------------
+class CClientAlphaProperty : public IClientAlphaProperty
+{
+	// Inherited from IClientAlphaProperty
+public:
+	virtual IClientUnknown* GetIClientUnknown();
+	virtual void SetAlphaModulation(uint8 a);
+	virtual void SetRenderFX(RenderFx_t nRenderFx, RenderMode_t nRenderMode, float flStartTime = FLT_MAX, float flDuration = 0.0f);
+	virtual void SetFade(float flGlobalFadeScale, float flDistFadeMinDist, float flDistFadeMaxDist);
+	virtual void SetDesyncOffset(int nOffset);
+	virtual void EnableAlphaModulationOverride(bool bEnable);
+	virtual void EnableShadowAlphaModulationOverride(bool bEnable);
+	virtual void SetDistanceFadeMode(ClientAlphaDistanceFadeMode_t nFadeMode);
+
+	// Other public methods
+public:
+	CClientAlphaProperty();
+	void Init(IClientUnknown* pUnk);
+
+	// NOTE: Only the client shadow manager should ever call this method!
+	void SetShadowHandle(ClientShadowHandle_t hShadowHandle);
+
+	// Returns the current alpha modulation (no fades or render FX taken into account)
+	uint8 GetAlphaModulation() const;
+
+	// Compute the render alpha (after fades + render FX are applied)
+	uint8 ComputeRenderAlpha() const;
+
+	// Returns alpha fade
+	float GetMinFadeDist() const;
+	float GetMaxFadeDist() const;
+	float GetGlobalFadeScale() const;
+
+	// Should this ignore the Z buffer?
+	bool IgnoresZBuffer(void) const;
+
+private:
+	// NOTE: Be careful if you add data to this class.
+	// It needs to be no more than 32 bytes, which it is right now
+	// (remember the vtable adds 4 bytes). Try to restrict usage
+	// to reserved areas or figure out a way of compressing existing fields
+	IClientUnknown* m_pOuter;
+
+	ClientShadowHandle_t m_hShadowHandle;
+	uint16 m_nRenderFX : 5;
+	uint16 m_nRenderMode : 4;
+	uint16 m_bAlphaOverride : 1;
+	uint16 m_bShadowAlphaOverride : 1;
+	uint16 m_nDistanceFadeMode : CLIENT_ALPHA_DISTANCE_FADE_MODE_BIT_COUNT;
+	uint16 m_nReserved : 4;
+
+	uint16 m_nDesyncOffset;
+	uint8 m_nAlpha;
+	uint8 m_nReserved2;
+
+	uint16 m_nDistFadeStart;
+	uint16 m_nDistFadeEnd;
+
+	float m_flFadeScale;
+	float m_flRenderFxStartTime;
+	float m_flRenderFxDuration;
+
+	friend class CClientLeafSystem;
+};
+
+// Returns the current alpha modulation
+inline uint8 CClientAlphaProperty::GetAlphaModulation() const
+{
+	return m_nAlpha;
+}
+
+inline float CClientAlphaProperty::GetMinFadeDist() const
+{
+	return m_nDistFadeStart;
+}
+
+inline float CClientAlphaProperty::GetMaxFadeDist() const
+{
+	return m_nDistFadeEnd;
+}
+
+inline float CClientAlphaProperty::GetGlobalFadeScale() const
+{
+	return m_flFadeScale;
+}
+
+inline bool CClientAlphaProperty::IgnoresZBuffer(void) const
+{
+	return m_nRenderMode == kRenderGlow || m_nRenderMode == kRenderWorldGlow;
+}
+
+
+//-----------------------------------------------------------------------------
+// Client alpha property starts here
+//-----------------------------------------------------------------------------
+CClientAlphaProperty::CClientAlphaProperty()
+{
+	m_nRenderFX = kRenderFxNone;
+	m_nRenderMode = kRenderNormal;
+	m_nDesyncOffset = 0;
+	m_hShadowHandle = CLIENTSHADOW_INVALID_HANDLE;
+	m_nAlpha = 255;
+	m_flFadeScale = 0.0f;	// By default, things don't fade out automagically
+	m_nDistFadeStart = 0;
+	m_nDistFadeEnd = 0;
+	m_bAlphaOverride = false;
+	m_bShadowAlphaOverride = false;
+	m_nDistanceFadeMode = CLIENT_ALPHA_DISTANCE_FADE_USE_CENTER;
+}
+
+void CClientAlphaProperty::Init(IClientUnknown* pUnk)
+{
+	m_pOuter = pUnk;
+}
+
+IClientUnknown* CClientAlphaProperty::GetIClientUnknown()
+{
+	return m_pOuter;
+}
+
+void CClientAlphaProperty::SetShadowHandle(ClientShadowHandle_t hShadowHandle)
+{
+	m_hShadowHandle = hShadowHandle;
+}
+
+void CClientAlphaProperty::SetAlphaModulation(uint8 a)
+{
+	m_nAlpha = a;
+}
+
+void CClientAlphaProperty::EnableAlphaModulationOverride(bool bEnable)
+{
+	m_bAlphaOverride = bEnable;
+}
+
+void CClientAlphaProperty::EnableShadowAlphaModulationOverride(bool bEnable)
+{
+	m_bShadowAlphaOverride = bEnable;
+}
+
+// Sets an FX function
+void CClientAlphaProperty::SetRenderFX(RenderFx_t nRenderFx, RenderMode_t nRenderMode, float flStartTime, float flDuration)
+{
+	bool bStartTimeUnspecified = (flStartTime == FLT_MAX);
+	bool bRenderFxChanged = (m_nRenderFX != nRenderFx);
+
+	switch (nRenderFx)
+	{
+	case kRenderFxFadeIn:
+	case kRenderFxFadeOut:
+		Assert(!bStartTimeUnspecified || !bRenderFxChanged);
+		if (bStartTimeUnspecified)
+		{
+			flStartTime = gpGlobals->curtime;
+		}
+		break;
+
+	case kRenderFxFadeSlow:
+	case kRenderFxSolidSlow:
+		Assert(!bStartTimeUnspecified || !bRenderFxChanged);
+		if (bStartTimeUnspecified)
+		{
+			flStartTime = gpGlobals->curtime;
+		}
+		flDuration = 4.0f;
+		break;
+
+	case kRenderFxFadeFast:
+	case kRenderFxSolidFast:
+		Assert(!bStartTimeUnspecified || !bRenderFxChanged);
+		if (bStartTimeUnspecified)
+		{
+			flStartTime = gpGlobals->curtime;
+		}
+		flDuration = 1.0f;
+		break;
+	}
+
+	m_nRenderMode = nRenderMode;
+	m_nRenderFX = nRenderFx;
+	if (bRenderFxChanged || !bStartTimeUnspecified)
+	{
+		m_flRenderFxStartTime = flStartTime;
+		m_flRenderFxDuration = flDuration;
+	}
+}
+
+void CClientAlphaProperty::SetDesyncOffset(int nOffset)
+{
+	m_nDesyncOffset = nOffset;
+}
+
+void CClientAlphaProperty::SetDistanceFadeMode(ClientAlphaDistanceFadeMode_t nFadeMode)
+{
+	// Necessary since m_nDistanceFadeMode is stored in 1 bit
+	COMPILE_TIME_ASSERT(CLIENT_ALPHA_DISTANCE_FADE_MODE_COUNT <= (1 << CLIENT_ALPHA_DISTANCE_FADE_MODE_BIT_COUNT));
+	m_nDistanceFadeMode = nFadeMode;
+}
+
+
+// Sets fade parameters
+void CClientAlphaProperty::SetFade(float flGlobalFadeScale, float flDistFadeStart, float flDistFadeEnd)
+{
+	if (flDistFadeStart > flDistFadeEnd)
+	{
+		V_swap(flDistFadeStart, flDistFadeEnd);
+	}
+
+	// If a negative value is provided for the min fade distance, then base it off the max.
+	if (flDistFadeStart < 0)
+	{
+		flDistFadeStart = flDistFadeEnd + flDistFadeStart;
+		if (flDistFadeStart < 0)
+		{
+			flDistFadeStart = 0;
+		}
+	}
+
+	Assert(flDistFadeStart >= 0 && flDistFadeStart <= 65535);
+	Assert(flDistFadeEnd >= 0 && flDistFadeEnd <= 65535);
+
+	m_nDistFadeStart = (uint16)flDistFadeStart;
+	m_nDistFadeEnd = (uint16)flDistFadeEnd;
+	m_flFadeScale = flGlobalFadeScale;
+}
+
+
+//-----------------------------------------------------------------------------
+// Computes alpha value based on render fx
+//-----------------------------------------------------------------------------
+uint8 CClientAlphaProperty::ComputeRenderAlpha() const
+{
+	if (m_nRenderMode == kRenderNone || m_nRenderMode == kRenderEnvironmental)
+		return 0;
+
+	int blend = 0;
+	float flOffset = ((int)m_nDesyncOffset) * 363.0;// Use ent index to de-sync these fx
+
+	switch (m_nRenderFX)
+	{
+	case kRenderFxPulseSlowWide:
+		blend = m_nAlpha + 0x40 * sin(gpGlobals->curtime * 2 + flOffset);
+		break;
+
+	case kRenderFxPulseFastWide:
+		blend = m_nAlpha + 0x40 * sin(gpGlobals->curtime * 8 + flOffset);
+		break;
+
+	case kRenderFxPulseFastWider:
+		blend = (0xff * fabs(sin(gpGlobals->curtime * 12 + flOffset)));
+		break;
+
+	case kRenderFxPulseSlow:
+		blend = m_nAlpha + 0x10 * sin(gpGlobals->curtime * 2 + flOffset);
+		break;
+
+	case kRenderFxPulseFast:
+		blend = m_nAlpha + 0x10 * sin(gpGlobals->curtime * 8 + flOffset);
+		break;
+
+	case kRenderFxFadeOut:
+	case kRenderFxFadeFast:
+	case kRenderFxFadeSlow:
+	{
+		float flElapsed = gpGlobals->curtime - m_flRenderFxStartTime;
+		float flVal = RemapValClamped(flElapsed, 0, m_flRenderFxDuration, m_nAlpha, 0);
+		flVal = clamp(flVal, 0, 255);
+		blend = (int)flVal;
+	}
+	break;
+
+	case kRenderFxFadeIn:
+	case kRenderFxSolidFast:
+	case kRenderFxSolidSlow:
+	{
+		float flElapsed = gpGlobals->curtime - m_flRenderFxStartTime;
+		float flVal = RemapValClamped(flElapsed, 0, m_flRenderFxDuration, 0, m_nAlpha);
+		flVal = clamp(flVal, 0, 255);
+		blend = (int)flVal;
+	}
+	break;
+
+	case kRenderFxStrobeSlow:
+		blend = 20 * sin(gpGlobals->curtime * 4 + flOffset);
+		blend = (blend < 0) ? 0 : m_nAlpha;
+		break;
+
+	case kRenderFxStrobeFast:
+		blend = 20 * sin(gpGlobals->curtime * 16 + flOffset);
+		blend = (blend < 0) ? 0 : m_nAlpha;
+		break;
+
+	case kRenderFxStrobeFaster:
+		blend = 20 * sin(gpGlobals->curtime * 36 + flOffset);
+		blend = (blend < 0) ? 0 : m_nAlpha;
+		break;
+
+	case kRenderFxFlickerSlow:
+		blend = 20 * (sin(gpGlobals->curtime * 2) + sin(gpGlobals->curtime * 17 + flOffset));
+		blend = (blend < 0) ? 0 : m_nAlpha;
+		break;
+
+	case kRenderFxFlickerFast:
+		blend = 20 * (sin(gpGlobals->curtime * 16) + sin(gpGlobals->curtime * 23 + flOffset));
+		blend = (blend < 0) ? 0 : m_nAlpha;
+		break;
+
+	case kRenderFxNone:
+	default:
+		blend = (m_nRenderMode == kRenderNormal) ? 255 : m_nAlpha;
+		break;
+	}
+
+	blend = clamp(blend, 0, 255);
+
+	if (m_bAlphaOverride)
+	{
+		blend = m_pOuter->GetClientRenderable()->OverrideAlphaModulation(m_nAlpha);
+		blend = clamp(blend, 0, 255);
+	}
+
+	return blend;
+}
 
 
 //-----------------------------------------------------------------------------
@@ -333,8 +721,37 @@ private:
 CClientLeafSystem CClientLeafSystem::s_ClientLeafSystem;
 IClientLeafSystem *g_pClientLeafSystem = &CClientLeafSystem::s_ClientLeafSystem;
 EXPOSE_SINGLE_INTERFACE_GLOBALVAR( CClientLeafSystem, IClientLeafSystem, CLIENTLEAFSYSTEM_INTERFACE_VERSION, CClientLeafSystem::s_ClientLeafSystem );
+EXPOSE_SINGLE_INTERFACE_GLOBALVAR(CClientLeafSystem, IClientAlphaPropertyMgr, "ClientAlphaPropertyMgrV001", CClientLeafSystem::s_ClientLeafSystem);
 
 void CalcRenderableWorldSpaceAABB_Fast( IClientRenderable *pRenderable, Vector &absMin, Vector &absMax );
+//-----------------------------------------------------------------------------
+// Methods of IClientAlphaPropertyMgr
+//-----------------------------------------------------------------------------
+IClientAlphaProperty* CClientLeafSystem::CreateClientAlphaProperty(IClientUnknown* pUnk)
+{
+	++m_nAlphaPropertyCount;
+	CClientAlphaProperty* pProperty = (CClientAlphaProperty*)m_AlphaPropertyPool.Alloc(sizeof(CClientAlphaProperty));
+	Construct(pProperty);
+	pProperty->Init(pUnk);
+	return pProperty;
+}
+
+void CClientLeafSystem::DestroyClientAlphaProperty(IClientAlphaProperty* pAlphaProperty)
+{
+	if (!pAlphaProperty)
+		return;
+
+	Destruct(static_cast<CClientAlphaProperty*>(pAlphaProperty));
+	m_AlphaPropertyPool.Free(pAlphaProperty);
+	Assert(m_nAlphaPropertyCount > 0);
+	if (--m_nAlphaPropertyCount == 0)
+	{
+		m_AlphaPropertyPool.Clear();
+	}
+}
+
+
+
 
 //-----------------------------------------------------------------------------
 // Helper functions.
@@ -436,7 +853,7 @@ void CalcRenderableWorldSpaceAABB_Fast( IClientRenderable *pRenderable, Vector &
 //-----------------------------------------------------------------------------
 // constructor, destructor
 //-----------------------------------------------------------------------------
-CClientLeafSystem::CClientLeafSystem() : m_DrawStaticProps(true), m_DrawSmallObjects(true)
+CClientLeafSystem::CClientLeafSystem() : m_DrawStaticProps(true), m_DrawSmallObjects(true), m_AlphaPropertyPool(sizeof(CClientAlphaProperty), 1024, CUtlMemoryPool::GROW_SLOW, "CClientAlphaProperty")
 {
 	// Set up the bi-directional lists...
 	m_RenderablesInLeaf.Init( FirstRenderableInLeaf, FirstLeafInRenderable );

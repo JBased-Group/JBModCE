@@ -549,6 +549,7 @@ enum RenderTargetSizeMode_t
 typedef void (*MaterialBufferReleaseFunc_t)( );
 typedef void (*MaterialBufferRestoreFunc_t)( int nChangeFlags );	// see RestoreChangeFlags_t
 typedef void (*ModeChangeCallbackFunc_t)( void );
+typedef void (*EndFrameCleanupFunc_t)(void);
 
 typedef int VertexBufferHandle_t;
 typedef unsigned short MaterialHandle_t;
@@ -606,7 +607,6 @@ public:
 	//---------------------------------------------------------
 	virtual void					SetThreadMode( MaterialThreadMode_t mode, int nServiceThread = -1 ) = 0;
 	virtual MaterialThreadMode_t	GetThreadMode( ) = 0;
-	virtual bool					IsRenderThreadSafe( ) = 0;
 	virtual void					ExecuteQueued() = 0;
 
 	//---------------------------------------------------------
@@ -726,6 +726,10 @@ public:
 	// Installs a function to be called when we need to restore vertex buffers
 	virtual void				AddRestoreFunc( MaterialBufferRestoreFunc_t func ) = 0;
 	virtual void				RemoveRestoreFunc( MaterialBufferRestoreFunc_t func ) = 0;
+	
+	// Installs a function to be called when we need to delete objects at the end of the render frame
+	virtual void				AddEndFrameCleanupFunc(EndFrameCleanupFunc_t func) = 0;
+	virtual void				RemoveEndFrameCleanupFunc(EndFrameCleanupFunc_t func) = 0;
 
 	// Release temporary HW memory...
 	virtual void				ResetTempHWMemory( bool bExitingLevel = false ) = 0;
@@ -768,7 +772,7 @@ public:
 
 	// Used to enable editor materials. Must be called before Init.
 	virtual void				EnableEditorMaterials() = 0;
-
+	virtual void                EnableGBuffers() = 0;
 
 	// -----------------------------------------------------------
 	// Stub mode mode
@@ -836,9 +840,6 @@ public:
 	// (Or use the global IsErrorMaterial function, which checks if it's null too).
 	virtual IMaterial *			FindMaterial( char const* pMaterialName, const char *pTextureGroupName, bool complain = true, const char *pComplainPrefix = NULL ) = 0;
 
-	// Query whether a material is loaded (eg, whether FindMaterial will be nonblocking)
-	virtual bool				IsMaterialLoaded( char const* pMaterialName ) = 0;
-
 	//---------------------------------
 	// This is the interface for knowing what materials are available
 	// is to use the following functions to get a list of materials.  The
@@ -865,8 +866,6 @@ public:
 	virtual int					GetNumMaterials( ) const = 0;
 
 	//---------------------------------
-
-	virtual void				SetAsyncTextureLoadCache( void* hFileCache ) = 0;
 
 	virtual ITexture *			FindTexture( char const* pTextureName, const char *pTextureGroupName, bool complain = true, int nAdditionalCreationFlags = 0  ) = 0;
 

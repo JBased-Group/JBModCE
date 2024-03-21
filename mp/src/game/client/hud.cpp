@@ -618,7 +618,7 @@ void CHudTexture::DrawSelfCropped( int x, int y, int cropx, int cropy, int cropw
 		vgui::surface()->DrawSetTextColor( clr );
 		vgui::surface()->DrawSetTextPos( x, y );
 
-		vgui::CharRenderInfo info;
+		vgui::FontCharRenderInfo info;
 		if ( vgui::surface()->DrawGetUnicodeCharRenderInfo( cCharacterInFont, info ) )
 		{
 			if ( cropy )

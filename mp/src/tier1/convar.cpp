@@ -116,7 +116,7 @@ ConCommandBase::ConCommandBase( void )
 //-----------------------------------------------------------------------------
 ConCommandBase::ConCommandBase( const char *pName, const char *pHelpString /*=0*/, int flags /*= 0*/ )
 {
-	CreateBase( pName, pHelpString, flags );
+	Create( pName, pHelpString, flags );
 }
 
 //-----------------------------------------------------------------------------
@@ -153,7 +153,7 @@ CVarDLLIdentifier_t ConCommandBase::GetDLLIdentifier() const
 //			*pHelpString - 
 //			flags - 
 //-----------------------------------------------------------------------------
-void ConCommandBase::CreateBase( const char *pName, const char *pHelpString /*= 0*/, int flags /*= 0*/ )
+void ConCommandBase::Create( const char *pName, const char *pHelpString /*= 0*/, int flags /*= 0*/ )
 {
 	m_bRegistered = false;
 
@@ -533,7 +533,7 @@ ConCommand::ConCommand( const char *pName, FnCommandCallbackVoid_t callback, con
 	m_bHasCompletionCallback = completionFunc != 0 ? true : false;
 
 	// Setup the rest
-	BaseClass::CreateBase( pName, pHelpString, flags );
+	BaseClass::Create( pName, pHelpString, flags );
 }
 
 ConCommand::ConCommand( const char *pName, FnCommandCallback_t callback, const char *pHelpString /*= 0*/, int flags /*= 0*/, FnCommandCompletionCallback completionFunc /*= 0*/ )
@@ -546,7 +546,7 @@ ConCommand::ConCommand( const char *pName, FnCommandCallback_t callback, const c
 	m_bUsingCommandCallbackInterface = false;
 
 	// Setup the rest
-	BaseClass::CreateBase( pName, pHelpString, flags );
+	BaseClass::Create( pName, pHelpString, flags );
 }
 
 ConCommand::ConCommand( const char *pName, ICommandCallback *pCallback, const char *pHelpString /*= 0*/, int flags /*= 0*/, ICommandCompletionCallback *pCompletionCallback /*= 0*/ )
@@ -559,7 +559,7 @@ ConCommand::ConCommand( const char *pName, ICommandCallback *pCallback, const ch
 	m_bUsingCommandCallbackInterface = true;
 
 	// Setup the rest
-	BaseClass::CreateBase( pName, pHelpString, flags );
+	BaseClass::Create( pName, pHelpString, flags );
 }
 
 //-----------------------------------------------------------------------------
@@ -702,15 +702,20 @@ ConVar::~ConVar( void )
 //-----------------------------------------------------------------------------
 // Install a change callback (there shouldn't already be one....)
 //-----------------------------------------------------------------------------
-void ConVar::InstallChangeCallback( FnChangeCallback_t callback )
+void ConVar::InstallChangeCallback( FnChangeCallback_t callback, bool bInvoke)
 {
 	m_pParent->m_fnChangeCallbacks.AddToTail(callback);
 
-	if ( m_pParent->m_fnChangeCallbacks[0] )
+	if ( m_pParent->m_fnChangeCallbacks[0] && bInvoke)
 	{
 		// Call it immediately to set the initial value...
 		m_pParent->m_fnChangeCallbacks[0]( this, m_Value.m_pszString, m_Value.m_fValue );
 	}
+}
+
+void ConVar::RemoveChangeCallback(FnChangeCallback_t callback)
+{
+	m_pParent->m_fnChangeCallbacks.FindAndRemove(callback);
 }
 
 bool ConVar::IsFlagSet( int flag ) const
@@ -730,6 +735,11 @@ void ConVar::AddFlags( int flags )
 #ifdef ALLOW_DEVELOPMENT_CVARS
 	m_pParent->m_nFlags &= ~FCVAR_DEVELOPMENTONLY;
 #endif
+}
+
+int ConVar::GetFlags() const
+{
+	return m_pParent->m_nFlags;
 }
 
 bool ConVar::IsRegistered( void ) const
@@ -1013,7 +1023,7 @@ void ConVar::Create( const char *pName, const char *pDefaultValue, int flags /*=
 		Assert( 0 );
 	}
 
-	BaseClass::CreateBase( pName, pHelpString, flags );
+	BaseClass::Create( pName, pHelpString, flags );
 }
 
 //-----------------------------------------------------------------------------

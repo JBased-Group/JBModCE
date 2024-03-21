@@ -381,16 +381,18 @@ enum RenderFx_t
 	kRenderFxFlickerSlow, 
 	kRenderFxFlickerFast,
 	kRenderFxNoDissipation,
+	kRenderFxFadeOut,
+	kRenderFxFadeIn,
+	kRenderFxPulseFastWider,
+	kRenderFxGlowShell,			// Glowing Shell
 	kRenderFxDistort,			// Distort/scale/translate flicker
 	kRenderFxHologram,			// kRenderFxDistort + distance fade
 	kRenderFxExplode,			// Scale up really big!
-	kRenderFxGlowShell,			// Glowing Shell
 	kRenderFxClampMinScale,		// Keep this sprite from getting very small (SPRITES only!)
 	kRenderFxEnvRain,			// for environmental rendermode, make rain
 	kRenderFxEnvSnow,			//  "        "            "    , make snow
 	kRenderFxSpotlight,			// TEST CODE for experimental spotlight
 	kRenderFxRagdoll,			// HACKHACK: TEST CODE for signalling death of a ragdoll character
-	kRenderFxPulseFastWider,
 	kRenderFxMax
 };
 

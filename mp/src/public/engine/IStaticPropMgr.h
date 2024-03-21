@@ -30,7 +30,7 @@ class ICollideable;
 //-----------------------------------------------------------------------------
 // Interface versions for static props
 //-----------------------------------------------------------------------------
-#define INTERFACEVERSION_STATICPROPMGR_CLIENT		"StaticPropMgrClient004"
+#define INTERFACEVERSION_STATICPROPMGR_CLIENT		"StaticPropMgrClient005"
 #define INTERFACEVERSION_STATICPROPMGR_SERVER		"StaticPropMgrServer002"
 
 

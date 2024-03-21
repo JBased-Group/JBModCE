@@ -3401,11 +3401,11 @@ HCursor Panel::GetCursor()
 {
 	return _cursor;
 }
-
+/*
 void Panel::SetCursorAlwaysVisible( bool visible )
 {
 	surface()->SetCursorAlwaysVisible( visible );
-}
+}*/
 
 void Panel::SetMinimumSize(int wide,int tall)
 {
@@ -5898,6 +5898,12 @@ bool Panel::IsKeyBoardInputEnabled()
 bool Panel::IsMouseInputEnabled()
 {
 	return ipanel()->IsMouseInputEnabled( GetVPanel() );
+}
+
+bool Panel::HandleMouseCode(MouseCode code)
+{
+	Warning("IMPLEMENT Panel::HandleMouseCode!!!!!\n");
+	return true;
 }
 
 class CFloatProperty : public vgui::IPanelAnimationPropertyConverter

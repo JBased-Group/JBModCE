@@ -19,6 +19,7 @@
 #include "tier1/bitbuf.h"
 #include "inputsystem/ButtonCode.h"
 #include "modes.h"
+#include "string_t.h"
 
 #if !defined( _X360 )
 #include "xbox/xboxstubs.h"
@@ -27,6 +28,7 @@
 //-----------------------------------------------------------------------------
 // forward declarations
 //-----------------------------------------------------------------------------
+FORWARD_DECLARE_HANDLE(InputContextHandle_t);
 class ClientClass;
 struct model_t;
 class CSentence;
@@ -59,6 +61,8 @@ class IFileList;
 class CRenamedRecvTableInfo;
 class CMouthInfo;
 class IConVar;
+class ISPSharedMemory;
+class CSteamAPIContext;
 
 //-----------------------------------------------------------------------------
 // Purpose: This data structure is filled in by the engine when the client .dll requests information about
@@ -106,6 +110,11 @@ struct AudioState_t
 	bool m_bIsUnderwater;
 };
 
+enum EngineInputContextId_t
+{
+	ENGINE_INPUT_CONTEXT_GAME = 0,
+	ENGINE_INPUT_CONTEXT_GAMEUI,
+};
 
 //-----------------------------------------------------------------------------
 // Skybox visibility
@@ -176,6 +185,8 @@ struct OcclusionParams_t
 	float	m_flMinOccluderArea;
 };
 
+typedef void (*pfnDemoCustomDataCallback)(uint8* pData, size_t iSize);
+
 
 //-----------------------------------------------------------------------------
 // Just an interface version name for the random number interface
@@ -185,13 +196,13 @@ struct OcclusionParams_t
 #define VENGINE_CLIENT_RANDOM_INTERFACE_VERSION	"VEngineRandom001"
 
 // change this when the new version is incompatable with the old
-#define VENGINE_CLIENT_INTERFACE_VERSION		"VEngineClient014"
+#define VENGINE_CLIENT_INTERFACE_VERSION		"VEngineClient013"
 #define VENGINE_CLIENT_INTERFACE_VERSION_13		"VEngineClient013"
 
 //-----------------------------------------------------------------------------
 // Purpose: Interface exposed from the engine to the client .dll
 //-----------------------------------------------------------------------------
-abstract_class IVEngineClient013
+abstract_class IVEngineClient
 {
 public:
 	// Find the model's surfaces that intersect the given sphere.
@@ -245,9 +256,6 @@ public:
 	// Client DLL is hooking a model, loads the model into memory and returns  pointer to the model_t
 	virtual const model_t		*LoadModel( const char *pName, bool bProp = false ) = 0;
 
-	// Get accurate, sub-frame clock ( profiling use )
-	virtual float				Time( void ) = 0; 
-
 	// Get the exact server timesstamp ( server time ) from the last message received from the server
 	virtual float				GetLastTimeStamp( void ) = 0; 
 
@@ -284,6 +292,7 @@ public:
 	virtual bool				IsConnected( void ) = 0;
 	// Returns true if the loading plaque should be drawn
 	virtual bool				IsDrawingLoadingImage( void ) = 0;
+	virtual void				HideLoadingPlaque(void) = 0;
 
 	// Prints the formatted string to the notification area of the screen ( down the right hand edge
 	//  numbered lines starting at position 0
@@ -372,6 +381,7 @@ public:
 
 	// Returns true if the box touches the specified area's frustum.
 	virtual bool		DoesBoxTouchAreaFrustum( const Vector &mins, const Vector &maxs, int iArea ) = 0;
+	virtual int			GetFrustumList(Frustum_t** pList, int listMax) = 0;
 
 	// Sets the hearing origin (i.e., the origin and orientation of the listener so that the sound system can spatialize 
 	//  sound appropriately ).
@@ -421,17 +431,19 @@ public:
 	virtual int			GetDemoPlaybackTotalTicks( void ) = 0;
 	// Is the game paused?
 	virtual bool		IsPaused( void ) = 0;
+
+	virtual float GetTimescale(void) const = 0;
 	// Is the game currently taking a screenshot?
 	virtual bool		IsTakingScreenshot( void ) = 0;
 	// Is this a HLTV broadcast ?
 	virtual bool		IsHLTV( void ) = 0;
+	// Is this a Replay demo?
+	virtual bool		IsReplay(void) = 0;
 	// is this level loaded as just the background to the main menu? (active, but unplayable)
 	virtual bool		IsLevelMainMenuBackground( void ) = 0;
 	// returns the name of the background level
 	virtual void		GetMainMenuBackgroundName( char *dest, int destlen ) = 0;
 
-	// Get video modes
-	virtual void		GetVideoModes( int &nCount, vmode_s *&pModes ) = 0;
 
 	// Occlusion system control
 	virtual void		SetOcclusionParameters( const OcclusionParams_t &params ) = 0;
@@ -498,9 +510,6 @@ public:
 
 	virtual bool			CopyFrameBufferToMaterial( const char *pMaterialName ) = 0;
 
-	// Matchmaking
-	virtual void			ChangeTeam( const char *pTeamName ) = 0;
-
 	// Causes the engine to read in the user's configuration on disk
 	virtual void			ReadConfiguration( const bool readDefault = false ) = 0; 
 
@@ -519,58 +528,140 @@ public:
 	virtual uint			OnStorageDeviceAttached( void ) = 0;
 	virtual void			OnStorageDeviceDetached( void ) = 0;
 
+	// generic screenshot writing
+	virtual void		WriteScreenshot(const char* pFilename) = 0;
+
 	virtual void			ResetDemoInterpolation( void ) = 0;
+
+	virtual int				GetActiveSplitScreenPlayerSlot() = 0;
+	virtual int				SetActiveSplitScreenPlayerSlot(int slot) = 0;
+
+	// This is the current # of players on the local host
+	virtual bool			SetLocalPlayerIsResolvable(char const* pchContext, int nLine, bool bResolvable) = 0;
+	virtual bool			IsLocalPlayerResolvable() = 0;
+
+	virtual int				GetSplitScreenPlayer(int nSlot) = 0;
+	virtual bool			IsSplitScreenActive() = 0;
+	virtual bool			IsValidSplitScreenSlot(int nSlot) = 0;
+	virtual int				FirstValidSplitScreenSlot() = 0; // -1 == invalid
+	virtual int				NextValidSplitScreenSlot(int nPreviousSlot) = 0; // -1 == invalid
+
+	//Finds or Creates a shared memory space, the returned pointer will automatically be AddRef()ed
+	virtual ISPSharedMemory* GetSinglePlayerSharedMemorySpace(const char* szName, int ent_num = MAX_EDICTS) = 0;
+
+	// Computes an ambient cube that includes ALL dynamic lights
+	virtual void ComputeLightingCube(const Vector& pt, bool bClamp, Vector* pBoxColors) = 0;
+
+	//All callbacks have to be registered before demo recording begins. TODO: Macro'ize a way to do it at startup
+	virtual void RegisterDemoCustomDataCallback(string_t szCallbackSaveID, pfnDemoCustomDataCallback pCallback) = 0;
+	virtual void RecordDemoCustomData(pfnDemoCustomDataCallback pCallback, const void* pData, size_t iDataLength) = 0;
+
+	// global sound pitch scaling
+	virtual void SetPitchScale(float flPitchScale) = 0;
+	virtual float GetPitchScale(void) = 0;
+
+	// Load/unload the SFM - used by Replay
+	virtual bool		LoadFilmmaker() = 0;
+	virtual void		UnloadFilmmaker() = 0;
+
+	// leaf flag management. Allows fast leaf enumeration of leaves that have a flag set
+
+	// set a bit in a leaf flag
+	virtual void SetLeafFlag(int nLeafIndex, int nFlagBits) = 0;
+
+	// you must call this once done modifying flags. Not super fast.
+	virtual void RecalculateBSPLeafFlags(void) = 0;
+
+	virtual bool DSPGetCurrentDASRoomNew(void) = 0;
+	virtual bool DSPGetCurrentDASRoomChanged(void) = 0;
+	virtual bool DSPGetCurrentDASRoomSkyAbove(void) = 0;
+	virtual float DSPGetCurrentDASRoomSkyPercent(void) = 0;
+	virtual void SetMixGroupOfCurrentMixer(const char* szgroupname, const char* szparam, float val, int setMixerType) = 0;
+	virtual int GetMixLayerIndex(const char* szmixlayername) = 0;
+	virtual void SetMixLayerLevel(int index, float level) = 0;
+
+
+	virtual bool IsCreatingReslist() = 0;
+	virtual bool IsCreatingXboxReslist() = 0;
+
+	virtual void SetTimescale(float flTimescale) = 0;
 
 	// Methods to set/get a gamestats data container so client & server running in same process can send combined data
 	virtual void SetGamestatsData( CGamestatsData *pGamestatsData ) = 0;
 	virtual CGamestatsData *GetGamestatsData() = 0;
 
-#if defined( USE_SDL )
-	// we need to pull delta's from the cocoa mgr, the engine vectors this for us
-	virtual void GetMouseDelta( int &x, int &y, bool bIgnoreNextMouseDelta = false ) = 0;
-#endif
+	// Given the string pBinding which may be bound to a key, 
+	//  returns the string name of the key to which this string is bound. Returns NULL if no such binding exists
+	// Increment start count to iterate through multiple keys bound to the same binding
+	// iAllowJoystick defaults to -1 witch returns joystick and non-joystick binds, 0 returns only non-joystick, 1 returns only joystick
+	virtual	const char* Key_LookupBindingEx(const char* pBinding, int iUserId = -1, int iStartCount = 0, int iAllowJoystick = -1) = 0;
+
+	// Updates dynamic light state. Necessary for light cache to work properly for d- and elights
+	virtual void UpdateDAndELights(void) = 0;
+
+	// Methods to get bug count for internal dev work stat tracking.
+	// Will get the bug count and clear it every map transition
+	virtual int			GetBugSubmissionCount() const = 0;
+	virtual void		ClearBugSubmissionCount() = 0;
+
+	// Is there water anywhere in the level?
+	virtual bool	DoesLevelContainWater() const = 0;
+
+	// How much time was spent in server simulation?
+	virtual float	GetServerSimulationFrameTime() const = 0;
+
+	virtual void SolidMoved(class IClientEntity* pSolidEnt, class ICollideable* pSolidCollide, const Vector* pPrevAbsOrigin, bool accurateBboxTriggerChecks) = 0;
+	virtual void TriggerMoved(class IClientEntity* pTriggerEnt, bool accurateBboxTriggerChecks) = 0;
+
+	// Using area bits, check whether the area of the specified point flows into the other areas
+	virtual void ComputeLeavesConnected(const Vector& vecOrigin, int nCount, const int* pLeafIndices, bool* pIsConnected) = 0;
+
+	// Is the engine in Commentary mode?
+	virtual bool IsInCommentaryMode(void) = 0;
+
+	virtual void SetBlurFade(float amount) = 0;
+	virtual bool IsTransitioningToLoad() = 0;
+
+	virtual void SearchPathsChangedAfterInstall() = 0;
+
+	virtual void ConfigureSystemLevel(int nCPULevel, int nGPULevel) = 0;
+
+	virtual void SetConnectionPassword(char const* pchCurrentPW) = 0;
+
+	virtual CSteamAPIContext* GetSteamAPIContext() = 0;
+
+	virtual void SubmitStatRecord(char const* szMapName, uint uiBlobVersion, uint uiBlobSize, const void* pvBlob) = 0;
 
 	// Sends a key values server command, not allowed from scripts execution
 	// Params:
 	//	pKeyValues	- key values to be serialized and sent to server
 	//				  the pointer is deleted inside the function: pKeyValues->deleteThis()
-	virtual void ServerCmdKeyValues( KeyValues *pKeyValues ) = 0;
+	virtual void ServerCmdKeyValues(KeyValues* pKeyValues) = 0;
+	// Tells the engine what and where to paint
+	virtual void PaintSurface(const model_t* model, const Vector& position, const Color& color, float radius) = 0;
+	// Enable paint in the engine for project Paint
+	virtual void EnablePaintmapRender() = 0;
+	virtual void TracePaintSurface(const model_t* model, const Vector& position, float radius, CUtlVector<Color>& surfColors) = 0;
+	virtual void RemoveAllPaint() = 0;
 
-	virtual bool IsSkippingPlayback( void ) = 0;
-	virtual bool IsLoadingDemo( void ) = 0;
-
-	// Returns true if the engine is playing back a "locally recorded" demo, which includes
-	// both SourceTV and replay demos, since they're recorded locally (on servers), as opposed
-	// to a client recording a demo while connected to a remote server.
-	virtual bool IsPlayingDemoALocallyRecordedDemo() = 0;
-
-	// Given the string pBinding which may be bound to a key, 
-	//  returns the string name of the key to which this string is bound. Returns NULL if no such binding exists
-	// Unlike Key_LookupBinding, leading '+' characters are not stripped from bindings.
-	virtual	const char			*Key_LookupBindingExact( const char *pBinding ) = 0;
-	
-	virtual void				AddPhonemeFile( const char *pszPhonemeFile ) = 0;
-
-};
-
-abstract_class IVEngineClient : public IVEngineClient013
-{
-public:
-	virtual uint GetProtocolVersion() = 0;
-	virtual bool IsWindowedMode() = 0;
-
-	// Flash the window (os specific)
-	virtual void	FlashWindow() = 0;
-
-	// Client version from the steam.inf, this will be compared to the GC version
-	virtual int GetClientVersion() const = 0; // engines build
-
-	// Is App Active 
 	virtual bool IsActiveApp() = 0;
 
-	virtual void DisconnectInternal() = 0;
+	// is this client running inside the same process as an active server?
+	virtual bool IsClientLocalToActiveServer() = 0;
 
-	virtual int GetInstancesRunningCount( ) = 0;
+	// Callback for LevelInit to tick the progress bar during time consuming operations
+	virtual void TickProgressBar() = 0;
+
+	// Returns the requested input context
+	virtual InputContextHandle_t GetInputContext(EngineInputContextId_t id) = 0;
+
+	// let client lock mouse to the window bounds
+	virtual void SetMouseWindowLock(bool bLockToWindow) = 0;
+
+	inline int GetProtocolVersion()
+	{
+		return 24;
+	}
 };
 
 

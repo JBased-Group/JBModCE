@@ -961,7 +961,7 @@ int CHLClient::Init( CreateInterfaceFn appSystemFactory, CGlobalVarsBase *pGloba
 		return false;
 	if ( (datacache = (IDataCache*)appSystemFactory(DATACACHE_INTERFACE_VERSION, NULL )) == NULL )
 		return false;
-	if ( !mdlcache )
+	if ((mdlcache = (IMDLCache*)appSystemFactory(MDLCACHE_INTERFACE_VERSION, NULL)) == NULL)
 		return false;
 	if ( (modelinfo = (IVModelInfoClient *)appSystemFactory(VMODELINFO_CLIENT_INTERFACE_VERSION, NULL )) == NULL )
 		return false;
@@ -995,10 +995,6 @@ int CHLClient::Init( CreateInterfaceFn appSystemFactory, CGlobalVarsBase *pGloba
 		return false;
 	if ( IsX360() && (matchmaking = (IMatchmaking *)appSystemFactory( VENGINE_MATCHMAKING_VERSION, NULL )) == NULL )
 		return false;
-#ifndef _XBOX
-	if ( ( gamestatsuploader = (IUploadGameStats *)appSystemFactory( INTERFACEVERSION_UPLOADGAMESTATS, NULL )) == NULL )
-		return false;
-#endif
 
 #if defined( REPLAY_ENABLED )
 	if ( IsPC() && (g_pEngineReplay = (IEngineReplay *)appSystemFactory( ENGINE_REPLAY_INTERFACE_VERSION, NULL )) == NULL )
@@ -1007,7 +1003,9 @@ int CHLClient::Init( CreateInterfaceFn appSystemFactory, CGlobalVarsBase *pGloba
 		return false;
 #endif
 
-	if (!g_pMatSystemSurface)
+	if ((g_pMatSystemSurface = (IMatSystemSurface*)appSystemFactory("MatSystemSurface006", NULL)) == NULL) //MAT_SYSTEM_SURFACE_INTERFACE_VERSION
+		return false;
+	if ((materials = g_pMaterialSystem = (IMaterialSystem*)appSystemFactory("VMaterialSystem080", NULL)) == NULL) //MATERIAL_SYSTEM_INTERFACE_VERSION
 		return false;
 
 #ifdef WORKSHOP_IMPORT_ENABLED
@@ -1041,7 +1039,8 @@ int CHLClient::Init( CreateInterfaceFn appSystemFactory, CGlobalVarsBase *pGloba
 	// Not fatal if the material system stub isn't around.
 	materials_stub = (IMaterialSystemStub*)appSystemFactory( MATERIAL_SYSTEM_STUB_INTERFACE_VERSION, NULL );
 
-	if( !g_pMaterialSystemHardwareConfig )
+
+	if ((g_pMaterialSystemHardwareConfig = (IMaterialSystemHardwareConfig*)appSystemFactory("MaterialSystemHardwareConfig013", NULL)) == NULL) //MATERIALSYSTEM_HARDWARECONFIG_INTERFACE_VERSION
 		return false;
 
 	// Hook up the gaussian random number generator
@@ -1055,10 +1054,10 @@ int CHLClient::Init( CreateInterfaceFn appSystemFactory, CGlobalVarsBase *pGloba
 	if (!Initializer::InitializeAllObjects())
 		return false;
 
-	if (!ParticleMgr()->Init(MAX_TOTAL_PARTICLES, materials))
-		return false;
+	//if (!ParticleMgr()->Init(MAX_TOTAL_PARTICLES, materials))
+	//	return false;
 
-
+	Msg("SiZEOF: %i\n", sizeof(ConVar));
 	if (!VGui_Startup( appSystemFactory ))
 		return false;
 
@@ -1074,7 +1073,7 @@ int CHLClient::Init( CreateInterfaceFn appSystemFactory, CGlobalVarsBase *pGloba
 	IGameSystem::Add( DetailObjectSystem() );
 	IGameSystem::Add( ViewportClientSystem() );
 	IGameSystem::Add( ClientEffectPrecacheSystem() );
-	IGameSystem::Add( g_pClientShadowMgr );
+	//IGameSystem::Add( g_pClientShadowMgr );
 	IGameSystem::Add( g_pColorCorrectionMgr );	// NOTE: This must happen prior to ClientThinkList (color correction is updated there)
 	IGameSystem::Add( ClientThinkList() );
 	IGameSystem::Add( ClientSoundscapeSystem() );
@@ -1133,13 +1132,13 @@ int CHLClient::Init( CreateInterfaceFn appSystemFactory, CGlobalVarsBase *pGloba
 	// Register user messages..
 	CUserMessageRegister::RegisterAll();
 
-	ClientVoiceMgr_Init();
+	//ClientVoiceMgr_Init();
 
 	// Embed voice status icons inside chat element
-	{
-		vgui::VPANEL parent = enginevgui->GetPanel( PANEL_CLIENTDLL );
-		GetClientVoiceMgr()->Init( &g_VoiceStatusHelper, parent );
-	}
+	//{
+	//	vgui::VPANEL parent = enginevgui->GetPanel( PANEL_CLIENTDLL );
+	//	GetClientVoiceMgr()->Init( &g_VoiceStatusHelper, parent );
+	//}
 
 	if ( !PhysicsDLLInit(appSystemFactory) )
 		return false;
@@ -1367,7 +1366,7 @@ void CHLClient::HudUpdate( bool bActive )
 	}
 
 	// run vgui animations
-	vgui::GetAnimationController()->UpdateAnimations( engine->Time() );
+	vgui::GetAnimationController()->UpdateAnimations( Plat_FloatTime() );
 
 	hudlcd->SetGlobalStat( "(time_int)", VarArgs( "%d", (int)gpGlobals->curtime ) );
 	hudlcd->SetGlobalStat( "(time_float)", VarArgs( "%.2f", gpGlobals->curtime ) );

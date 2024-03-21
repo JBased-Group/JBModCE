@@ -95,7 +95,7 @@ public:
 	ITexture* operator->() { return m_pTexture; }
 
 	// Assignment operator
-	void operator=(CTextureReference& ref) { m_pTexture = ref.m_pTexture; };
+	const CTextureReference& operator=(CTextureReference& ref);
 
 private:
 	ITexture* m_pTexture;

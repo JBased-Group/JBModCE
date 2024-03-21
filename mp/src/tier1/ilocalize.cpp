@@ -26,49 +26,6 @@ int ILocalize::ConvertANSIToUnicode(const char *ansi, wchar_t *unicode, int unic
 #endif
 }
 
-int ILocalize::ConvertUTF8ToUTF16(const char* utf8, wchar_t** utf16)
-{
-	if (*utf16 != nullptr)
-	{
-		return 0;
-	}
-
-	int size = Q_UTF8ToUTF16(utf8, nullptr, 0);
-	*utf16 = (wchar_t*)calloc(1, size);
-
-#ifdef POSIX
-	size = Q_UTF8ToUnicode(utf8, *utf16, size);
-#else
-	size = Q_UTF8ToUTF16(utf8, *utf16, size);
-#endif
-
-	return size / sizeof(wchar_t);
-}
-
-int ILocalize::ConvertUTF16ToUTF8(const wchar_t* utf16, char** utf8)
-{
-	if (*utf8 != nullptr)
-	{
-		return 0;
-	}
-
-#ifdef POSIX
-	int size = Q_UnicodeToUTF8(utf16, nullptr, 0);
-#else
-	int size = Q_UTF16ToUTF8(utf16, nullptr, 0);
-#endif
-
-	* utf8 = (char*)calloc(1, size);
-
-#ifdef POSIX
-	size = Q_UnicodeToUTF8(utf16, *utf8, size);
-#else
-	size = Q_UTF16ToUTF8(utf16, *utf8, size);
-#endif
-
-	return size;
-}
-
 //-----------------------------------------------------------------------------
 // Purpose: converts an unicode string to an english string
 //-----------------------------------------------------------------------------
@@ -186,15 +143,6 @@ void ConstructStringVArgsInternal_Impl(T *unicodeOutput, int unicodeBufferSizeIn
 	*outputPos = L'\0';
 }
 
-void ILocalize::ConstructStringVArgsInternal(char *unicodeOutput, int unicodeBufferSizeInBytes, const char *formatString, int numFormatParameters, va_list argList)
-{
-	ConstructStringVArgsInternal_Impl<char>( unicodeOutput, unicodeBufferSizeInBytes, formatString, numFormatParameters, argList );
-}
-
-void ILocalize::ConstructStringVArgsInternal(wchar_t *unicodeOutput, int unicodeBufferSizeInBytes, const wchar_t *formatString, int numFormatParameters, va_list argList)
-{
-	ConstructStringVArgsInternal_Impl<wchar_t>( unicodeOutput, unicodeBufferSizeInBytes, formatString, numFormatParameters, argList );
-}
 
 template < typename T >
 void ConstructStringArgsInternal_Impl(T* unicodeOutput, int unicodeBufferSizeInBytes, const T* formatString, int numFormatParameters, const CLocalizedStringArg* argList)
@@ -290,15 +238,6 @@ void ConstructStringArgsInternal_Impl(T* unicodeOutput, int unicodeBufferSizeInB
 	*outputPos = L'\0';
 }
 
-void ILocalize::ConstructStringArgsInternal(char* unicodeOutput, int unicodeBufferSizeInBytes, const char* formatString, int numFormatParameters, const CLocalizedStringArg* argList)
-{
-	ConstructStringArgsInternal_Impl<char>(unicodeOutput, unicodeBufferSizeInBytes, formatString, numFormatParameters, argList);
-}
-
-void ILocalize::ConstructStringArgsInternal(wchar_t* unicodeOutput, int unicodeBufferSizeInBytes, const wchar_t* formatString, int numFormatParameters, const CLocalizedStringArg* argList)
-{
-	ConstructStringArgsInternal_Impl<wchar_t>(unicodeOutput, unicodeBufferSizeInBytes, formatString, numFormatParameters, argList);
-}
 
 
 //-----------------------------------------------------------------------------
@@ -397,12 +336,3 @@ void ConstructStringKeyValuesInternal_Impl( T *unicodeOutput, int unicodeBufferS
 	*outputPos = '\0';
 }
 
-void ILocalize::ConstructStringKeyValuesInternal(char *unicodeOutput, int unicodeBufferSizeInBytes, const char *formatString, KeyValues *localizationVariables)
-{
-	ConstructStringKeyValuesInternal_Impl<char>( unicodeOutput, unicodeBufferSizeInBytes, formatString, localizationVariables );
-}
-
-void ILocalize::ConstructStringKeyValuesInternal(wchar_t *unicodeOutput, int unicodeBufferSizeInBytes, const wchar_t *formatString, KeyValues *localizationVariables)
-{
-	ConstructStringKeyValuesInternal_Impl<wchar_t>( unicodeOutput, unicodeBufferSizeInBytes, formatString, localizationVariables );
-}

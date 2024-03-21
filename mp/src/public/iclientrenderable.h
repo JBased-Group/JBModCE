@@ -157,6 +157,12 @@ public:
 	// Rendering clip plane, should be 4 floats, return value of NULL indicates a disabled render clip plane
 	virtual float *GetRenderClipPlane( void ) = 0;
 
+	virtual void RecordToolMessage() {}
+
+	virtual bool	ShouldDrawForSplitScreenUser(int nSlot) { return true; }
+	virtual uint8	OverrideAlphaModulation(uint8 nAlpha) { return nAlpha; }
+	virtual uint8	OverrideShadowAlphaModulation(uint8 nAlpha) { return nAlpha; }
+
 	// Get the skin parameter
 	virtual int		GetSkin() = 0;
 
@@ -166,8 +172,6 @@ public:
 	virtual void	OnThreadedDrawSetup() = 0;
 
 	virtual bool	UsesFlexDelayedWeights() = 0;
-
-	virtual void	RecordToolMessage() = 0;
 
 	virtual bool	IgnoresZBuffer( void ) const = 0;
 };

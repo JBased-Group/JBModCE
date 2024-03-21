@@ -316,7 +316,7 @@ public:
 };
 
 // change this when the new version is incompatable with the old
-#define VENGINE_RENDERVIEW_INTERFACE_VERSION	"VEngineRenderView014"
+#define VENGINE_RENDERVIEW_INTERFACE_VERSION	"VEngineRenderView013"
 
 #if defined(_STATIC_LINKED) && defined(CLIENT_DLL)
 namespace Client

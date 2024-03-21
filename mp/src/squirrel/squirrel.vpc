@@ -38,6 +38,11 @@ $Project "squirrel"
 		$File	"sqstdmath.cpp"
 		$File	"sqstdrex.cpp"
 	}
+	$Folder	"Link Libraries" 
+	{
+		$Lib	tier1
+		$Lib		interfaces
+	}
 }
 
 

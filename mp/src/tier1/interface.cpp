@@ -80,6 +80,7 @@ void* CreateInterfaceInternal( const char *pName, int *pReturnCode )
 			return pCur->m_CreateFn();
 		}
 	}
+
 	
 	if (pReturnCode)
 	{

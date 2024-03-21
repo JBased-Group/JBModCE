@@ -411,8 +411,6 @@ $Project
 		$File	"physpropclientside.cpp"
 		$File	"playerandobjectenumerator.cpp"
 		$File	"playerspawncache.cpp"
-		$File	"$SRCDIR\game\shared\point_bonusmaps_accessor.cpp"
-		$File	"$SRCDIR\game\shared\point_bonusmaps_accessor.h"
 		$File	"$SRCDIR\game\shared\point_posecontroller.cpp"
 		$File	"$SRCDIR\game\shared\precache_register.cpp"
 		$File	"$SRCDIR\game\shared\predictableid.cpp"
@@ -643,8 +641,6 @@ $Project
 			$File	"game_controls\baseviewport.cpp"
 			$File	"game_controls\basemodelpanel.cpp"
 			$File	"game_controls\basemodelpanel.h"
-			$File	"game_controls\basemodel_panel.cpp"
-			$File	"game_controls\basemodel_panel.h"
 			$File	"game_controls\ClientScoreBoardDialog.cpp"
 			$File	"game_controls\commandmenu.cpp"
 			$File	"game_controls\intromenu.cpp"
@@ -1101,6 +1097,7 @@ $Project
 		//Haptics
 		$File   "$SRCDIR\public\haptics\ihaptics.h"	[$WIN32]
 		$File   "$SRCDIR\public\haptics\haptic_utils.h"	[$WIN32]
+		$File   "$SRCDIR\public\GameUI\IGameConsole.h"
 	}
 
 	$Folder	"Game Shared Header Files"
@@ -1250,6 +1247,7 @@ $Project
 		$Lib		tier3
 		$Lib		vgui_controls
 		$Lib		vtf
+		$Lib		interfaces
 		$ImpLib		steam_api
 		
 		$Libexternal $LIBCOMMON/libcrypto [$OSXALL]

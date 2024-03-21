@@ -33,7 +33,7 @@ FORCEINLINE bool IsOpenGL( void )
 //-----------------------------------------------------------------------------
 // Material system interface version
 //-----------------------------------------------------------------------------
-#define MATERIALSYSTEM_HARDWARECONFIG_INTERFACE_VERSION		"MaterialSystemHardwareConfig012"
+#define MATERIALSYSTEM_HARDWARECONFIG_INTERFACE_VERSION		"MaterialSystemHardwareConfig013"
 
 // HDRFIXME NOTE: must match common_ps_fxc.h
 enum HDRType_t

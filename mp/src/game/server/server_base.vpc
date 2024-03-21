@@ -515,8 +515,6 @@ $Project
 		$File	"playerlocaldata.cpp"
 		$File	"playerlocaldata.h"
 		$File	"plugin_check.cpp"
-		$File	"$SRCDIR\game\shared\point_bonusmaps_accessor.cpp"
-		$File	"$SRCDIR\game\shared\point_bonusmaps_accessor.h"
 		$File	"point_camera.cpp"
 		$File	"point_camera.h"
 		$File	"point_devshot_camera.cpp"
@@ -1013,6 +1011,8 @@ $Project
 		$Lib	particles
 		$Lib	tier2
 		$Lib	tier3
+		$Lib	tier1
+		$Lib		interfaces
 		$ImpLibexternal steam_api
 	}
 }

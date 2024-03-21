@@ -3437,7 +3437,7 @@ int CGameMovement::CheckStuck( void )
 	// Only an issue on the client.
 	idx = player->IsServer() ? 0 : 1;
 
-	fTime = engine->Time();
+	fTime = Plat_FloatTime();
 	// Too soon?
 	if ( m_flStuckCheckTime[ player->entindex() ][ idx ] >=  fTime - CHECKSTUCK_MINTIME )
 	{

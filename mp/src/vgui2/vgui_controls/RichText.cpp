@@ -1355,8 +1355,8 @@ void RichText::RecalculateLineBreaks()
 		if ( i < m_TextStream.Count() - 1 && i+1 != selection0 && i != selection1 )
 			wchAfter = m_TextStream[i+1];
 
-		float flabcA;
-		surface()->GetKernedCharWidth( font, ch, wchBefore, wchAfter, w, flabcA );
+		w = surface()->GetCharacterWidth(font, ch);
+		
 		flLineWidthSoFar += w;
 	
 		// See if we've exceeded the width we have available, with 

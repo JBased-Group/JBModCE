@@ -13,6 +13,7 @@
 #endif
 
 #include <vgui/VGUI.h>
+#include "MouseCode.h"
 
 #ifdef GetClassName
 #undef GetClassName
@@ -75,6 +76,8 @@ public:
 	virtual bool IsAutoDeleteSet() = 0;
 	// deletes this
 	virtual void DeletePanel() = 0;
+	// Mouse Codes...
+	virtual bool HandleMouseCode(MouseCode code) = 0;
 
 	// interfaces
 	virtual void *QueryInterface(EInterfaceID id) = 0;

@@ -5907,7 +5907,7 @@ float C_BaseEntity::GetInterpolationAmount( int flags )
 	// demo was recorded locally.
 	const bool bPlayingDemo = engine->IsPlayingDemo();
 	const bool bPlayingMultiplayer = !bPlayingDemo && ( gpGlobals->maxClients > 1 );
-	const bool bPlayingNonLocallyRecordedDemo = bPlayingDemo && !engine->IsPlayingDemoALocallyRecordedDemo();
+	const bool bPlayingNonLocallyRecordedDemo = bPlayingDemo;
 	if ( bPlayingMultiplayer || bPlayingNonLocallyRecordedDemo )
 	{
 		return AdjustInterpolationAmount( this, TICKS_TO_TIME( TIME_TO_TICKS( GetClientInterpAmount() ) + serverTickMultiple ) );

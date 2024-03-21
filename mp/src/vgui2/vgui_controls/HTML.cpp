@@ -150,7 +150,7 @@ m_HideTooltip( this, &HTML::BrowserHideToolTip )
 	if ( m_SteamAPIContext.SteamHTMLSurface() )
 	{
 		m_SteamAPIContext.SteamHTMLSurface()->Init();
-		SteamAPICall_t hSteamAPICall = m_SteamAPIContext.SteamHTMLSurface()->CreateBrowser( surface()->GetWebkitHTMLUserAgentString(), NULL );
+		SteamAPICall_t hSteamAPICall = m_SteamAPIContext.SteamHTMLSurface()->CreateBrowser("JBMod:CE", NULL);
 		m_SteamCallResultBrowserReady.Set( hSteamAPICall, this, &HTML::OnBrowserReady );
 	}
 	else
@@ -1242,7 +1242,7 @@ void HTML::BrowserNeedsPaint( HTML_NeedsPaint_t *pCallback )
 	{
 		m_bNeedsFullTextureUpload = false;
 		if ( m_iHTMLTextureID != 0 )
-			surface()->DeleteTextureByID( m_iHTMLTextureID );
+			surface()->DestroyTextureID( m_iHTMLTextureID );
 
 		// if the dimensions changed we also need to re-create the texture ID to support the overlay properly (it won't resize a texture on the fly, this is the only control that needs
 		//   to so lets have a tiny bit more code here to support that)
@@ -1254,7 +1254,8 @@ void HTML::BrowserNeedsPaint( HTML_NeedsPaint_t *pCallback )
 	else if ( (int)pCallback->unUpdateWide > 0 && (int)pCallback->unUpdateTall > 0 )
 	{
 		// same size texture, just bits changing in it, lets twiddle
-		surface()->DrawUpdateRegionTextureRGBA( m_iHTMLTextureID, pCallback->unUpdateX, pCallback->unUpdateY, (const unsigned char *)pCallback->pBGRA, pCallback->unUpdateWide, pCallback->unUpdateTall, IMAGE_FORMAT_BGRA8888 );
+		Warning("Implement surface()->DrawUpdateRegionTextureRGBA !! %s:%i\n", __FILE__, __LINE__);
+		//surface()->DrawUpdateRegionTextureRGBA( m_iHTMLTextureID, pCallback->unUpdateX, pCallback->unUpdateY, (const unsigned char *)pCallback->pBGRA, pCallback->unUpdateWide, pCallback->unUpdateTall, IMAGE_FORMAT_BGRA8888 );
 	}
 	else
 	{

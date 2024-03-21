@@ -186,5 +186,18 @@ $Project "Client"
 			$File	"$SRCDIR\game\client\jbmodce\mountingmenu.cpp"
 			$File	"$SRCDIR\game\client\jbmodce\mountingmenu.h"
 		}
+		
+		$Folder "GameUI"
+		{
+			$File	"$SRCDIR\game\client\gameui\engineinterface.h"
+			$File	"$SRCDIR\game\client\gameui\gameui_util.h"
+			$File	"$SRCDIR\game\client\gameui\gameui_util.cpp"
+			$File	"$SRCDIR\game\client\gameui\gameui_interface.h"
+			$File	"$SRCDIR\game\client\gameui\gameui_interface.cpp"
+			$File	"$SRCDIR\game\client\gameui\gameconsoledialog.h"
+			$File	"$SRCDIR\game\client\gameui\gameconsoledialog.cpp"
+			$File	"$SRCDIR\game\client\gameui\gameconsole.h"
+			$File	"$SRCDIR\game\client\gameui\gameconsole.cpp"
+		}
 	}
 }

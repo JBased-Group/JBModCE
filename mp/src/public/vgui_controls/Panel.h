@@ -313,7 +313,7 @@ public:
 
 	virtual void SetCursor(HCursor cursor);
 	virtual HCursor GetCursor();
-	virtual void SetCursorAlwaysVisible( bool visible );
+	//virtual void SetCursorAlwaysVisible( bool visible );
 	virtual void RequestFocus(int direction = 0);
 	virtual bool HasFocus();
 	virtual void InvalidateLayout(bool layoutNow = false, bool reloadScheme = false);
@@ -509,6 +509,7 @@ public:
 	virtual void SetKeyBoardInputEnabled( bool state );
 	virtual bool IsMouseInputEnabled();
 	virtual bool IsKeyBoardInputEnabled();
+	virtual bool HandleMouseCode(MouseCode code);
 
 	virtual void DrawTexturedBox( int x, int y, int wide, int tall, Color color, float normalizedAlpha );
 	virtual void DrawBox(int x, int y, int wide, int tall, Color color, float normalizedAlpha, bool hollow = false );

@@ -141,7 +141,7 @@ public:
 	virtual CVarDLLIdentifier_t	GetDLLIdentifier() const;
 
 protected:
-	virtual void				CreateBase( const char *pName, const char *pHelpString = 0, 
+	virtual void				Create( const char *pName, const char *pHelpString = 0, 
 									int flags = 0 );
 
 	// Used internally by OneTimeInit to initialize/shutdown
@@ -348,10 +348,12 @@ public:
 	virtual const char*			GetBaseName(void) const;
 	virtual int					GetSplitScreenPlayerSlot() const;
 	virtual void				AddFlags( int flags );
+	virtual int					GetFlags() const;
 	virtual	bool				IsCommand( void ) const;
 
 	// Install a change callback (there shouldn't already be one....)
-	void InstallChangeCallback( FnChangeCallback_t callback );
+	void InstallChangeCallback( FnChangeCallback_t callback, bool bInvoke = true);
+	void RemoveChangeCallback(FnChangeCallback_t callbackToRemove);
 
 	int GetChangeCallbackCount() const { return m_pParent->m_fnChangeCallbacks.Count(); }
 	FnChangeCallback_t GetChangeCallback(int slot) const { return m_pParent->m_fnChangeCallbacks[slot]; }
@@ -362,6 +364,8 @@ public:
 	FORCEINLINE_CVAR bool			GetBool() const {  return !!GetInt(); }
 	FORCEINLINE_CVAR char const	   *GetString( void ) const;
 
+	template <typename T> T Get(void) const;
+	template <typename T> T Get(T*) const;
 	// Any function that allocates/frees memory needs to be virtual or else you'll have crashes
 	//  from alloc/free across dll/exe boundaries.
 	
@@ -409,8 +413,7 @@ private:
 
 	// Used internally by OneTimeInit to initialize.
 	virtual void				Init();
-	int GetFlags() { return m_pParent->m_nFlags; }
-private:
+protected:
 
 	// This either points to "this" or it points to the original declaration of a ConVar.
 	// This allows ConVars to exist in separate modules, and they all use the first one to be declared.
@@ -572,6 +575,14 @@ FORCEINLINE_CVAR const char *ConVarRef::GetDefault() const
 	return m_pConVarState->m_pszDefaultValue;
 }
 
+template <> FORCEINLINE_CVAR float			ConVar::Get<float>(void) const { return GetFloat(); }
+template <> FORCEINLINE_CVAR int			ConVar::Get<int>(void) const { return GetInt(); }
+template <> FORCEINLINE_CVAR bool			ConVar::Get<bool>(void) const { return GetBool(); }
+template <> FORCEINLINE_CVAR const char* ConVar::Get<const char*>(void) const { return GetString(); }
+template <> FORCEINLINE_CVAR float			ConVar::Get<float>(float* p) const { return (*p = GetFloat()); }
+template <> FORCEINLINE_CVAR int			ConVar::Get<int>(int* p) const { return (*p = GetInt()); }
+template <> FORCEINLINE_CVAR bool			ConVar::Get<bool>(bool* p) const { return (*p = GetBool()); }
+template <> FORCEINLINE_CVAR const char* ConVar::Get<const char*>(char const** p) const { return (*p = GetString()); }
 
 //-----------------------------------------------------------------------------
 // Called by the framework to register ConCommands with the ICVar
