@@ -887,7 +887,7 @@ public:
 		m_pItems = m_pLimit= 0;
 	}
 
-	void Run( ITEM_TYPE *pItems, unsigned nItems, int nChunkSize = 1, int nMaxParallel = INT_MAX, IThreadPool *pThreadPool = NULL )
+	void Run( ITEM_TYPE *pItems, unsigned nItems, int nChunkSize = 1, int nMaxParallel = 1, IThreadPool *pThreadPool = NULL )
 	{
 		if ( nItems == 0 )
 			return;
@@ -989,7 +989,7 @@ private:
 #pragma warning(pop)
 
 template <typename ITEM_TYPE> 
-inline void ParallelProcess( ITEM_TYPE *pItems, unsigned nItems, void (*pfnProcess)( ITEM_TYPE & ), void (*pfnBegin)() = NULL, void (*pfnEnd)() = NULL, int nMaxParallel = INT_MAX )
+inline void ParallelProcess( ITEM_TYPE *pItems, unsigned nItems, void (*pfnProcess)( ITEM_TYPE & ), void (*pfnBegin)() = NULL, void (*pfnEnd)() = NULL, int nMaxParallel = 1 )
 {
 	CParallelProcessor<ITEM_TYPE, CFuncJobItemProcessor<ITEM_TYPE> > processor;
 	processor.m_ItemProcessor.Init( pfnProcess, pfnBegin, pfnEnd );
