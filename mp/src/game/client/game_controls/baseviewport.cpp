@@ -668,6 +668,11 @@ void CBaseViewport::FireGameEvent( IGameEvent * event)
 	}
 }
 
+int	CBaseViewport::GetEventDebugID(void)
+{
+	return 0;
+}
+
 //-----------------------------------------------------------------------------
 // Purpose: 
 //-----------------------------------------------------------------------------

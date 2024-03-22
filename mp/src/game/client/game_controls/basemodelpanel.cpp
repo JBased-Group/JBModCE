@@ -596,7 +596,7 @@ void CModelPanel::Paint()
 	}
 
 	pRenderContext->SetLightingOrigin( vec3_origin );
-	pRenderContext->SetAmbientLight( 0.4, 0.4, 0.4 );
+	//pRenderContext->SetAmbientLight( 0.4, 0.4, 0.4 );
 
 	static Vector white[6] = 
 	{

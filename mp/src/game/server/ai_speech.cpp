@@ -438,7 +438,7 @@ bool CAI_Expresser::SpeakDispatchResponse( AIConcept_t concept, AI_Response& res
 
 		if ( response.IsApplyContextToWorld() )
 		{
-			CBaseEntity *pEntity = CBaseEntity::Instance( engine->PEntityOfEntIndex( 0 ) );
+			CBaseEntity *pEntity = CBaseEntity::Instance( INDEXENT( 0 ) );
 			if ( pEntity )
 			{
 				pEntity->AddContext( response.GetContext() );

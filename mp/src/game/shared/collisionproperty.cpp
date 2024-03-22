@@ -45,7 +45,6 @@ public:
 	virtual void LevelShutdownPostEntity();
 
 	// Members of IPartitionQueryCallback
-	virtual void OnPreQuery_V1()	{ Assert( 0 ); }
 	virtual void OnPreQuery( SpatialPartitionListMask_t listMask );
 	virtual void OnPostQuery( SpatialPartitionListMask_t listMask );
 

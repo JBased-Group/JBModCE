@@ -3508,7 +3508,7 @@ static void PlayCDTrack( int iTrack )
 	edict_t *pClient;
 	
 	// manually find the single player. 
-	pClient = engine->PEntityOfEntIndex( 1 );
+	pClient = INDEXENT( 1 );
 
 	Assert(gpGlobals->maxClients == 1);
 	

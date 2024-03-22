@@ -573,7 +573,7 @@ void CPointClientCommand::InputCommand( inputdata_t& inputdata )
 	edict_t *pClient = NULL;
 	if ( gpGlobals->maxClients == 1 )
 	{
-		pClient = engine->PEntityOfEntIndex( 1 );
+		pClient = INDEXENT( 1 );
 	}
 	else
 	{
@@ -587,7 +587,7 @@ void CPointClientCommand::InputCommand( inputdata_t& inputdata )
 		if ( IsInCommentaryMode() && !pClient )
 		{
 			// Commentary is stuffing a command in. We'll pretend it came from the first player.
-			pClient = engine->PEntityOfEntIndex( 1 );
+			pClient = INDEXENT( 1 );
 		}
 	}
 

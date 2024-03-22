@@ -216,14 +216,14 @@ void ProcessQueryCacheUpdate( QueryCacheUpdateRecord_t &workItem )
 
 static void PreUpdateQueryCache()
 {
-	//mdlcache->BeginCoarseLock();			// x360 only - will need to port for this in the future
+	mdlcache->BeginCoarseLock();			// x360 only - will need to port for this in the future
 	mdlcache->BeginLock();
 }
 
 static void PostUpdateQueryCache()
 {
 	mdlcache->EndLock();
-	//mdlcache->EndCoarseLock();			// x360 only - will need to port for this in the future
+	mdlcache->EndCoarseLock();			// x360 only - will need to port for this in the future
 }
 
 
@@ -241,7 +241,7 @@ void UpdateQueryCache( void )
 			workList[i].m_nNumHashChainsToUpdate = ARRAYSIZE( s_HashChains ) - nCurEntry;
 		nCurEntry += ARRAYSIZE( s_HashChains ) / N_WAYS_TO_SPLIT_CACHE_UPDATE;
 	}
-	ParallelProcess( "ProcessQueryCacheUpdate", workList, N_WAYS_TO_SPLIT_CACHE_UPDATE, ProcessQueryCacheUpdate, PreUpdateQueryCache, PostUpdateQueryCache, ( sv_disable_querycache.GetBool() ) ? 0 : INT_MAX );
+	ParallelProcess(workList, N_WAYS_TO_SPLIT_CACHE_UPDATE, ProcessQueryCacheUpdate, PreUpdateQueryCache, PostUpdateQueryCache, (sv_disable_querycache.GetBool()) ? 0 : INT_MAX);
 	// now, we need to take all of the obsolete cache entries each thread generated and add them to
 	// the victim cache
 	for( int i = 0 ; i < N_WAYS_TO_SPLIT_CACHE_UPDATE; i++ )

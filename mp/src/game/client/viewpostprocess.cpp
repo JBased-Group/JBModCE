@@ -411,6 +411,19 @@ public:
 	void IssueQuery( int frm_num );
 };
 
+
+struct ShaderStencilState_t
+{
+	bool m_bEnable;
+	StencilOperation_t m_FailOp;
+	StencilOperation_t m_ZFailOp;
+	StencilOperation_t m_PassOp;
+	StencilComparisonFunction_t m_CompareFunc;
+	int m_nReferenceValue;
+	uint32 m_nTestMask;
+	uint32 m_nWriteMask;
+};
+
 void CHistogram_entry_t::IssueQuery( int frm_num )
 {
 	CMatRenderContextPtr pRenderContext( materials );
@@ -463,22 +476,19 @@ void CHistogram_entry_t::IssueQuery( int frm_num )
 	use_t_scale->SetFloatValue( tscale );
 
 	m_npixels = ( 1 + scrx_max - scrx_min ) * ( 1 + scry_max - scry_min );
-
-	if ( mat_tonemapping_occlusion_use_stencil.GetInt() )
+	//ShaderStencilState_t state;
+	/*if (mat_tonemapping_occlusion_use_stencil.GetInt())
 	{
-		pRenderContext->SetStencilWriteMask( 1 );
-
-		// AV - We don't need to clear stencil here because it's already been cleared at the beginning of the frame
-		//pRenderContext->ClearStencilBufferRectangle( scrx_min, scry_min, scrx_max, scry_max, 0 );
-
-		pRenderContext->SetStencilEnable( true );
-		pRenderContext->SetStencilPassOperation( STENCILOPERATION_REPLACE );
-		pRenderContext->SetStencilCompareFunction( STENCILCOMPARISONFUNCTION_ALWAYS );
-		pRenderContext->SetStencilFailOperation( STENCILOPERATION_KEEP );
-		pRenderContext->SetStencilZFailOperation( STENCILOPERATION_KEEP );
-		pRenderContext->SetStencilReferenceValue( 1 );
+		state.m_nWriteMask = 1;
+		state.m_bEnable = true;
+		state.m_PassOp = SHADER_STENCILOP_SET_TO_REFERENCE;
+		state.m_CompareFunc = SHADER_STENCILFUNC_ALWAYS;
+		state.m_FailOp = SHADER_STENCILOP_KEEP;
+		state.m_ZFailOp = SHADER_STENCILOP_KEEP;
+		state.m_nReferenceValue = 1;
+		pRenderContext->SetStencilState(state);
 	}
-	else
+	else*/
 	{
 		pRenderContext->BeginOcclusionQueryDrawing( m_occ_handle );
 	}
@@ -495,19 +505,20 @@ void CHistogram_entry_t::IssueQuery( int frm_num )
 											  scrx_max, scry_max,
 											  dest_width, dest_height);
 
-	if ( mat_tonemapping_occlusion_use_stencil.GetInt() )
+	/*if (mat_tonemapping_occlusion_use_stencil.GetInt())
 	{
 		// now, start counting how many pixels had their stencil bit set via an occlusion query
 		pRenderContext->BeginOcclusionQueryDrawing( m_occ_handle );
 
 		// now, issue an occlusion query using stencil as the mask
-		pRenderContext->SetStencilEnable( true );
-		pRenderContext->SetStencilTestMask( 1 );
-		pRenderContext->SetStencilPassOperation( STENCILOPERATION_KEEP );
-		pRenderContext->SetStencilCompareFunction( STENCILCOMPARISONFUNCTION_EQUAL );
-		pRenderContext->SetStencilFailOperation( STENCILOPERATION_KEEP );
-		pRenderContext->SetStencilZFailOperation( STENCILOPERATION_KEEP );
-		pRenderContext->SetStencilReferenceValue( 1 );
+		state.m_bEnable = true;
+		state.m_nTestMask = 1;
+		state.m_PassOp = SHADER_STENCILOP_KEEP;
+		state.m_CompareFunc = SHADER_STENCILFUNC_EQUAL;
+		state.m_FailOp = SHADER_STENCILOP_KEEP;
+		state.m_ZFailOp = SHADER_STENCILOP_KEEP;
+		state.m_nReferenceValue = 1;
+		pRenderContext->SetStencilState(state);
 		IMaterial *stest_mat=materials->FindMaterial( "dev/no_pixel_write", TEXTURE_GROUP_OTHER, true);
 		pRenderContext->DrawScreenSpaceRectangle( stest_mat,
 												  scrx_min, scry_min,
@@ -517,7 +528,7 @@ void CHistogram_entry_t::IssueQuery( int frm_num )
 												  scrx_max, scry_max,
 												  dest_width, dest_height);
 		pRenderContext->SetStencilEnable( false );
-	}
+	}*/
 	pRenderContext->EndOcclusionQueryDrawing( m_occ_handle );
 	if ( m_state == HESTATE_INITIAL )
 		m_state = HESTATE_FIRST_QUERY_IN_FLIGHT;
@@ -1123,7 +1134,7 @@ void ResetToneMapping(float value)
 {
 	CMatRenderContextPtr pRenderContext( materials );
 	s_nInAverage = 0;
-	pRenderContext->ResetToneMappingScale(value);
+	pRenderContext->SetToneMappingScaleLinear(Vector(value, value, value));
 }
 
 static ConVar mat_force_tonemap_scale( "mat_force_tonemap_scale", "0.0", FCVAR_CHEAT );
@@ -1144,12 +1155,12 @@ static void SetToneMapScale(IMatRenderContext *pRenderContext, float newvalue, f
 	if( flForcedTonemapScale > 0.0f )
 	{
 		mat_hdr_tonemapscale.SetValue( flForcedTonemapScale );
-		pRenderContext->ResetToneMappingScale( flForcedTonemapScale );
+		//pRenderContext->ResetToneMappingScale( flForcedTonemapScale );
 		return;
 	}
 
 	mat_hdr_tonemapscale.SetValue( newvalue );
-	pRenderContext->SetGoalToneMappingScale( newvalue );
+	//pRenderContext->SetGoalToneMappingScale( newvalue );
 
 	if ( s_nInAverage < ARRAYSIZE( s_MovingAverageToneMapScale ))
 	{
@@ -1177,7 +1188,7 @@ static void SetToneMapScale(IMatRenderContext *pRenderContext, float newvalue, f
 		}
 		avg *= ( 1.0 / sumweights );
 		avg = MIN( maxvalue, MAX( minvalue, avg ));
-		pRenderContext->SetGoalToneMappingScale( avg );
+		//pRenderContext->SetGoalToneMappingScale( avg );
 		mat_hdr_tonemapscale.SetValue( avg );
 	}
 }
@@ -1440,10 +1451,6 @@ static float GetBloomAmount( void )
 	if ( mat_fullbright.GetInt() == 1 )
 	{
 		bBloomEnabled = false;
-	}
-	if( !g_pMaterialSystemHardwareConfig->CanDoSRGBReadFromRTs() && g_pMaterialSystemHardwareConfig->FakeSRGBWrite() )
-	{
-		bBloomEnabled = false;		
 	}
 
 	float flBloomAmount=0.0;
@@ -2513,7 +2520,7 @@ void DoEnginePostProcessing( int x, int y, int w, int h, bool bFlashlightIsOn, b
 
 					bool bVisionOverride = ( localplayer_visionflags.GetInt() & ( 0x01 ) ); // Pyro-vision Goggles
 
-					if ( bVisionOverride && g_pMaterialSystemHardwareConfig->SupportsPixelShaders_2_0() && pyro_vignette.GetInt() > 0 )
+					if ( bVisionOverride && pyro_vignette.GetInt() > 0 )
 					{
 						if ( bFBUpdated )
 						{
@@ -2568,7 +2575,7 @@ void DoEnginePostProcessing( int x, int y, int w, int h, bool bFlashlightIsOn, b
 					float avg_lum = MAX( 0.0001, g_HDR_HistogramSystem.GetTargetTonemapScalar() );
 					float scalevalue = MAX( flAutoExposureMin,
 										 MIN( flAutoExposureMax, 0.18 / avg_lum ));
-					pRenderContext->SetGoalToneMappingScale( scalevalue );
+					//pRenderContext->SetGoalToneMappingScale( scalevalue );
 					mat_hdr_tonemapscale.SetValue( scalevalue );
 				}
 			}

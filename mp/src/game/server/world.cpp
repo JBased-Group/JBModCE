@@ -623,7 +623,7 @@ void CWorld::Precache( void )
 	SENTENCEG_Init();
 
 	// Precache standard particle systems
-	PrecacheStandardParticleSystems( );
+	// PrecacheStandardParticleSystems( );
 
 // the area based ambient sounds MUST be the first precache_sounds
 
@@ -703,7 +703,7 @@ void CWorld::Precache( void )
 //-----------------------------------------------------------------------------
 float GetRealTime()
 {
-	return engine->Time();
+	return Plat_FloatTime();
 }
 
 

@@ -680,7 +680,7 @@ void CBasePlayer::PlayStepSound( Vector &vecOrigin, surfacedata_t *psurface, flo
 		return;
 
 	int nSide = m_Local.m_nStepside;
-	unsigned short stepSoundName = nSide ? psurface->sounds.stepleft : psurface->sounds.stepright;
+	unsigned short stepSoundName = nSide ? psurface->sounds.walkStepLeft : psurface->sounds.walkStepRight;
 	if ( !stepSoundName )
 		return;
 

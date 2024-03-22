@@ -95,7 +95,6 @@ public:
 class IPartitionQueryCallback
 {
 public:
-	virtual void OnPreQuery_V1() = 0;
 	virtual void OnPreQuery( SpatialPartitionListMask_t listMask ) = 0;
 	virtual void OnPostQuery( SpatialPartitionListMask_t listMask ) = 0;
 };
@@ -113,11 +112,6 @@ enum
 abstract_class ISpatialPartition
 {
 public:
-	// Add a virtual destructor to silence the clang warning.
-	// This is harmless but not important since the only derived class
-	// doesn't have a destructor.
-	virtual ~ISpatialPartition() {}
-
 	// Create/destroy a handle for this dude in our system. Destroy
 	// will also remove it from all lists it happens to be in
 	virtual SpatialPartitionHandle_t CreateHandle( IHandleEntity *pHandleEntity ) = 0;
@@ -152,7 +146,7 @@ public:
 	virtual void UnhideElement( SpatialPartitionHandle_t handle, SpatialTempHandle_t tempHandle ) = 0;
 	
 	// Installs callbacks to get called right before a query occurs
-	virtual void InstallQueryCallback_V1( IPartitionQueryCallback *pCallback ) = 0;
+	virtual void InstallQueryCallback( IPartitionQueryCallback *pCallback ) = 0;
 	virtual void RemoveQueryCallback( IPartitionQueryCallback *pCallback ) = 0;
 
 	// Gets all entities in a particular volume...
@@ -209,8 +203,6 @@ public:
 	virtual void RenderObjectsAlongRay( const Ray_t& ray, float flTime ) = 0;
 
 	virtual void ReportStats( const char *pFileName ) = 0;
-
-	virtual void InstallQueryCallback( IPartitionQueryCallback *pCallback ) = 0;
 };
 
 #endif

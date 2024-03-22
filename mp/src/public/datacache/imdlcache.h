@@ -261,7 +261,7 @@ public:
 	virtual void BeginCoarseLock() = 0;
 	virtual void EndCoarseLock() = 0;
 
-	virtual void ReloadVCollide(MDLHandle_t handle) = 0;
+	virtual void ReloadVCollide( MDLHandle_t handle ) = 0;
 };
 
 

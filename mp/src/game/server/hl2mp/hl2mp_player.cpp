@@ -316,7 +316,7 @@ void CHL2MP_Player::GiveDefaultItems( void )
 	GiveNamedItem( "weapon_physcannon" );
 	GiveNamedItem("weapon_physgun");
 
-	const char *szDefaultWeaponName = engine->GetClientConVarValue( engine->IndexOfEdict( edict() ), "cl_defaultweapon" );
+	const char *szDefaultWeaponName = engine->GetClientConVarValue( ENTINDEX( edict() ), "cl_defaultweapon" );
 
 	CBaseCombatWeapon *pDefaultWeapon = Weapon_OwnsThisType( szDefaultWeaponName );
 
@@ -339,7 +339,7 @@ void CHL2MP_Player::PickDefaultSpawnTeam( void )
 			if ( GetModelPtr() == NULL )
 			{
 				const char *szModelName = NULL;
-				szModelName = engine->GetClientConVarValue( engine->IndexOfEdict( edict() ), "cl_playermodel" );
+				szModelName = engine->GetClientConVarValue( ENTINDEX( edict() ), "cl_playermodel" );
 
 				if ( ValidatePlayerModel( szModelName ) == false )
 				{
@@ -474,7 +474,7 @@ bool CHL2MP_Player::ValidatePlayerModel( const char *pModel )
 void CHL2MP_Player::SetPlayerTeamModel( void )
 {
 	const char *szModelName = NULL;
-	szModelName = engine->GetClientConVarValue( engine->IndexOfEdict( edict() ), "cl_playermodel" );
+	szModelName = engine->GetClientConVarValue( ENTINDEX( edict() ), "cl_playermodel" );
 
 	int modelIndex = modelinfo->GetModelIndex( szModelName );
 
@@ -525,7 +525,7 @@ void CHL2MP_Player::SetPlayerModel( void )
 	const char *szModelName = NULL;
 	const char *pszCurrentModelName = modelinfo->GetModelName( GetModel());
 
-	szModelName = engine->GetClientConVarValue( engine->IndexOfEdict( edict() ), "cl_playermodel" );
+	szModelName = engine->GetClientConVarValue( ENTINDEX( edict() ), "cl_playermodel" );
 
 	if ( ValidatePlayerModel( szModelName ) == false )
 	{
@@ -1702,7 +1702,7 @@ void CHL2MP_Player::State_Enter_OBSERVER_MODE()
 	int observerMode = m_iObserverLastMode;
 	if ( IsNetClient() )
 	{
-		const char *pIdealMode = engine->GetClientConVarValue( engine->IndexOfEdict( edict() ), "cl_spec_mode" );
+		const char *pIdealMode = engine->GetClientConVarValue( ENTINDEX( edict() ), "cl_spec_mode" );
 		if ( pIdealMode )
 		{
 			observerMode = atoi( pIdealMode );

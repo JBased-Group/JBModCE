@@ -6262,7 +6262,7 @@ void CBasePlayer::CheatImpulseCommands( int iImpulse )
 		{
 			trace_t tr;
 
-			edict_t		*pWorld = engine->PEntityOfEntIndex( 0 );
+			edict_t		*pWorld = INDEXENT( 0 );
 
 			Vector start = EyePosition();
 			Vector forward;

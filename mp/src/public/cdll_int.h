@@ -77,6 +77,8 @@ class CSteamAPIContext;
 typedef struct player_info_s
 {
 	DECLARE_BYTESWAP_DATADESC();
+	// network xuid
+	uint64			xuid;
 	// scoreboard information
 	char			name[MAX_PLAYER_NAME_LENGTH];
 	// local server user ID, unique while server is running
@@ -91,16 +93,13 @@ typedef struct player_info_s
 	bool			fakeplayer;
 	// true if player is the HLTV proxy
 	bool			ishltv;
-#if defined( REPLAY_ENABLED )
 	// true if player is the Replay proxy
 	bool			isreplay;
-#endif
 	// custom files CRC for this player
 	CRC32_t			customFiles[MAX_CUSTOM_FILES];
 	// this counter increases each time the server downloaded a new file
 	unsigned char	filesDownloaded;
 } player_info_t;
-
 
 //-----------------------------------------------------------------------------
 // Hearing info

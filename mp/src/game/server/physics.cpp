@@ -231,9 +231,9 @@ void CPhysicsHook::LevelInitPreEntity()
 	{
 	g_EntityCollisionHash = physics->CreateObjectPairHash();
 	}
-	factorylist_t factories;
-	FactoryList_Retrieve( factories );
-	physenv->SetDebugOverlay( factories.engineFactory );
+	//factorylist_t factories;
+	//FactoryList_Retrieve( factories );
+	//physenv->SetDebugOverlay( factories.engineFactory );
 	physenv->EnableDeleteQueue( true );
 
 	physenv->SetCollisionSolver( &g_Collisions );
@@ -1617,9 +1617,9 @@ CON_COMMAND( physics_budget, "Times the cost of each active object" )
 		CUtlVector<float> times;
 		float totalTime = 0.f;
 		g_Collisions.BufferTouchEvents( true );
-		float full = engine->Time();
+		float full = Plat_FloatTime();
 		physenv->Simulate( DEFAULT_TICK_INTERVAL );
-		full = engine->Time() - full;
+		full = Plat_FloatTime() - full;
 		float lastTime = full;
 
 		times.SetSize( ents.Count() );
@@ -1634,9 +1634,9 @@ CON_COMMAND( physics_budget, "Times the cost of each active object" )
 			{
 				PhysForceEntityToSleep( ents[j], ents[j]->VPhysicsGetObject() );
 			}
-			float start = engine->Time();
+			float start = Plat_FloatTime();
 			physenv->Simulate( DEFAULT_TICK_INTERVAL );
-			float end = engine->Time();
+			float end = Plat_FloatTime();
 
 			float elapsed = end - start;
 			float avgTime = lastTime - elapsed;
@@ -1710,7 +1710,7 @@ void PhysFrame( float deltaTime )
 
 	if ( bProfile )
 	{
-		simRealTime = engine->Time();
+		simRealTime = Plat_FloatTime();
 	}
 
 #ifdef _DEBUG
@@ -1764,7 +1764,7 @@ void PhysFrame( float deltaTime )
 
 	if ( bProfile )
 	{
-		simRealTime = engine->Time() - simRealTime;
+		simRealTime = Plat_FloatTime() - simRealTime;
 
 		if ( simRealTime < 0 )
 			simRealTime = 0;

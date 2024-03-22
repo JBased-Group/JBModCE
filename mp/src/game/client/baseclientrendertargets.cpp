@@ -10,6 +10,7 @@
 #include "baseclientrendertargets.h"						// header	
 #include "materialsystem/imaterialsystemhardwareconfig.h"	// Hardware config checks
 #include "tier0/icommandline.h"
+#include "materialsystem/itexture.h"
 
 ITexture* CBaseClientRenderTargets::CreateWaterReflectionTexture( IMaterialSystem* pMaterialSystem, int iSize )
 {
@@ -60,6 +61,9 @@ void CBaseClientRenderTargets::InitClientRenderTargets( IMaterialSystem* pMateri
 
 	// Monitors
 	//m_CameraTexture.Init( CreateCameraTexture( pMaterialSystem, 256 ) );
+	ITexture* pGlintTexture = pMaterialSystem->CreateNamedRenderTargetTextureEx2(
+		"_rt_eyeglint", 32, 32, RT_SIZE_NO_CHANGE, IMAGE_FORMAT_BGRA8888, MATERIAL_RT_DEPTH_NONE);
+	pGlintTexture->IncrementReferenceCount();
 }
 
 

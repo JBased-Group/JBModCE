@@ -617,20 +617,7 @@ void CTeamplayRoundBasedRules::Think( void )
 		// check to see if we should change levels now
 		if ( m_flIntermissionEndTime && ( m_flIntermissionEndTime < gpGlobals->curtime ) )
 		{
-			if ( !IsX360() )
-			{
-				ChangeLevel(); // intermission is over
-			}
-			else
-			{
-				IGameEvent * event = gameeventmanager->CreateEvent( "player_stats_updated" );
-				if ( event )
-				{
-					event->SetBool( "forceupload", true );
-					gameeventmanager->FireEvent( event );
-				}
-				engine->MultiplayerEndGame();
-			}
+			ChangeLevel(); // intermission is over
 
 			// Don't run this code again
 			m_flIntermissionEndTime = 0.f;
@@ -2908,7 +2895,7 @@ void CTeamplayRoundBasedRules::CleanUpMap()
 				CMapEntityRef &ref = g_MapEntityRefs[m_iIterator];
 				m_iIterator = g_MapEntityRefs.Next( m_iIterator );	// Seek to the next entity.
 
-				if ( ref.m_iEdict == -1 || engine->PEntityOfEntIndex( ref.m_iEdict ) )
+				if ( ref.m_iEdict == -1 || INDEXENT( ref.m_iEdict ) )
 				{
 					// Doh! The entity was delete and its slot was reused.
 					// Just use any old edict slot. This case sucks because we lose the baseline.

@@ -939,7 +939,7 @@ void CBaseEntity::PhysicsDispatchThink( BASEPTR thinkFunc )
 
 	if ( thinkLimit )
 	{
-		startTime = engine->Time();
+		startTime = Plat_FloatTime();
 	}
 	
 	if ( thinkFunc )
@@ -951,7 +951,7 @@ void CBaseEntity::PhysicsDispatchThink( BASEPTR thinkFunc )
 	if ( thinkLimit )
 	{
 		// calculate running time of the AI in milliseconds
-		float ftime = ( engine->Time() - startTime ) * 1000.0f;
+		float ftime = ( Plat_FloatTime() - startTime ) * 1000.0f;
 		if ( ftime > thinkLimit )
 		{
 #if defined( _XBOX ) && !defined( _RETAIL )

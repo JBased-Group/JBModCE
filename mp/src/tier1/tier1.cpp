@@ -72,6 +72,27 @@ DLL_EXPORT void CallAssertFailedNotifyFunc(const char* a, int b, const char* c)
 	
 }
 
+float VectorNormalize(Vector& vec)
+{
+#ifndef DEBUG // stop crashing my edit-and-continue!
+#if defined(__i386__) || defined(_M_IX86)
+#define DO_SSE_OPTIMIZATION
+#endif
+#endif
+
+#if defined( DO_SSE_OPTIMIZATION )
+	float sqrlen = vec.LengthSqr() + 1.0e-10f, invlen;
+	_SSE_RSqrtInline(sqrlen, &invlen);
+	vec.x *= invlen;
+	vec.y *= invlen;
+	vec.z *= invlen;
+	return sqrlen * invlen;
+#else
+	extern float (FASTCALL * pfVectorNormalize)(Vector & v);
+	return (*pfVectorNormalize)(vec);
+#endif
+}
+
 //-----------------------------------------------------------------------------
 // These tier1 libraries must be set by any users of this library.
 // They can be set by calling ConnectTier1Libraries or InitDefaultFileSystem.
@@ -93,7 +114,7 @@ static bool s_bConnected = false;
 // Call this to connect to all tier 1 libraries.
 // It's up to the caller to check the globals it cares about to see if ones are missing
 //-----------------------------------------------------------------------------
-void ConnectTier1Libraries( CreateInterfaceFn *pFactoryList, int nFactoryCount )
+void __stdcall ConnectTier1Libraries( CreateInterfaceFn *pFactoryList, int nFactoryCount )
 {
 	// Don't connect twice..
 	if ( s_bConnected )

@@ -153,18 +153,28 @@ public:
 //
 // Conversion among the three types of "entity", including identity-conversions.
 //
+
+extern CGlobalVars* gpGlobals;
 inline int	  ENTINDEX( edict_t *pEdict)			
 { 
-	int nResult = pEdict ? pEdict->m_EdictIndex : 0;
-	Assert( nResult == engine->IndexOfEdict(pEdict) );
-	return nResult;
+	if (!pEdict)
+		return 0;
+	int edictIndex = pEdict - gpGlobals->pEdicts;
+	return edictIndex;
 }
 
 int	  ENTINDEX( CBaseEntity *pEnt );
 
 inline edict_t* INDEXENT( int iEdictNum )		
 { 
-	return engine->PEntityOfEntIndex(iEdictNum); 
+	if (gpGlobals->pEdicts)
+	{
+		edict_t* pEdict = gpGlobals->pEdicts + iEdictNum;
+		if (pEdict->IsFree())
+			return NULL;
+		return pEdict;
+	}
+	return NULL;
 }
 
 // Testing the three types of "entity" for nullity

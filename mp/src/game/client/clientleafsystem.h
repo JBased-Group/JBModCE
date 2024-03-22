@@ -59,6 +59,7 @@ public:
 	{
 		IClientRenderable	*m_pRenderable;
 		unsigned short		m_iWorldListInfoLeaf; // NOTE: this indexes WorldListInfo_t's leaf list.
+		RenderableInstance_t m_InstanceData;
 		unsigned short		m_TwoPass;
 		ClientRenderHandle_t m_RenderHandle;
 	};

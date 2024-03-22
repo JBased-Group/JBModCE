@@ -2769,14 +2769,6 @@ void CDetailObjectSystem::BuildDetailObjectRenderLists( const Vector &vViewOrigi
 	ctx.m_vViewOrigin = vViewOrigin;
  	ctx.m_BuildWorldListNumber = view->BuildWorldListsNumber();
 
-	// We need to recompute translucency information for all detail props
-	for (int i = m_DetailObjectDict.Size(); --i >= 0; )
-	{
-		if (modelinfo->ModelHasMaterialProxy( m_DetailObjectDict[i].m_pModel ))
-		{
-			modelinfo->RecomputeTranslucency( m_DetailObjectDict[i].m_pModel, 0, 0, NULL );
-		}
-	}
 
 	float factor = 1.0f;
 	C_BasePlayer *local = C_BasePlayer::GetLocalPlayer();

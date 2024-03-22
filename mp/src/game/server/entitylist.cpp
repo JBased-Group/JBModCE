@@ -1469,7 +1469,7 @@ public:
 			// Allocate a CBasePlayer for pev, and call spawn
 			if ( nPlayerIndex >= 0 )
 			{
-				edict_t *pEdict = engine->PEntityOfEntIndex( nPlayerIndex );
+				edict_t *pEdict = INDEXENT( nPlayerIndex );
 				ClientPutInServer( pEdict, "unnamed" );
 				ClientActive( pEdict, false );
 

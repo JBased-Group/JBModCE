@@ -199,7 +199,7 @@ void CRecipientFilter::RemoveRecipientsNotOnTeam( CTeam *team )
 	}
 }
 
-void CRecipientFilter::AddPlayersFromBitMask( CBitVec< ABSOLUTE_PLAYER_LIMIT >& playerbits )
+void CRecipientFilter::AddPlayersFromBitMask(CPlayerBitVec& playerbits )
 {
 	int index = playerbits.FindNextSetBit( 0 );
 
@@ -215,7 +215,7 @@ void CRecipientFilter::AddPlayersFromBitMask( CBitVec< ABSOLUTE_PLAYER_LIMIT >& 
 	}
 }
 
-void CRecipientFilter::RemovePlayersFromBitMask( CBitVec< ABSOLUTE_PLAYER_LIMIT >& playerbits )
+void CRecipientFilter::RemovePlayersFromBitMask(CPlayerBitVec& playerbits )
 {
 	int index = playerbits.FindNextSetBit( 0 );
 
@@ -239,7 +239,7 @@ void CRecipientFilter::AddRecipientsByPVS( const Vector& origin )
 	}
 	else
 	{
-		CBitVec< ABSOLUTE_PLAYER_LIMIT > playerbits;
+		CPlayerBitVec playerbits;
 		engine->Message_DetermineMulticastRecipients( false, origin, playerbits );
 		AddPlayersFromBitMask( playerbits );
 	}
@@ -253,7 +253,7 @@ void CRecipientFilter::RemoveRecipientsByPVS( const Vector& origin )
 	}
 	else
 	{
-		CBitVec< ABSOLUTE_PLAYER_LIMIT > playerbits;
+		CPlayerBitVec playerbits;
 		engine->Message_DetermineMulticastRecipients( false, origin, playerbits );
 		RemovePlayersFromBitMask( playerbits );
 	}
@@ -269,7 +269,7 @@ void CRecipientFilter::AddRecipientsByPAS( const Vector& origin )
 	}
 	else
 	{
-		CBitVec< ABSOLUTE_PLAYER_LIMIT > playerbits;
+		CPlayerBitVec playerbits;
 		engine->Message_DetermineMulticastRecipients( true, origin, playerbits );
 		AddPlayersFromBitMask( playerbits );
 	}

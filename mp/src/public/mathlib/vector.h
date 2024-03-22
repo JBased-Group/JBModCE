@@ -2208,26 +2208,8 @@ inline void _SSE_RSqrtInline( float a, float* out )
 #endif
 
 // FIXME: Change this back to a #define once we get rid of the vec_t version
-FORCEINLINE float VectorNormalize( Vector& vec )
-{
-#ifndef DEBUG // stop crashing my edit-and-continue!
-	#if defined(__i386__) || defined(_M_IX86)
-		#define DO_SSE_OPTIMIZATION
-	#endif
-#endif
+float VectorNormalize(Vector& vec);
 
-#if defined( DO_SSE_OPTIMIZATION )
-	float sqrlen = vec.LengthSqr() + 1.0e-10f, invlen;
-	_SSE_RSqrtInline(sqrlen, &invlen);
-	vec.x *= invlen;
-	vec.y *= invlen;
-	vec.z *= invlen;
-	return sqrlen * invlen;
-#else
-	extern float (FASTCALL *pfVectorNormalize)(Vector& v);
-	return (*pfVectorNormalize)(vec);
-#endif
-}
 
 // FIXME: Obsolete version of VectorNormalize, once we remove all the friggin float*s
 FORCEINLINE float VectorNormalize( float * v )

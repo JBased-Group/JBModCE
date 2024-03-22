@@ -1028,11 +1028,6 @@ CStudioHdr *C_BaseAnimating::OnNewModel()
 		m_pJiggleBones = NULL;
 	}
 
-	if ( m_bDynamicModelPending )
-	{
-		modelinfo->UnregisterModelLoadCallback( -1, this );
-		m_bDynamicModelPending = false;
-	}
 
 	m_AutoRefModelIndex.Clear();
 
@@ -1051,11 +1046,6 @@ CStudioHdr *C_BaseAnimating::OnNewModel()
 	}
 
 	m_AutoRefModelIndex = nNewIndex;
-	if ( IsDynamicModelIndex( nNewIndex ) && modelinfo->IsDynamicModelLoading( nNewIndex ) )
-	{
-		m_bDynamicModelPending = true;
-		modelinfo->RegisterModelLoadCallback( nNewIndex, this );
-	}
 
 	if ( IsDynamicModelLoading() )
 	{
@@ -2749,7 +2739,7 @@ void C_BaseAnimating::ThreadedBoneSetup()
 		{
 			g_bInThreadedBoneSetup = true;
 
-			ParallelProcess( "C_BaseAnimating::ThreadedBoneSetup", g_PreviousBoneSetups.Base(), nCount, &SetupBonesOnBaseAnimating, &PreThreadedBoneSetup, &PostThreadedBoneSetup );
+			ParallelProcess( g_PreviousBoneSetups.Base(), nCount, &SetupBonesOnBaseAnimating, &PreThreadedBoneSetup, &PostThreadedBoneSetup );
 
 			g_bInThreadedBoneSetup = false;
 		}
@@ -3725,11 +3715,11 @@ void MaterialFootstepSound( C_BaseAnimating *pEnt, bool bLeftFoot, float flVolum
 			EmitSound_t params;
 			if( bLeftFoot )
 			{
-				params.m_pSoundName = physprops->GetString(psurf->sounds.stepleft);
+				params.m_pSoundName = physprops->GetString(psurf->sounds.walkStepLeft);
 			}
 			else
 			{
-				params.m_pSoundName = physprops->GetString(psurf->sounds.stepright);
+				params.m_pSoundName = physprops->GetString(psurf->sounds.walkStepRight);
 			}
 
 			CPASAttenuationFilter filter( pEnt, params.m_pSoundName );

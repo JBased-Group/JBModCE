@@ -72,6 +72,8 @@ public:
 	
 public: // IGameEventListener:
 	virtual void FireGameEvent( IGameEvent * event);
+	virtual int	 GetEventDebugID(void);
+
 
 
 protected:

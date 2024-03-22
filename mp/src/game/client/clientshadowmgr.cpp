@@ -1301,7 +1301,7 @@ bool CClientShadowMgr::Init()
 	}
 
 	// If someone turned shadow depth mapping on but we can't do it, force it off
-	if ( r_flashlightdepthtexture.GetBool() && !materials->SupportsShadowDepthTextures() )
+	if ( r_flashlightdepthtexture.GetBool() && !g_pMaterialSystemHardwareConfig->SupportsShadowDepthTextures() )
 	{
 		r_flashlightdepthtexture.SetValue( 0 );
 		ShutdownDepthTextureShadows();	
@@ -1340,9 +1340,9 @@ void CClientShadowMgr::InitDepthTextureShadows()
 	{
 		m_bDepthTextureActive = true;
 
-		ImageFormat dstFormat  = materials->GetShadowDepthTextureFormat();	// Vendor-dependent depth texture format
+		ImageFormat dstFormat  = g_pMaterialSystemHardwareConfig->GetShadowDepthTextureFormat();	// Vendor-dependent depth texture format
 #if !defined( _X360 )
-		ImageFormat nullFormat = materials->GetNullTextureFormat();			// Vendor-dependent null texture format (takes as little memory as possible)
+		ImageFormat nullFormat = g_pMaterialSystemHardwareConfig->GetNullTextureFormat();			// Vendor-dependent null texture format (takes as little memory as possible)
 #endif
 		materials->BeginRenderTargetAllocation();
 
@@ -2876,7 +2876,7 @@ void CClientShadowMgr::PreRender()
 		VPROF_BUDGET( "CClientShadowMgr::PreRender", VPROF_BUDGETGROUP_SHADOW_DEPTH_TEXTURING );
 
 		// If someone turned shadow depth mapping on but we can't do it, force it off
-		if ( r_flashlightdepthtexture.GetBool() && !materials->SupportsShadowDepthTextures() )
+		if ( r_flashlightdepthtexture.GetBool() && !g_pMaterialSystemHardwareConfig->SupportsShadowDepthTextures() )
 		{
 			r_flashlightdepthtexture.SetValue( 0 );
 			ShutdownDepthTextureShadows();	
@@ -4063,8 +4063,8 @@ void CClientShadowMgr::ComputeShadowTextures( const CViewSetup &view, int leafCo
 			}
 		}
 
-		ParallelProcess( "NPCShadowBoneSetups", s_NPCShadowBoneSetups.Base(), s_NPCShadowBoneSetups.Count(), &SetupBonesOnBaseAnimating );
-		ParallelProcess( "NonNPCShadowBoneSetups", s_NonNPCShadowBoneSetups.Base(), s_NonNPCShadowBoneSetups.Count(), &SetupBonesOnBaseAnimating );
+		ParallelProcess( s_NPCShadowBoneSetups.Base(), s_NPCShadowBoneSetups.Count(), &SetupBonesOnBaseAnimating );
+		ParallelProcess( s_NonNPCShadowBoneSetups.Base(), s_NonNPCShadowBoneSetups.Count(), &SetupBonesOnBaseAnimating );
 
 		nModelsRendered = 0;
 	}

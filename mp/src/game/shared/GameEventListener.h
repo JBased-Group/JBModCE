@@ -56,6 +56,8 @@ public:
 
 	// Intentionally abstract
 	virtual void FireGameEvent( IGameEvent *event ) = 0;
+	int m_nDebugID;
+	virtual int GetEventDebugID(void) { return m_nDebugID; }
 
 private:
 

@@ -2268,6 +2268,13 @@ inline float CBaseEntity::GetLocalTime( void ) const
 	return m_flLocalTime; 
 }
 
+inline void CBaseEntity::SetModelIndex(int index)
+{
+	m_nModelIndex = index;
+	DispatchUpdateTransmitState();
+}
+
+
 inline void CBaseEntity::IncrementLocalTime( float flTimeDelta )
 { 
 	m_flLocalTime += flTimeDelta; 

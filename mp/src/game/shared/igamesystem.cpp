@@ -377,6 +377,7 @@ void InvokePerFrameMethod( PerFrameGameSystemFunc_t f, char const *timed /*=0*/ 
 	{
 		IGameSystemPerFrame *sys  = s_GameSystemsPerFrame[i];
 		MDLCACHE_CRITICAL_SECTION();
+		//Msg("invoking %s\n", sys->Name());
 		(sys->*f)();
 	}
 }

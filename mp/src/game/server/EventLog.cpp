@@ -22,6 +22,52 @@ CEventLog::~CEventLog()
 }
 
 
+void CEventLog::FormatPlayer(CBaseEntity* ent, char* str, int len) const
+{
+	if (!str || len <= 0)
+	{
+		return;
+	}
+
+	CBasePlayer* player = ToBasePlayer(ent);
+
+	const char* playerName = "Unknown";
+	int userID = 0;
+	const char* networkIDString = "";
+	const char* teamName = "";
+	if (player)
+	{
+		playerName = player->GetPlayerName();
+		userID = player->GetUserID();
+		networkIDString = player->GetNetworkIDString();
+		CTeam* team = player->GetTeam();
+		if (team)
+		{
+			teamName = team->GetName();
+		}
+	}
+
+	V_snprintf(str, len, "\"%s<%i><%s><%s>\"", playerName, userID, networkIDString, teamName);
+}
+
+const char* CEventLog::FormatPlayer(CBaseEntity* ent) const
+{
+	const int MaxEntries = 4;
+	const int BufferLength = PLAYER_LOGINFO_SIZE;
+	static char s_buffer[MaxEntries][BufferLength];
+	static int s_index = 0;
+
+	char* ret = s_buffer[s_index++];
+	if (s_index >= MaxEntries)
+	{
+		s_index = 0;
+	}
+
+	FormatPlayer(ent, ret, BufferLength);
+	return ret;
+}
+
+
 void CEventLog::FireGameEvent( IGameEvent *event )
 {
 	PrintEvent ( event );
@@ -249,9 +295,4 @@ bool CEventLog::Init()
 	ListenForGameEvent( "player_connect" );
 
 	return true;
-}
-
-void CEventLog::Shutdown()
-{
-	StopListeningForAllEvents();
 }

@@ -116,8 +116,6 @@ int HudTransform( const Vector& point, Vector& screen )
 
 void UpdateFullScreenDepthTexture( void )
 {
-	if( !g_pMaterialSystemHardwareConfig->SupportsPixelShaders_2_b() )
-		return;
 
 	ITexture *pDepthTex = GetFullFrameDepthTexture();
 	CMatRenderContextPtr pRenderContext( materials );

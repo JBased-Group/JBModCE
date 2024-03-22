@@ -226,7 +226,7 @@ PLATFORM_INTERFACE bool DoNewAssertDialog(const tchar* pFile, int line, const tc
 #define  Assert( _exp )										((void)0)
 #define  AssertAligned( ptr )								((void)0)
 #define  AssertOnce( _exp )									((void)0)
-#define  AssertMsg( _exp, _msg )							((void)0)
+#define  AssertMsg( _exp, _msg, ... )						((void)0)
 #define  AssertMsgOnce( _exp, _msg )						((void)0)
 #define  AssertFunc( _exp, _f )								((void)0)
 #define  AssertEquals( _exp, _expectedValue )				((void)0)

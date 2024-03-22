@@ -1971,7 +1971,7 @@ void CViewRender::RenderView( const CViewSetup &view, int nClearFlags, int whatT
 		render->SceneBegin();
 
 		pRenderContext.GetFrom( materials );
-		pRenderContext->TurnOnToneMapping();
+		//pRenderContext->TurnOnToneMapping();
 		pRenderContext.SafeRelease();
 
 		// clear happens here probably
@@ -3345,7 +3345,7 @@ void CRendering3dView::UpdateRenderablesOpacity()
 	}
 
 	// When zoomed in, tweak the opacity to stay visible from further away
-	staticpropmgr->ComputePropOpacity( origin, flFactor );
+	//staticpropmgr->ComputePropOpacity( origin, flFactor );
 
 	// Build a list of detail props to render
 	DetailObjectSystem()->BuildDetailObjectRenderLists( origin );
@@ -3868,6 +3868,8 @@ static void DrawOpaqueRenderables_DrawBrushModels( CClientRenderablesList::CEntr
 	}
 }
 
+
+
 static void DrawOpaqueRenderables_DrawStaticProps( CClientRenderablesList::CEntry *pEntitiesBegin, CClientRenderablesList::CEntry *pEntitiesEnd, ERenderDepthMode DepthMode )
 {
 	if ( pEntitiesEnd == pEntitiesBegin )
@@ -3879,7 +3881,7 @@ static void DrawOpaqueRenderables_DrawStaticProps( CClientRenderablesList::CEntr
 	
 	const int MAX_STATICS_PER_BATCH = 512;
 	IClientRenderable *pStatics[ MAX_STATICS_PER_BATCH ];
-	
+	RenderableInstance_t pInstances[MAX_STATICS_PER_BATCH];
 	int numScheduled = 0, numAvailable = MAX_STATICS_PER_BATCH;
 
 	for( CClientRenderablesList::CEntry *itEntity = pEntitiesBegin; itEntity < pEntitiesEnd; ++ itEntity )
@@ -3895,17 +3897,18 @@ static void DrawOpaqueRenderables_DrawStaticProps( CClientRenderablesList::CEntr
 			continue;
 		}
 
+		pInstances[ numScheduled ] = itEntity->m_InstanceData;
 		pStatics[ numScheduled ++ ] = itEntity->m_pRenderable;
 		if ( -- numAvailable > 0 )
 			continue; // place a hint for compiler to predict more common case in the loop
 		
-		staticpropmgr->DrawStaticProps( pStatics, numScheduled, DepthMode, vcollide_wireframe.GetBool() );
+		staticpropmgr->DrawStaticProps( pStatics, pInstances, numScheduled, DepthMode, vcollide_wireframe.GetBool() );
 		numScheduled = 0;
 		numAvailable = MAX_STATICS_PER_BATCH;
 	}
 	
 	if ( numScheduled )
-		staticpropmgr->DrawStaticProps( pStatics, numScheduled, DepthMode, vcollide_wireframe.GetBool() );
+		staticpropmgr->DrawStaticProps( pStatics, pInstances, numScheduled, DepthMode, vcollide_wireframe.GetBool() );
 }
 
 static void DrawOpaqueRenderables_Range( CClientRenderablesList::CEntry *pEntitiesBegin, CClientRenderablesList::CEntry *pEntitiesEnd, ERenderDepthMode DepthMode )
@@ -4041,8 +4044,8 @@ void CRendering3dView::DrawOpaqueRenderables( ERenderDepthMode DepthMode )
 
 	if ( 0 && r_threaded_renderables.GetBool() )
 	{
-		ParallelProcess( "BoneSetupNpcsLast", arrBoneSetupNpcsLast.Base() + numOpaqueEnts - numNpcs, numNpcs, &SetupBonesOnBaseAnimating );
-		ParallelProcess( "BoneSetupNpcsLast NonNPCs", arrBoneSetupNpcsLast.Base(), numNonNpcsAnimating, &SetupBonesOnBaseAnimating );
+		ParallelProcess(  arrBoneSetupNpcsLast.Base() + numOpaqueEnts - numNpcs, numNpcs, &SetupBonesOnBaseAnimating );
+		ParallelProcess(  arrBoneSetupNpcsLast.Base(), numNonNpcsAnimating, &SetupBonesOnBaseAnimating );
 	}
 
 
@@ -5440,10 +5443,6 @@ void CBaseWorldView::DrawExecute( float waterHeight, view_id_t viewID, float wat
 
 void CBaseWorldView::SSAO_DepthPass()
 {
-	if ( !g_pMaterialSystemHardwareConfig->SupportsPixelShaders_2_0() )
-	{
-		return;
-	}
 
 #if 1
 	VPROF_BUDGET( "CSimpleWorldView::SSAO_DepthPass", VPROF_BUDGETGROUP_SHADOW_DEPTH_TEXTURING );
@@ -5528,10 +5527,6 @@ void CBaseWorldView::SSAO_DepthPass()
 
 void CBaseWorldView::DrawDepthOfField( )
 {
-	if ( !g_pMaterialSystemHardwareConfig->SupportsPixelShaders_2_0() )
-	{
-		return;
-	}
 
 	CMatRenderContextPtr pRenderContext( materials );
 

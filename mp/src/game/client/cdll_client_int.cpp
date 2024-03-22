@@ -766,7 +766,7 @@ public:
 	virtual void			OnScreenSizeChanged(int nOldWidth, int nOldHeight) { Msg("IMPLEMENT " __FUNCTION__ " !!!\n"); };
 	virtual IMaterialProxy* InstantiateMaterialProxy(const char* proxyName) { Msg("IMPLEMENT " __FUNCTION__ " !!!\n"); return 0; };
 
-	virtual vgui::VPANEL	GetFullscreenClientDLLVPanel(void) { Msg("IMPLEMENT " __FUNCTION__ " !!!\n"); return 0; };
+	virtual vgui::VPANEL	GetFullscreenClientDLLVPanel(void) { /*Msg("IMPLEMENT " __FUNCTION__ " !!!\n");*/ return 0; };
 	virtual void			MarkEntitiesAsTouching(IClientEntity* e1, IClientEntity* e2) { Msg("IMPLEMENT " __FUNCTION__ " !!!\n"); };
 	virtual void			OnKeyBindingChanged(ButtonCode_t buttonCode, char const* pchKeyName, char const* pchNewBinding) { Msg("IMPLEMENT " __FUNCTION__ " !!!\n"); };
 	virtual bool			HandleGameUIEvent(const InputEvent_t& event) { Msg("IMPLEMENT " __FUNCTION__ " !!!\n");  return true; };

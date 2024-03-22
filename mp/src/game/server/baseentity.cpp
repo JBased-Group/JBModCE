@@ -326,7 +326,7 @@ protected:
 public:
 	explicit CBaseEntityModelLoadProxy( CBaseEntity *pEntity ) : m_pHandler( new Handler( pEntity ) ) { }
 	~CBaseEntityModelLoadProxy() { delete m_pHandler; }
-	void Register( int nModelIndex ) const { modelinfo->RegisterModelLoadCallback( nModelIndex, m_pHandler ); }
+	void Register( int nModelIndex ) const {  }
 	operator CBaseEntity * () const { return m_pHandler->m_pEntity; }
 
 private:
@@ -444,7 +444,6 @@ CBaseEntity::~CBaseEntity( )
 	// case where friction sounds are added between the call to UpdateOnRemove + ~CBaseEntity
 	PhysCleanupFrictionSounds( this );
 
-	Assert( !IsDynamicModelIndex( m_nModelIndex ) );
 	Verify( !sg_DynamicLoadHandlers.Remove( this ) );
 
 	// In debug make sure that we don't call delete on an entity without setting
@@ -616,41 +615,6 @@ CBaseEntity *CBaseEntity::GetFollowedEntity()
 void CBaseEntity::SetClassname( const char *className )
 {
 	m_iClassname = AllocPooledString( className );
-}
-
-void CBaseEntity::SetModelIndex( int index )
-{
-	if ( IsDynamicModelIndex( index ) && !(GetBaseAnimating() && m_bDynamicModelAllowed) )
-	{
-		AssertMsg( false, "dynamic model support not enabled on server entity" );
-		index = -1;
-	}
-
-	if ( index != m_nModelIndex )
-	{
-		if ( m_bDynamicModelPending )
-		{
-			sg_DynamicLoadHandlers.Remove( this );
-		}
-		
-		modelinfo->ReleaseDynamicModel( m_nModelIndex );
-		modelinfo->AddRefDynamicModel( index );
-		m_nModelIndex = index;
-		
-		m_bDynamicModelSetBounds = false;
-
-		if ( IsDynamicModelIndex( index ) )
-		{
-			m_bDynamicModelPending = true;
-			sg_DynamicLoadHandlers[ sg_DynamicLoadHandlers.Insert( this ) ].Register( index );
-		}
-		else
-		{
-			m_bDynamicModelPending = false;
-			OnNewModel();
-		}
-	}
-	DispatchUpdateTransmitState();
 }
 
 void CBaseEntity::ClearModelIndexOverrides( void )
@@ -2097,11 +2061,7 @@ void CBaseEntity::UpdateOnRemove( void )
 		sg_DynamicLoadHandlers.Remove( this );
 	}
 	
-	if ( IsDynamicModelIndex( m_nModelIndex ) )
-	{
-		modelinfo->ReleaseDynamicModel( m_nModelIndex ); // no-op if not dynamic
-		m_nModelIndex = -1;
-	}
+
 }
 
 //-----------------------------------------------------------------------------
@@ -6382,7 +6342,7 @@ void CBaseEntity::ModifyOrAppendCriteria( AI_CriteriaSet& set )
 	}
 
 	// Append anything from world I/O/keyvalues with "world" as prefix
-	CWorld *world = dynamic_cast< CWorld * >( CBaseEntity::Instance( engine->PEntityOfEntIndex( 0 ) ) );
+	CWorld *world = dynamic_cast< CWorld * >( CBaseEntity::Instance( INDEXENT( 0 ) ) );
 	if ( world )
 	{
 		world->AppendContextToCriteria( set, "world" );
@@ -7315,7 +7275,6 @@ void CBaseEntity::IncrementInterpolationFrame()
 
 void CBaseEntity::OnModelLoadComplete( const model_t* model )
 {
-	Assert( m_bDynamicModelPending && IsDynamicModelIndex( m_nModelIndex ) );
 	Assert( model == modelinfo->GetModel( m_nModelIndex ) );
 	
 	m_bDynamicModelPending = false;

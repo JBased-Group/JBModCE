@@ -981,7 +981,7 @@ void CClientLeafSystem::PreRender()
 			// InsertIntoTree can result in new renderables being added, so copy:
 			ClientRenderHandle_t *pDirtyRenderables = (ClientRenderHandle_t *)alloca( sizeof(ClientRenderHandle_t) * nDirty );
 			memcpy( pDirtyRenderables, m_DirtyRenderables.Base(), sizeof(ClientRenderHandle_t) * nDirty );
-			ParallelProcess( "CClientLeafSystem::PreRender", pDirtyRenderables, nDirty, this, &CClientLeafSystem::InsertIntoTree, &CClientLeafSystem::FrameLock, &CClientLeafSystem::FrameUnlock );
+			ParallelProcess( pDirtyRenderables, nDirty, this, &CClientLeafSystem::InsertIntoTree, &CClientLeafSystem::FrameLock, &CClientLeafSystem::FrameUnlock );
 		}
 
 		if ( m_DeferredInserts.Count() )
@@ -1834,7 +1834,7 @@ void CClientLeafSystem::ComputeTranslucentRenderLeaf( int count, const LeafIndex
 
 	if ( bThreaded )
 	{
-		ParallelProcess( "CClientLeafSystem::ComputeTranslucentRenderLeaf", renderablesToUpdate.Base(), renderablesToUpdate.Count(), &CallComputeFXBlend, &::FrameLock, &::FrameUnlock );
+		ParallelProcess( renderablesToUpdate.Base(), renderablesToUpdate.Count(), &CallComputeFXBlend, &::FrameLock, &::FrameUnlock );
 		renderablesToUpdate.RemoveAll();
 	}
 

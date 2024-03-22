@@ -12,8 +12,10 @@
 #include "materialsystem/itexture.h"
 #include "view_shared.h"
 #include "viewpostprocess.h"
+#include "materialsystem/imaterialsystem.h"
 
 #define FULL_FRAME_TEXTURE "_rt_FullFrameFB"
+
 
 #ifdef GLOWS_ENABLE
 

@@ -225,6 +225,9 @@ private:
 
 	// If m_pString is not NULL, it points to the start of the string, and the memory allocation.
 	char *m_pString;
+	int funny;
+	int idk;
+	int len;
 };
 
 //	// If these are not defined, CUtlConstString as rhs will auto-convert
@@ -263,11 +266,6 @@ inline CUtlString::CUtlString()
 {
 }
 
-inline CUtlString::CUtlString( const char *pString )
-: m_pString( NULL )
-{
-	Set( pString );
-}
 
 inline CUtlString::CUtlString( const char *pString, int length )
 : m_pString( NULL )
@@ -310,11 +308,6 @@ inline int __cdecl CUtlString::SortCaseSensitive( const CUtlString *pString1, co
 	return V_strcmp( pString1->String(), pString2->String() );
 }
 
-// Converts to c-strings
-inline CUtlString::operator const char*() const
-{
-	return Get();
-}
 
 
 

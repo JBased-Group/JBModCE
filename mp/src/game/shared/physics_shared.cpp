@@ -1045,8 +1045,8 @@ void PrecachePhysicsSounds()
 		surfacedata_t *pprop = physprops->GetSurfaceData( i );
 		Assert( pprop );
 
-		pprop->soundhandles.stepleft = PrecachePhysicsSoundByStringIndex( pprop->sounds.stepleft );
-		pprop->soundhandles.stepright = PrecachePhysicsSoundByStringIndex( pprop->sounds.stepright );
+		pprop->soundhandles.walkStepLeft = PrecachePhysicsSoundByStringIndex( pprop->sounds.walkStepLeft );
+		pprop->soundhandles.walkStepRight = PrecachePhysicsSoundByStringIndex( pprop->sounds.walkStepRight );
 		pprop->soundhandles.impactSoft = PrecachePhysicsSoundByStringIndex( pprop->sounds.impactSoft );
 		pprop->soundhandles.impactHard = PrecachePhysicsSoundByStringIndex( pprop->sounds.impactHard );
 		pprop->soundhandles.scrapeSmooth = PrecachePhysicsSoundByStringIndex( pprop->sounds.scrapeSmooth );

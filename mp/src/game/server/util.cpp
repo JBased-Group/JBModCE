@@ -2202,7 +2202,7 @@ static int UTIL_GetNewCheckClient( int check )
 			i = 1;
 		}
 
-		ent = engine->PEntityOfEntIndex( i );
+		ent = INDEXENT( i );
 		if ( !ent )
 			continue;
 
@@ -2267,7 +2267,7 @@ static edict_t *UTIL_GetCurrentCheckClient()
 	}
 
 	// return check if it might be visible	
-	ent = engine->PEntityOfEntIndex( g_CheckClient.m_lastcheck );
+	ent = INDEXENT( g_CheckClient.m_lastcheck );
 
 	// Allow dead clients -- JAY
 	// Our monsters know the difference, and this function gates alot of behavior
@@ -3322,7 +3322,7 @@ void CC_CollisionTest( const CCommand &args )
 	int nMask = MASK_ALL & ~(CONTENTS_MONSTER | CONTENTS_HITBOX );
 	for ( int j = 0; j < 2; j++ )
 	{
-		float startTime = engine->Time();
+		float startTime = Plat_FloatTime();
 		if ( testType == 1 )
 		{
 			trace_t tr;
@@ -3352,7 +3352,7 @@ void CC_CollisionTest( const CCommand &args )
 			}
 		}
 
-		duration += engine->Time() - startTime;
+		duration += Plat_FloatTime() - startTime;
 	}
 	test[testType] = duration;
 	Msg("%d collisions in %.2f ms (%u dots)\n", NUM_COLLISION_TESTS, duration*1000, dots );

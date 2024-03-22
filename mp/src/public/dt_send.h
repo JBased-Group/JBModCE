@@ -265,6 +265,8 @@ public:
 
 	const char		*m_pVarName;
 	float			m_fHighLowMul;
+
+	byte			m_priority;
 	
 private:
 

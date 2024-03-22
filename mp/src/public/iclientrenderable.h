@@ -32,6 +32,12 @@ enum
 	CLIENTSHADOW_INVALID_HANDLE = (ClientShadowHandle_t)~0
 };
 
+
+struct RenderableInstance_t
+{
+	uint8 m_nAlpha;
+};
+
 //-----------------------------------------------------------------------------
 // What kind of shadows to render?
 //-----------------------------------------------------------------------------

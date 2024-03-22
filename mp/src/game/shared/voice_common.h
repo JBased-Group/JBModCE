@@ -14,7 +14,7 @@
 
 #include "bitvec.h"
 #include "const.h"
-
+#include "shareddefs.h"
 
 #define VOICE_MAX_PLAYERS		MAX_PLAYERS
 #define VOICE_MAX_PLAYERS_DW	((VOICE_MAX_PLAYERS / 32) + !!(VOICE_MAX_PLAYERS & 31))

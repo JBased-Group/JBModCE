@@ -18,6 +18,18 @@
 // Simple string class. 
 //-----------------------------------------------------------------------------
 
+CUtlString::operator const char* () const
+{
+	return Get();
+}
+
+
+CUtlString::CUtlString(const char* pString)
+	: m_pString(NULL)
+{
+	Set(pString);
+}
+
 //-----------------------------------------------------------------------------
 // Either allocates or reallocates memory to the length
 //

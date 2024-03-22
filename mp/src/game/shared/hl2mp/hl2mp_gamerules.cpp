@@ -767,7 +767,7 @@ void CHL2MPRules::ClientSettingsChanged(CBasePlayer* pPlayer)
 		return;
 
 	const char* pCurrentModel = modelinfo->GetModelName(pPlayer->GetModel());
-	const char* szModelName = engine->GetClientConVarValue(engine->IndexOfEdict(pPlayer->edict()), "cl_playermodel");
+	const char* szModelName = engine->GetClientConVarValue(ENTINDEX(pPlayer->edict()), "cl_playermodel");
 
 	//If we're different.
 	if (stricmp(szModelName, pCurrentModel))
@@ -1045,7 +1045,7 @@ bool CHL2MPRules::FShouldSwitchWeapon(CBasePlayer* pPlayer, CBaseCombatWeapon* p
 	if (pPlayer->GetActiveWeapon() && pPlayer->IsNetClient())
 	{
 		// Player has an active item, so let's check cl_autowepswitch.
-		const char* cl_autowepswitch = engine->GetClientConVarValue(engine->IndexOfEdict(pPlayer->edict()), "cl_autowepswitch");
+		const char* cl_autowepswitch = engine->GetClientConVarValue(ENTINDEX(pPlayer->edict()), "cl_autowepswitch");
 		if (cl_autowepswitch && atoi(cl_autowepswitch) <= 0)
 		{
 			return false;
@@ -1194,7 +1194,7 @@ void CHL2MPRules::CleanUpMap()
 				CMapEntityRef& ref = g_MapEntityRefs[m_iIterator];
 				m_iIterator = g_MapEntityRefs.Next(m_iIterator);	// Seek to the next entity.
 
-				if (ref.m_iEdict == -1 || engine->PEntityOfEntIndex(ref.m_iEdict))
+				if (ref.m_iEdict == -1 || INDEXENT(ref.m_iEdict))
 				{
 					// Doh! The entity was delete and its slot was reused.
 					// Just use any old edict slot. This case sucks because we lose the baseline.
