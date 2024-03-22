@@ -777,6 +777,7 @@ void			CServerGameDLL::ApplyGameSettings(KeyValues* pKV)
 
 void			CServerGameDLL::GetMatchmakingTags(char* buf, size_t bufSize)
 {
+	Q_strncpy(buf, "hi", bufSize);
 	Msg("IMPLEMENT " __FUNCTION__ " !!!\n");
 }
 
@@ -793,7 +794,7 @@ bool			CServerGameDLL::ShouldPreferSteamAuth()
 
 void			CServerGameDLL::GetMatchmakingGameData(char* buf, size_t bufSize)
 {
-	Msg("IMPLEMENT " __FUNCTION__ " !!!\n");
+	Q_strncpy(buf, "hi", bufSize);
 }
 
 // does this game support randomly generated maps?

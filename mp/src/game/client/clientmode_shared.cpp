@@ -383,6 +383,7 @@ void ClientModeShared::Init()
 
 void ClientModeShared::InitViewport()
 {
+
 }
 
 
