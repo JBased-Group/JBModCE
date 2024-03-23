@@ -90,9 +90,9 @@ void CFXDiscreetLine::Draw( double frametime )
 	}
 
 	// Get our delta to calculate the tc offset
-	float	dDistance	= fabs( sDistance - eDistance );
-	float	dTotal		= ( m_fLength != 0.0f ) ? m_fLength : 0.01f;
-	float	fOffset		= ( dDistance / dTotal );
+	//float	dDistance	= fabs( sDistance - eDistance );
+	//float	dTotal		= ( m_fLength != 0.0f ) ? m_fLength : 0.01f;
+	//float	fOffset		= ( dDistance / dTotal );
 
 	// Find our points along our path
 	VectorMA( m_vecOrigin, sDistance, m_vecDirection, vecEnd );
@@ -104,7 +104,7 @@ void CFXDiscreetLine::Draw( double frametime )
 	
 	cross = lineDir.Cross( viewDir );
 	VectorNormalize( cross );
-
+	/*
 	CMeshBuilder meshBuilder;
 	IMesh *pMesh;
 
@@ -241,6 +241,7 @@ void CFXDiscreetLine::Draw( double frametime )
 
 	meshBuilder.End();
 	pMesh->Draw();
+	*/
 }
 
 /*

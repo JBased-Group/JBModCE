@@ -28,6 +28,7 @@ struct model_t;
 typedef unsigned short ModelInstanceHandle_t;
 class IClientRenderable;
 class ITexture;
+struct FlashlightInstance_t;
 
 // change this when the new version is incompatable with the old
 #define ENGINE_SHADOWMGR_INTERFACE_VERSION	"VEngineShadowMgr002"
@@ -96,6 +97,9 @@ struct ShadowInfo_t
 };
 
 struct FlashlightState_t;
+
+typedef void (*ShadowDrawCallbackFn_t)(void*);
+
 
 //-----------------------------------------------------------------------------
 // The engine's interface to the shadow manager
@@ -175,14 +179,45 @@ public:
 
 	virtual void DrawFlashlightDepthTexture( ) = 0;
 
-	virtual void AddFlashlightRenderable( ShadowHandle_t shadow, IClientRenderable *pRenderable ) = 0;
-	virtual ShadowHandle_t CreateShadowEx( IMaterial* pMaterial, IMaterial* pModelMaterial, void* pBindProxy, int creationFlags ) = 0;
+	virtual ShadowHandle_t CreateShadowEx( IMaterial* pMaterial, IMaterial* pModelMaterial, void* pBindProxy, int creationFlags, int nEntIndex ) = 0;
 
 	virtual void SetFlashlightDepthTexture( ShadowHandle_t shadowHandle, ITexture *pFlashlightDepthTexture, unsigned char ucShadowStencilBit ) = 0;
 
 	virtual const FlashlightState_t &GetFlashlightState( ShadowHandle_t handle ) = 0;
 
 	virtual void SetFlashlightRenderState( ShadowHandle_t handle ) = 0;
+	virtual void EndFlashlightRenderState( ShadowHandle_t handle ) = 0;
+
+	virtual void DrawVolumetrics() = 0;
+
+	virtual int GetNumShadowsOnModel( ModelInstanceHandle_t instance ) = 0;
+	virtual int GetShadowsOnModel( ModelInstanceHandle_t instance, ShadowHandle_t* pShadowArray, bool bNormalShadows, bool bFlashlightShadows ) = 0;
+
+	virtual void FlashlightDrawCallback( ShadowDrawCallbackFn_t pCallback, void *pData ) = 0; //used to draw each additive flashlight pass. The callback is called once per flashlight state for an additive pass.
+
+	//Way for the client to determine which flashlight to use in single-pass modes. Does not actually enable the flashlight in any way.
+	virtual void SetSinglePassFlashlightRenderState( ShadowHandle_t handle ) = 0;
+
+	//Enable/Disable the flashlight state set with SetSinglePassFlashlightRenderState.
+	virtual void PushSinglePassFlashlightStateEnabled( bool bEnable ) = 0;
+	virtual void PopSinglePassFlashlightStateEnabled( void ) = 0;
+
+	virtual bool SinglePassFlashlightModeEnabled( void ) = 0;
+
+	// Determine a unique list of flashlights which hit at least one of the specified models
+	// Accepts an instance count and an array of ModelInstanceHandle_ts.
+	// Returns the number of FlashlightInstance_ts it's found that affect the models.
+	// Also fills in a mask of which flashlights affect each ModelInstanceHandle_t
+	// There can be at most MAX_FLASHLIGHTS_PER_INSTANCE_DRAW_CALL pFlashlights,
+	// and the size of the pModelUsageMask array must be nInstanceCount.
+	virtual int SetupFlashlightRenderInstanceInfo( ShadowHandle_t *pUniqueFlashlights, uint32 *pModelUsageMask, int nUsageStride, int nInstanceCount, const ModelInstanceHandle_t *pInstance ) = 0;
+
+	// Returns the flashlight state for multiple flashlights
+	virtual void GetFlashlightRenderInfo( FlashlightInstance_t *pFlashlightState, int nCount, const ShadowHandle_t *pHandles ) = 0;
+
+	virtual void RemoveAllDecalsFromShadow( ShadowHandle_t handle ) = 0;
+
+	virtual void SkipShadowForEntity( int nEntIndex ) = 0;
 };
 
 

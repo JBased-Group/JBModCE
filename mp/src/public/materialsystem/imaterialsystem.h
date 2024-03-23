@@ -133,6 +133,8 @@ enum MaterialPrimitiveType_t
 	MATERIAL_LINE_LOOP,	// a single line loop
 	MATERIAL_POLYGON,	// this is a *single* polygon
 	MATERIAL_QUADS,
+	MATERIAL_SUBD_QUADS_EXTRA, // Extraordinary sub-d quads
+	MATERIAL_SUBD_QUADS_REG,   // Regular sub-d quads
 	MATERIAL_INSTANCED_QUADS, // (X360) like MATERIAL_QUADS, but uses vertex instancing
 
 	// This is used for static meshes that contain multiple types of

@@ -1855,7 +1855,7 @@ ClientShadowHandle_t CClientShadowMgr::CreateProjectedTexture( ClientEntityHandl
 	{
 		createShadowFlags = SHADOW_CACHE_VERTS;
 	}
-	shadow.m_ShadowHandle = shadowmgr->CreateShadowEx( pShadowMaterial, pShadowModelMaterial, pShadowProxyData, createShadowFlags );
+	shadow.m_ShadowHandle = shadowmgr->CreateShadowEx( pShadowMaterial, pShadowModelMaterial, pShadowProxyData, createShadowFlags, -1 );
 	return h;
 }
 
@@ -3466,7 +3466,6 @@ void CClientShadowMgr::AddShadowToReceiver( ClientShadowHandle_t handle,
 					const_cast<model_t*>(pRenderable->GetModel()),
 					pRenderable->GetRenderOrigin(), pRenderable->GetRenderAngles() );
 
-				shadowmgr->AddFlashlightRenderable( shadow.m_ShadowHandle, pRenderable );
 			}
 		}
 		else
@@ -3497,7 +3496,6 @@ void CClientShadowMgr::AddShadowToReceiver( ClientShadowHandle_t handle,
 			{
 				staticpropmgr->AddShadowToStaticProp( shadow.m_ShadowHandle, pRenderable );
 
-				shadowmgr->AddFlashlightRenderable( shadow.m_ShadowHandle, pRenderable );
 			}
 		}
 		break;
@@ -3511,7 +3509,6 @@ void CClientShadowMgr::AddShadowToReceiver( ClientShadowHandle_t handle,
 			{
 				pRenderable->CreateModelInstance();
 				shadowmgr->AddShadowToModel( shadow.m_ShadowHandle, pRenderable->GetModelInstance() );
-				shadowmgr->AddFlashlightRenderable( shadow.m_ShadowHandle, pRenderable );
 			}
 		}
 		break;

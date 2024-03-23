@@ -3392,7 +3392,7 @@ inline void CMeshBuilder::Begin( IMesh *pMesh, MaterialPrimitiveType_t type, int
 
 	int nMaxVertexCount, nMaxIndexCount;
 	ComputeNumVertsAndIndices( &nMaxVertexCount, &nMaxIndexCount, type, numPrimitives );
-
+	
 	switch( type )
 	{
 	case MATERIAL_INSTANCED_QUADS:
@@ -3413,6 +3413,7 @@ inline void CMeshBuilder::Begin( IMesh *pMesh, MaterialPrimitiveType_t type, int
 		m_pMesh->SetPrimitiveType( type );
 	}
 
+	
 	// Lock the mesh
 	m_pMesh->LockMesh( nMaxVertexCount, nMaxIndexCount, *this );
 
