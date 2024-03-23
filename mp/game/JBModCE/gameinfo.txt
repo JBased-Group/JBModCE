@@ -21,6 +21,7 @@
 			"game"		"C:\Program Files (x86)\Steam\steamapps\common\Half-Life 2\episodic"
 			"game"		"C:\Program Files (x86)\Steam\steamapps\common\Alien Swarm Reactive Drop\reactivedrop"
 			"game"		"C:\Program Files (x86)\Steam\steamapps\common\Alien Swarm Reactive Drop\platform"
+			"game"		"Q:\JBased\JBModCE\mp\game\hl2ump\hl2_misc_dir"
 		}
 	}
 }

@@ -131,10 +131,6 @@ void ConnectHaptics(CreateInterfaceFn appFactory)
 		haptics = new CHapticsStubbed;
 	}
 
-	if(haptics->HasDevice())
-	{
-		Assert( (void*)haptics == inputsystem->GetHapticsInterfaceAddress() );
-	}
 	HookHapticMessages();
 }
 

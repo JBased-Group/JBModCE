@@ -172,7 +172,7 @@ IN_Joystick_Advanced_f
 */
 void IN_Joystick_Advanced_f (void)
 {
-	::input->Joystick_Advanced();
+	::input->Joystick_Advanced(true);
 }
 
 /*
@@ -1290,10 +1290,10 @@ void CInput::CreateMove ( int sequence_number, float input_sample_frametime, boo
 //			buffersize - 
 //			slot - 
 //-----------------------------------------------------------------------------
-void CInput::EncodeUserCmdToBuffer( bf_write& buf, int sequence_number )
+void CInput::EncodeUserCmdToBuffer(int nSlot, bf_write& buf, int sequence_number )
 {
 	CUserCmd nullcmd;
-	CUserCmd *cmd = GetUserCmd( sequence_number);
+	CUserCmd *cmd = GetUserCmd(nSlot, sequence_number);
 
 	WriteUsercmd( &buf, cmd, &nullcmd );
 }
@@ -1304,7 +1304,7 @@ void CInput::EncodeUserCmdToBuffer( bf_write& buf, int sequence_number )
 //			buffersize - 
 //			slot - 
 //-----------------------------------------------------------------------------
-void CInput::DecodeUserCmdFromBuffer( bf_read& buf, int sequence_number )
+void CInput::DecodeUserCmdFromBuffer(int nSlot, bf_read& buf, int sequence_number )
 {
 	CUserCmd nullcmd;
 	CUserCmd *cmd = &m_pCommands[ sequence_number % MULTIPLAYER_BACKUP];
@@ -1328,7 +1328,7 @@ void CInput::ValidateUserCmd( CUserCmd *usercmd, int sequence_number )
 //			from - 
 //			to - 
 //-----------------------------------------------------------------------------
-bool CInput::WriteUsercmdDeltaToBuffer( bf_write *buf, int from, int to, bool isnewcommand )
+bool CInput::WriteUsercmdDeltaToBuffer(int nSlot, bf_write *buf, int from, int to, bool isnewcommand )
 {
 	Assert( m_pCommands );
 
@@ -1344,7 +1344,7 @@ bool CInput::WriteUsercmdDeltaToBuffer( bf_write *buf, int from, int to, bool is
 	}
 	else
 	{
-		f = GetUserCmd( from );
+		f = GetUserCmd(nSlot, from );
 
 		if ( !f )
 		{
@@ -1357,7 +1357,7 @@ bool CInput::WriteUsercmdDeltaToBuffer( bf_write *buf, int from, int to, bool is
 		}
 	}
 
-	t = GetUserCmd( to );
+	t = GetUserCmd(nSlot, to );
 
 	if ( !t )
 	{
@@ -1390,7 +1390,7 @@ bool CInput::WriteUsercmdDeltaToBuffer( bf_write *buf, int from, int to, bool is
 // Input  : slot - 
 // Output : CUserCmd
 //-----------------------------------------------------------------------------
-CUserCmd *CInput::GetUserCmd( int sequence_number )
+CUserCmd *CInput::GetUserCmd(int nSlot, int sequence_number )
 {
 	Assert( m_pCommands );
 
@@ -1444,7 +1444,7 @@ Returns appropriate button info for keyboard and mouse state
 Set bResetState to 1 to clear old state info
 ============
 */
-int CInput::GetButtonBits( int bResetState )
+int CInput::GetButtonBits( bool bResetState )
 {
 	int bits = 0;
 
@@ -1642,6 +1642,7 @@ Init_All
 */
 void CInput::Init_All (void)
 {
+	m_hInputContext = engine->GetInputContext(ENGINE_INPUT_CONTEXT_GAME);
 	Assert( !m_pCommands );
 	m_pCommands = new CUserCmd[ MULTIPLAYER_BACKUP ];
 	m_pVerifiedCommands = new CVerifiedUserCmd[ MULTIPLAYER_BACKUP ];

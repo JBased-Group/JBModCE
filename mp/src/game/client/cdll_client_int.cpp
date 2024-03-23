@@ -693,9 +693,9 @@ public:
 	// Create movement command
 	virtual void					CreateMove(int sequence_number, float input_sample_frametime, bool active);
 	virtual void					ExtraMouseSample(float frametime, bool active);
-	virtual bool					WriteUsercmdDeltaToBuffer(int nSlot, bf_write* buf, int from, int to, bool isnewcommand) { return input->WriteUsercmdDeltaToBuffer(buf, from, to, isnewcommand); };
-	virtual void					EncodeUserCmdToBuffer(int nSlot, bf_write& buf, int slot) { input->EncodeUserCmdToBuffer(buf, slot); };
-	virtual void					DecodeUserCmdFromBuffer(int nSlot, bf_read& buf, int slot) { input->DecodeUserCmdFromBuffer(buf, slot); };
+	virtual bool					WriteUsercmdDeltaToBuffer(int nSlot, bf_write* buf, int from, int to, bool isnewcommand) { return input->WriteUsercmdDeltaToBuffer(nSlot, buf, from, to, isnewcommand); };
+	virtual void					EncodeUserCmdToBuffer(int nSlot, bf_write& buf, int slot) { input->EncodeUserCmdToBuffer(nSlot, buf, slot); };
+	virtual void					DecodeUserCmdFromBuffer(int nSlot, bf_read& buf, int slot) { input->DecodeUserCmdFromBuffer(nSlot, buf, slot); };
 
 
 	virtual void					View_Render(vrect_t* rect);
@@ -992,6 +992,11 @@ int CHLClient::Init( CreateInterfaceFn appSystemFactory, CGlobalVarsBase *pGloba
 		return false;
 	if ((materials = g_pMaterialSystem = (IMaterialSystem*)appSystemFactory("VMaterialSystem080", NULL)) == NULL) //MATERIAL_SYSTEM_INTERFACE_VERSION
 		return false;
+	if ((g_pInputStackSystem = (IInputStackSystem*)appSystemFactory("InputStackSystemVersion001", NULL)) == NULL) //INPUTSTACKSYSTEM_INTERFACE_VERSION
+		return false;
+	if ((g_pInputSystem = (IInputSystem*)appSystemFactory(INPUTSYSTEM_INTERFACE_VERSION, NULL)) == NULL)
+		return false;
+
 
 #ifdef WORKSHOP_IMPORT_ENABLED
 	if ( !ConnectDataModel( appSystemFactory ) )
@@ -1382,7 +1387,7 @@ void CHLClient::IN_DeactivateMouse( void )
 //-----------------------------------------------------------------------------
 void CHLClient::IN_Accumulate ( void )
 {
-	input->AccumulateMouse();
+	input->AccumulateMouse(0);
 }
 
 //-----------------------------------------------------------------------------

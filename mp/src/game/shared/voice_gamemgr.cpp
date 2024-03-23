@@ -216,9 +216,9 @@ void CVoiceGameMgr::UpdateMasks()
 		// Request the state of their "VModEnable" cvar.
 		if(g_bWantModEnable[iClient])
 		{
-
-			UserMessageBegin( user, "RequestState" );
-			MessageEnd();
+			
+			//UserMessageBegin( user, "RequestState" );
+			//MessageEnd();
 			// Since this is reliable, only send it once
 			g_bWantModEnable[iClient] = false;
 		}

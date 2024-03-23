@@ -45,14 +45,14 @@ public:
 
 	virtual		void		Init_All( void );
 	virtual		void		Shutdown_All( void );
-	virtual		int			GetButtonBits( int );
+	virtual		int			GetButtonBits( bool bResetState );
 	virtual		void		CreateMove ( int sequence_number, float input_sample_frametime, bool active );
 	virtual		void		ExtraMouseSample( float frametime, bool active );
-	virtual		bool		WriteUsercmdDeltaToBuffer( bf_write *buf, int from, int to, bool isnewcommand );
-	virtual		void		EncodeUserCmdToBuffer( bf_write& buf, int slot );
-	virtual		void		DecodeUserCmdFromBuffer( bf_read& buf, int slot );
+	virtual		bool		WriteUsercmdDeltaToBuffer( int nSlot, bf_write *buf, int from, int to, bool isnewcommand );
+	virtual		void		EncodeUserCmdToBuffer( int nSlot, bf_write& buf, int slot );
+	virtual		void		DecodeUserCmdFromBuffer( int nSlot, bf_read& buf, int slot );
 
-	virtual		CUserCmd	*GetUserCmd( int sequence_number );
+	virtual		CUserCmd	*GetUserCmd( int nSlot, int sequence_number );
 
 	virtual		void		MakeWeaponSelection( C_BaseCombatWeapon *weapon );
 
@@ -61,11 +61,11 @@ public:
 	virtual		kbutton_t	*FindKey( const char *name );
 
 	virtual		void		ControllerCommands( void );
-	virtual		void		Joystick_Advanced( void );
+	virtual		void		Joystick_Advanced( bool bSilent );
 	virtual		void		Joystick_SetSampleTime(float frametime);
 	virtual		void		IN_SetSampleTime( float frametime );
 
-	virtual		void		AccumulateMouse( void );
+	virtual		void		AccumulateMouse( int nSlot );
 	virtual		void		ActivateMouse( void );
 	virtual		void		DeactivateMouse( void );
 
@@ -78,29 +78,25 @@ public:
 
 //	virtual		bool		IsNoClipping( void );
 	virtual		float		GetLastForwardMove( void );
-	virtual		float		Joystick_GetForward( void );
-	virtual		float		Joystick_GetSide( void );
-	virtual		float		Joystick_GetPitch( void );
-	virtual		float		Joystick_GetYaw( void );
 	virtual		void		ClearInputButton( int bits );
 
 	virtual		void		CAM_Think( void );
-	virtual		int			CAM_IsThirdPerson( void );
+	virtual		int			CAM_IsThirdPerson( int nSlot = -1 );
+	virtual		void		CAM_GetCameraOffset(Vector& ofs) {};
 	virtual		void		CAM_ToThirdPerson(void);
 	virtual		void		CAM_ToFirstPerson(void);
+	virtual		void		CAM_ToThirdPersonShoulder(void) {};
 	virtual		void		CAM_StartMouseMove(void);
 	virtual		void		CAM_EndMouseMove(void);
 	virtual		void		CAM_StartDistance(void);
 	virtual		void		CAM_EndDistance(void);
 	virtual		int			CAM_InterceptingMouse( void );
+	virtual		void		CAM_Command(int command) {};
 
 	// orthographic camera info
 	virtual		void		CAM_ToOrthographic();
 	virtual		bool		CAM_IsOrthographic() const;
 	virtual		void		CAM_OrthographicSize( float& w, float& h ) const;
-
-	virtual		float		CAM_CapYaw( float fVal ) const { return fVal; }
-	virtual		float		CAM_CapPitch( float fVal ) const { return fVal; }
 	
 #if defined( HL2_CLIENT_DLL )
 	// IK back channel info
@@ -111,7 +107,10 @@ public:
 	virtual		void		CAM_SetCameraThirdData( CameraThirdData_t *pCameraData, const QAngle &vecCameraOffset );
 	virtual		void		CAM_CameraThirdThink( void );	
 
-	virtual	bool		EnableJoystickMode();
+	virtual		void		CheckPaused(CUserCmd* cmd) {};
+	virtual		void		CheckSplitScreenMimic(int nSlot, CUserCmd* cmd, CUserCmd* pPlayer0Command) {};
+
+	virtual bool	ControllerModeActive(void) { return false; };
 
 // Private Implementation
 protected:
@@ -264,7 +263,7 @@ private:
 
 	// Set until polled by CreateMove and cleared
 	CHandle< C_BaseCombatWeapon > m_hSelectedWeapon;
-
+	InputContextHandle_t m_hInputContext;
 #if defined( HL2_CLIENT_DLL )
 	CUtlVector< CEntityGroundContact > m_EntityGroundContact;
 #endif

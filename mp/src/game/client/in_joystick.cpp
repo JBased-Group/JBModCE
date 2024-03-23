@@ -128,13 +128,6 @@ extern ConVar cam_idealyaw;
 extern ConVar thirdperson_platformer;
 extern ConVar thirdperson_screenspace;
 
-//-----------------------------------------------------------------
-// Purpose: Returns true if there's an active joystick connected.
-//-----------------------------------------------------------------
-bool CInput::EnableJoystickMode()
-{
-	return IsConsole() || in_joystick.GetBool();
-}
 
 
 //-----------------------------------------------
@@ -457,7 +450,7 @@ static float ResponseCurveLook( int curve, float x, int axis, float otherAxis, f
 //-----------------------------------------------------------------------------
 // Purpose: Advanced joystick setup
 //-----------------------------------------------------------------------------
-void CInput::Joystick_Advanced(void)
+void CInput::Joystick_Advanced(bool bSilent)
 {
 	// called whenever an update is needed
 	int	i;
@@ -645,25 +638,6 @@ void CInput::Joystick_SetSampleTime(float frametime)
 	m_flRemainingJoystickSampleTime = frametime;
 }
 
-float CInput::Joystick_GetForward( void )
-{
-	return m_flPreviousJoystickForward;
-}
-
-float CInput::Joystick_GetSide( void )
-{
-	return m_flPreviousJoystickSide;
-}
-
-float CInput::Joystick_GetPitch( void )
-{
-	return m_flPreviousJoystickPitch;
-}
-
-float CInput::Joystick_GetYaw( void )
-{
-	return m_flPreviousJoystickYaw;
-}
 
 //-----------------------------------------------------------------------------
 // Purpose: Apply joystick to CUserCmd creation
@@ -675,7 +649,7 @@ void CInput::JoyStickMove( float frametime, CUserCmd *cmd )
 	// complete initialization if first time in ( needed as cvars are not available at initialization time )
 	if ( !m_fJoystickAdvancedInit )
 	{
-		Joystick_Advanced();
+		Joystick_Advanced(false);
 		m_fJoystickAdvancedInit = true;
 	}
 
@@ -687,7 +661,7 @@ void CInput::JoyStickMove( float frametime, CUserCmd *cmd )
 	bool haveJoysticks = ( inputsystem->GetJoystickCount() > 0 );
 	if ( haveJoysticks != m_fHadJoysticks )
 	{
-		Joystick_Advanced();
+		Joystick_Advanced(false);
 		m_fHadJoysticks = haveJoysticks;
 	}
 

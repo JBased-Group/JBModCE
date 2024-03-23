@@ -3700,7 +3700,7 @@ void CallbackPhyscannonImpact( const CEffectData &data )
 		::FormatViewModelAttachment( vecAttachment, true );
 
 		// Explosions at the impact point
-		FX_GaussExplosion( data.m_vOrigin, -dir, 0 );
+		//FX_GaussExplosion( data.m_vOrigin, -dir, 0 );
 
 		// Draw a beam
 		BeamInfo_t beamInfo;

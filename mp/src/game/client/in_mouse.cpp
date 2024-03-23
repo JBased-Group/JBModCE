@@ -135,6 +135,7 @@ void CInput::ActivateMouse (void)
 		m_fMouseActive = true;
 
 		ResetMouse();
+		g_pInputStackSystem->SetCursorIcon(m_hInputContext, ((InputCursorHandle_t)0));
 #if !defined( PLATFORM_WINDOWS )
 		int dx, dy;
 		engine->GetMouseDelta( dx, dy, true );
@@ -143,10 +144,6 @@ void CInput::ActivateMouse (void)
 		// Clear accumulated error, too
 		m_flAccumulatedMouseXMovement = 0;
 		m_flAccumulatedMouseYMovement = 0;
-
-		// clear raw mouse accumulated data
-		int rawX, rawY;
-		inputsystem->GetRawMouseAccumulators(rawX, rawY);
 	}
 }
 
@@ -169,7 +166,7 @@ void CInput::DeactivateMouse (void)
 #endif
 		}
 		m_fMouseActive = false;
-		vgui::surface()->SetCursor( vgui::dc_arrow );
+		g_pInputStackSystem->SetCursorIcon(m_hInputContext, g_pInputSystem->GetStandardCursor(INPUT_CURSOR_ARROW));
 #if !defined( PLATFORM_WINDOWS )
 		// now put the mouse back in the middle of the screen
 		ResetMouse();
@@ -341,16 +338,6 @@ void CInput::GetAccumulatedMouseDeltasAndResetAccumulators( float *mx, float *my
 
 	*mx = m_flAccumulatedMouseXMovement;
 	*my = m_flAccumulatedMouseYMovement;
-
-	if ( m_rawinput.GetBool() )
-	{
-		int rawMouseX, rawMouseY;
-		if ( inputsystem->GetRawMouseAccumulators(rawMouseX, rawMouseY) )
-		{
-			*mx = (float)rawMouseX;
-			*my = (float)rawMouseY;
-		}
-	}
 	
 	m_flAccumulatedMouseXMovement = 0;
 	m_flAccumulatedMouseYMovement = 0;
@@ -481,7 +468,7 @@ void CInput::ApplyMouse( QAngle& viewangles, CUserCmd *cmd, float mouse_x, float
 			else
 			{
 				// Otherwize, use mouse to spin around vertical axis
-				viewangles[YAW] -= CAM_CapYaw( m_yaw.GetFloat() * mouse_x );
+				viewangles[YAW] -= m_yaw.GetFloat() * mouse_x;
 			}
 		}
 	}
@@ -522,7 +509,7 @@ void CInput::ApplyMouse( QAngle& viewangles, CUserCmd *cmd, float mouse_x, float
 			}
 			else
 			{
-				viewangles[PITCH] += CAM_CapPitch( m_pitch->GetFloat() * mouse_y );
+				viewangles[PITCH] += m_pitch->GetFloat() * mouse_y;
 			}
 
 			// Check pitch bounds
@@ -559,7 +546,7 @@ void CInput::ApplyMouse( QAngle& viewangles, CUserCmd *cmd, float mouse_x, float
 //-----------------------------------------------------------------------------
 // Purpose: AccumulateMouse
 //-----------------------------------------------------------------------------
-void CInput::AccumulateMouse( void )
+void CInput::AccumulateMouse( int nSlot )
 {
 	if( !cl_mouseenable.GetBool() )
 	{
@@ -627,7 +614,7 @@ void CInput::AccumulateMouse( void )
 //-----------------------------------------------------------------------------
 void CInput::GetMousePos(int &ox, int &oy)
 {
-	GetVGUICursorPos( ox, oy );
+	g_pInputSystem->GetCursorPosition( &ox, &oy );
 }
 
 //-----------------------------------------------------------------------------
@@ -637,7 +624,7 @@ void CInput::GetMousePos(int &ox, int &oy)
 //-----------------------------------------------------------------------------
 void CInput::SetMousePos(int x, int y)
 {
-	SetVGUICursorPos(x, y);
+	g_pInputStackSystem->SetCursorPosition(m_hInputContext,x, y);
 }
 
 //-----------------------------------------------------------------------------
@@ -665,7 +652,7 @@ void CInput::MouseMove( CUserCmd *cmd )
 		 !vgui::surface()->IsCursorVisible() )
 	{
 		// Sample mouse one more time
-		AccumulateMouse();
+		AccumulateMouse(0);
 
 		// Latch accumulated mouse movements and reset accumulators
 		GetAccumulatedMouseDeltasAndResetAccumulators( &mx, &my );
@@ -767,7 +754,4 @@ void CInput::ClearStates (void)
 	m_flAccumulatedMouseXMovement = 0;
 	m_flAccumulatedMouseYMovement = 0;
 
-	// clear raw mouse accumulated data
-	int rawX, rawY;
-	inputsystem->GetRawMouseAccumulators(rawX, rawY);
 }

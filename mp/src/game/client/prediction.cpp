@@ -1533,7 +1533,7 @@ bool CPrediction::PerformPrediction( bool received_new_world_update, C_BasePlaye
 		if ( i >= MULTIPLAYER_BACKUP )
 			break;
 
-		CUserCmd *cmd = input->GetUserCmd( current_command );
+		CUserCmd *cmd = input->GetUserCmd(0, current_command );
 		
 		if ( !cmd )
 		{

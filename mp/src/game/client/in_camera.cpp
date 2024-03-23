@@ -877,7 +877,7 @@ CAM_IsThirdPerson
 
 ==============================
 */
-int CInput::CAM_IsThirdPerson( void )
+int CInput::CAM_IsThirdPerson( int nSlot )
 {
 	return m_fCameraInThirdPerson;
 }

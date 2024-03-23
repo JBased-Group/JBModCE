@@ -77,6 +77,11 @@ public:
 		if ( dt == IDENTICAL )
 			return;
 
+		if (*(int*)&indata < 0x100000)
+		{
+			__debugbreak();
+		}
+
 		memcpy( outdata, indata, size );
 	}
 

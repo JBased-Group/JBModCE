@@ -97,11 +97,12 @@ inline void CopyParticle( const T *pSrc, T *pDest )
 
 void AddSimpleParticle( const SimpleParticle *pParticle, PMaterialHandle hMaterial, bool bInSkybox )
 {
-	if ( g_pSimpleSingleton[bInSkybox].IsValid() )
-	{
-		SimpleParticle *pNew = g_pSimpleSingleton[bInSkybox]->AddSimpleParticle( hMaterial, pParticle->m_Pos );
-		CopyParticle( pParticle, pNew );
-	}
+	return;
+	//if ( g_pSimpleSingleton[bInSkybox].IsValid() )
+	//{
+	//	SimpleParticle *pNew = g_pSimpleSingleton[bInSkybox]->AddSimpleParticle( hMaterial, pParticle->m_Pos );
+	//	CopyParticle( pParticle, pNew );
+	//}
 }
 
 

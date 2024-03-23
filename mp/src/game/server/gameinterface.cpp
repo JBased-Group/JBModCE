@@ -807,7 +807,7 @@ bool			CServerGameDLL::SupportsRandomMaps()
 // return true to disconnect client due to timeout (used to do stricter timeouts when the game is sure the client isn't loading a map)
 bool			CServerGameDLL::ShouldTimeoutClient(int nUserID, float flTimeSinceLastReceived)
 {
-	Msg("IMPLEMENT " __FUNCTION__ " !!!\n");
+	//Msg("IMPLEMENT " __FUNCTION__ " !!!\n");
 	return false;
 }
 
