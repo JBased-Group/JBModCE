@@ -276,11 +276,6 @@ public:
 abstract_class IIndexBuffer
 {
 public:
-	// Add a virtual destructor to silence the clang warning.
-	// This is harmless but not important since the only derived class
-	// doesn't have a destructor.
-	virtual ~IIndexBuffer() {}
-
 	// NOTE: The following two methods are only valid for static index buffers
 	// Returns the number of indices and the format of the index buffer
 	virtual int IndexCount() const = 0;
@@ -301,7 +296,7 @@ public:
 	virtual bool Lock( int nMaxIndexCount, bool bAppend, IndexDesc_t &desc ) = 0;
 	virtual void Unlock( int nWrittenIndexCount, IndexDesc_t &desc ) = 0;
 
-	// FIXME: Remove this!!
+	// FIXME: Remove this!! Here only for backward compat on IMesh
 	// Locks, unlocks the index buffer for modify
 	virtual void ModifyBegin( bool bReadOnly, int nFirstIndex, int nIndexCount, IndexDesc_t& desc ) = 0;
 	virtual void ModifyEnd( IndexDesc_t& desc ) = 0;
@@ -311,6 +306,9 @@ public:
 
 	// Ensures the data in the index buffer is valid
 	virtual void ValidateData( int nIndexCount, const IndexDesc_t &desc ) = 0;
+
+	// For backward compat to IMesh
+	virtual IMesh* GetMesh() = 0;
 };
 
 
@@ -367,7 +365,10 @@ public:
 
 	virtual void MarkAsDrawn() = 0;
 
-	virtual unsigned ComputeMemoryUsed() = 0;
+	// NOTE: I chose to create this method strictly because it's 2 days to code lock
+	// and I could use the DrawInstances technique without a larger code change
+	// Draws the mesh w/ modulation.
+	virtual void DrawModulated( const Vector4D &diffuseModulation, int nFirstIndex = -1, int nIndexCount = 0 ) = 0;
 };
 
 

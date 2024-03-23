@@ -654,8 +654,6 @@ void CViewRender::SetUpViews()
 	view.fov				= default_fov.GetFloat();
 
 	view.m_bOrtho			= false;
-    view.m_bViewToProjectionOverride = false;
-	view.m_eStereoEye		= STEREO_EYE_MONO;
 
 	// Enable spatial partition access to edicts
 	partition->SuppressLists( PARTITION_ALL_CLIENT_EDICTS, false );
@@ -742,37 +740,10 @@ void CViewRender::SetUpViews()
 	view.fovViewmodel = g_pClientMode->GetViewModelFOV() - flFOVOffset;
 #endif
 
-	if ( UseVR() )
-	{
-		// Let the headtracking read the status of the HMD, etc.
-		// This call can go almost anywhere, but it needs to know the player FOV for sniper weapon zoom, etc
-		if ( flFOVOffset == 0.0f )
-		{
-			g_ClientVirtualReality.ProcessCurrentTrackingState ( 0.0f );
-		}
-		else
-		{
-			g_ClientVirtualReality.ProcessCurrentTrackingState ( view.fov );
-		}
-
-		HeadtrackMovementMode_t hmmOverrideMode = g_pClientMode->ShouldOverrideHeadtrackControl();
-		g_ClientVirtualReality.OverrideView( &m_View, &ViewModelOrigin, &ViewModelAngles, hmmOverrideMode );
-
-		// left and right stereo views should default to being the same as the mono/middle view
-		m_ViewLeft = m_View;
-		m_ViewRight = m_View;
-		m_ViewLeft.m_eStereoEye = STEREO_EYE_LEFT;
-		m_ViewRight.m_eStereoEye = STEREO_EYE_RIGHT;
-
-		g_ClientVirtualReality.OverrideStereoView( &m_View, &m_ViewLeft, &m_ViewRight );
-	}
-	else
 	{
 		// left and right stereo views should default to being the same as the mono/middle view
 		m_ViewLeft = m_View;
 		m_ViewRight = m_View;
-		m_ViewLeft.m_eStereoEye = STEREO_EYE_LEFT;
-		m_ViewRight.m_eStereoEye = STEREO_EYE_RIGHT;
 	}
 
 	if ( bCalcViewModelView )
@@ -1148,10 +1119,6 @@ void CViewRender::Render( vrect_t *rect )
 
 	    float flViewportScale = mat_viewportscale.GetFloat();
 
-		view.m_nUnscaledX = vr.x;
-		view.m_nUnscaledY = vr.y;
-		view.m_nUnscaledWidth = vr.width;
-		view.m_nUnscaledHeight = vr.height;
 
         switch( eEye )
 		{
@@ -1178,10 +1145,6 @@ void CViewRender::Render( vrect_t *rect )
 			case STEREO_EYE_LEFT:
 			{
 				g_pSourceVR->GetViewportBounds( (ISourceVirtualReality::VREye)(eEye - 1 ), &view.x, &view.y, &view.width, &view.height );
-				view.m_nUnscaledWidth = view.width;
-				view.m_nUnscaledHeight = view.height;
-				view.m_nUnscaledX = view.x;
-				view.m_nUnscaledY = view.y;
 			}
 			break;
 

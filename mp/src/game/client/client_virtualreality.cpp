@@ -393,16 +393,14 @@ void CClientVirtualReality::DrawMainMenu()
 	viewEye[ STEREO_EYE_MONO ].zFar = 10000.f;
 	viewEye[ STEREO_EYE_MONO ].angles.Init();
 	viewEye[ STEREO_EYE_MONO ].origin.Zero();
-	viewEye[ STEREO_EYE_MONO ].x = viewEye[ STEREO_EYE_MONO ].m_nUnscaledX =  leftX;
-	viewEye[ STEREO_EYE_MONO ].y = viewEye[ STEREO_EYE_MONO ].m_nUnscaledY = leftY;
-	viewEye[ STEREO_EYE_MONO ].width = viewEye[ STEREO_EYE_MONO ].m_nUnscaledWidth = leftW;
-	viewEye[ STEREO_EYE_MONO ].height = viewEye[ STEREO_EYE_MONO ].m_nUnscaledHeight = leftH;
+	viewEye[ STEREO_EYE_MONO ].x =  leftX;
+	viewEye[ STEREO_EYE_MONO ].y = leftY;
+	viewEye[ STEREO_EYE_MONO ].width = leftW;
+	viewEye[ STEREO_EYE_MONO ].height = leftH;
 
 	viewEye[STEREO_EYE_LEFT] = viewEye[STEREO_EYE_RIGHT] = viewEye[ STEREO_EYE_MONO ] ;
-	viewEye[STEREO_EYE_LEFT].m_eStereoEye = STEREO_EYE_LEFT;
 	viewEye[STEREO_EYE_RIGHT].x = rightX;
 	viewEye[STEREO_EYE_RIGHT].y = rightY;
-	viewEye[STEREO_EYE_RIGHT].m_eStereoEye = STEREO_EYE_RIGHT;
 
 	// let sourcevr.dll tell us where to put the cameras
 	ProcessCurrentTrackingState( 0 );
@@ -604,7 +602,10 @@ bool CClientVirtualReality::OverrideStereoView( CViewSetup *pViewMiddle, CViewSe
 	{
 		return false;
 	}
-
+	(void)pViewMiddle;
+	(void)pViewLeft;
+	(void)pViewRight;
+	/*
 	VMatrix matOffsetLeft = g_pSourceVR->GetMidEyeFromEye( ISourceVirtualReality::VREye_Left );
 	VMatrix matOffsetRight = g_pSourceVR->GetMidEyeFromEye( ISourceVirtualReality::VREye_Right );
 
@@ -740,11 +741,11 @@ bool CClientVirtualReality::OverrideStereoView( CViewSetup *pViewMiddle, CViewSe
 
 	// Remember in source X forwards, Y left, Z up.
 	// We need to transform to a more conventional X right, Y up, Z backwards before doing the projection.
-	VMatrix WorldFromHudView;
-	WorldFromHudView./*X vector*/SetForward ( -m_WorldFromHud.GetLeft() );
-	WorldFromHudView./*Y vector*/SetLeft    ( m_WorldFromHud.GetUp() );
-	WorldFromHudView./*Z vector*/SetUp      ( -m_WorldFromHud.GetForward() );
-	WorldFromHudView.SetTranslation         ( m_PlayerViewOrigin );
+	VMatrix WorldFromHudView;*/
+	//WorldFromHudView./*X vector*/SetForward ( -m_WorldFromHud.GetLeft() );
+	//WorldFromHudView./*Y vector*/SetLeft    ( m_WorldFromHud.GetUp() );
+	//WorldFromHudView./*Z vector*/SetUp      ( -m_WorldFromHud.GetForward() );
+	/*WorldFromHudView.SetTranslation(m_PlayerViewOrigin);
 
 	VMatrix HudProjection;
 	HudProjection.Identity();
@@ -757,6 +758,8 @@ bool CClientVirtualReality::OverrideStereoView( CViewSetup *pViewMiddle, CViewSe
 	//  when projected (i.e. divide by w) maps to HUD space [-1,1]
 	m_HudProjectionFromWorld = HudProjection * WorldFromHudView.InverseTR();
 
+	return true;
+	*/
 	return true;
 }
 
@@ -1351,7 +1354,7 @@ void CClientVirtualReality::OverlayHUDQuadWithUndistort( const CViewSetup &eyeVi
 	ndcHudBounds[2] = Max ( Max( pUL.x, pUR.x ), Max( pLL.x, pLR.x ) );
 	ndcHudBounds[3] = Max ( Max( pUL.y, pUR.y ), Max( pLL.y, pLR.y ) );
 
-	ISourceVirtualReality::VREye sourceVrEye = ( eyeView.m_eStereoEye == STEREO_EYE_LEFT ) ? ISourceVirtualReality::VREye_Left : ISourceVirtualReality::VREye_Right;
+	ISourceVirtualReality::VREye sourceVrEye = ISourceVirtualReality::VREye_Left;
 
 	g_pSourceVR->CompositeHud ( sourceVrEye, ndcHudBounds, bDoUndistort, bBlackout, bTranslucent );
 }
@@ -1436,7 +1439,7 @@ void CClientVirtualReality::Activate()
 	int nViewportWidth, nViewportHeight;
 
 	g_pSourceVR->GetViewportBounds( ISourceVirtualReality::VREye_Left, NULL, NULL, &nViewportWidth, &nViewportHeight );
-	g_pMatSystemSurface->SetFullscreenViewportAndRenderTarget( 0, 0, nViewportWidth, nViewportHeight, g_pSourceVR->GetRenderTarget( ISourceVirtualReality::VREye_Left, ISourceVirtualReality::RT_Color ) );
+	//g_pMatSystemSurface->SetFullscreenViewportAndRenderTarget( 0, 0, nViewportWidth, nViewportHeight, g_pSourceVR->GetRenderTarget( ISourceVirtualReality::VREye_Left, ISourceVirtualReality::RT_Color ) );
 
 	vgui::ivgui()->SetVRMode( true );
 
@@ -1466,7 +1469,7 @@ void CClientVirtualReality::Deactivate()
 
 	g_pMatSystemSurface->ForceScreenSizeOverride(false, 0, 0 );
 	g_pMaterialSystem->GetRenderContext()->Viewport( 0, 0, m_nNonVRWidth, m_nNonVRHeight );
-	g_pMatSystemSurface->SetFullscreenViewportAndRenderTarget( 0, 0, m_nNonVRWidth, m_nNonVRHeight, NULL );
+	//g_pMatSystemSurface->SetFullscreenViewportAndRenderTarget( 0, 0, m_nNonVRWidth, m_nNonVRHeight, NULL );
 
     static ConVarRef cl_software_cursor( "cl_software_cursor" );
     vgui::surface()->SetSoftwareCursor( cl_software_cursor.GetBool() );

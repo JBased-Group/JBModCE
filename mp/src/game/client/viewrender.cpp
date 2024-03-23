@@ -1057,11 +1057,6 @@ void CViewRender::DrawViewModels( const CViewSetup &view, bool drawViewmodel )
 
 	ITexture *pRTColor = NULL;
 	ITexture *pRTDepth = NULL;
-	if( view.m_eStereoEye != STEREO_EYE_MONO )
-	{
-		pRTColor = g_pSourceVR->GetRenderTarget( (ISourceVirtualReality::VREye)(view.m_eStereoEye-1), ISourceVirtualReality::RT_Color );
-		pRTDepth = g_pSourceVR->GetRenderTarget( (ISourceVirtualReality::VREye)(view.m_eStereoEye-1), ISourceVirtualReality::RT_Depth );
-	}
 
 	render->Push3DView( viewModelSetup, 0, pRTColor, GetFrustum(), pRTDepth );
 
@@ -1832,12 +1827,6 @@ void CViewRender::SetupMain3DView( const CViewSetup &view, int &nClearFlags )
 	{
 		ITexture *pRTColor = NULL;
 		ITexture *pRTDepth = NULL;
-		if( view.m_eStereoEye != STEREO_EYE_MONO )
-		{
-			pRTColor = g_pSourceVR->GetRenderTarget( (ISourceVirtualReality::VREye)(view.m_eStereoEye-1), ISourceVirtualReality::RT_Color );
-			pRTDepth = g_pSourceVR->GetRenderTarget( (ISourceVirtualReality::VREye)(view.m_eStereoEye-1), ISourceVirtualReality::RT_Depth );
-		}
-
 		render->Push3DView( view, nClearFlags, pRTColor, GetFrustum(), pRTDepth );
 	}
 
@@ -1940,7 +1929,7 @@ void CViewRender::RenderView( const CViewSetup &view, int nClearFlags, int whatT
 	ITexture *saveRenderTarget = pRenderContext->GetRenderTarget();
 	pRenderContext.SafeRelease(); // don't want to hold for long periods in case in a locking active share thread mode
 
-	if ( !m_rbTakeFreezeFrame[ view.m_eStereoEye ] && m_flFreezeFrameUntil > gpGlobals->curtime )
+	if ( !m_rbTakeFreezeFrame[ 0 ] && m_flFreezeFrameUntil > gpGlobals->curtime )
 	{
 		CRefPtr<CFreezeFrameView> pFreezeFrameView = new CFreezeFrameView( this );
 		pFreezeFrameView->Setup( view );
@@ -2100,7 +2089,7 @@ void CViewRender::RenderView( const CViewSetup &view, int nClearFlags, int whatT
 
 		CleanupMain3DView( view );
 
-		if ( m_rbTakeFreezeFrame[ view.m_eStereoEye ] )
+		if ( m_rbTakeFreezeFrame[ 0 ] )
 		{
 			Rect_t rect;
 			rect.x = view.x;
@@ -2119,7 +2108,7 @@ void CViewRender::RenderView( const CViewSetup &view, int nClearFlags, int whatT
 				pRenderContext->CopyRenderTargetToTextureEx( GetFullscreenTexture(), 0, &rect, &rect );
 			}
 			pRenderContext.SafeRelease();
-			m_rbTakeFreezeFrame[ view.m_eStereoEye ] = false;
+			m_rbTakeFreezeFrame[ 0 ] = false;
 		}
 
 		pRenderContext = materials->GetRenderContext();
@@ -2143,39 +2132,6 @@ void CViewRender::RenderView( const CViewSetup &view, int nClearFlags, int whatT
 
 	}
 
-	if ( mat_viewportupscale.GetBool() && mat_viewportscale.GetFloat() < 1.0f ) 
-	{
-		CMatRenderContextPtr pRenderContext( materials );
-
-		ITexture	*pFullFrameFB1 = materials->FindTexture( "_rt_FullFrameFB1", TEXTURE_GROUP_RENDER_TARGET );
-		IMaterial	*pCopyMaterial = materials->FindMaterial( "dev/upscale", TEXTURE_GROUP_OTHER );
-		pCopyMaterial->IncrementReferenceCount();
-
-		Rect_t	DownscaleRect, UpscaleRect;
-
-		DownscaleRect.x = view.x;
-		DownscaleRect.y = view.y;
-		DownscaleRect.width = view.width;
-		DownscaleRect.height = view.height;
-
-		UpscaleRect.x = view.m_nUnscaledX;
-		UpscaleRect.y = view.m_nUnscaledY;
-		UpscaleRect.width = view.m_nUnscaledWidth;
-		UpscaleRect.height = view.m_nUnscaledHeight;
-
-		pRenderContext->CopyRenderTargetToTextureEx( pFullFrameFB1, 0, &DownscaleRect, &DownscaleRect );
-		pRenderContext->DrawScreenSpaceRectangle( pCopyMaterial, UpscaleRect.x, UpscaleRect.y, UpscaleRect.width, UpscaleRect.height,
-			DownscaleRect.x, DownscaleRect.y, DownscaleRect.x+DownscaleRect.width-1, DownscaleRect.y+DownscaleRect.height-1, 
-			pFullFrameFB1->GetActualWidth(), pFullFrameFB1->GetActualHeight() );
-
-		pCopyMaterial->DecrementReferenceCount();
-	}
-
-	// if we're in VR mode we might need to override the render target
-	if( UseVR() )
-	{
-		saveRenderTarget = g_pSourceVR->GetRenderTarget( (ISourceVirtualReality::VREye)(view.m_eStereoEye - 1), ISourceVirtualReality::RT_Color );
-	}
 
 	// Draw the 2D graphics
 	render->Push2DView( view, 0, saveRenderTarget, GetFrustum() );
@@ -2185,47 +2141,16 @@ void CViewRender::RenderView( const CViewSetup &view, int nClearFlags, int whatT
 	if ( whatToDraw & RENDERVIEW_DRAWHUD )
 	{
 		VPROF_BUDGET( "VGui_DrawHud", VPROF_BUDGETGROUP_OTHER_VGUI );
-		int viewWidth = view.m_nUnscaledWidth;
-		int viewHeight = view.m_nUnscaledHeight;
-		int viewActualWidth = view.m_nUnscaledWidth;
-		int viewActualHeight = view.m_nUnscaledHeight;
-		int viewX = view.m_nUnscaledX;
-		int viewY = view.m_nUnscaledY;
-		int viewFramebufferX = 0;
-		int viewFramebufferY = 0;
-		int viewFramebufferWidth = viewWidth;
-		int viewFramebufferHeight = viewHeight;
+		int viewWidth = view.width;
+		int viewHeight = view.height;
+		int viewActualWidth = view.width;
+		int viewActualHeight = view.height;
+		int viewX = view.x;
+		int viewY = view.y;
+		//int viewFramebufferHeight = viewHeight;
 		bool bClear = false;
 		bool bPaintMainMenu = false;
 		ITexture *pTexture = NULL;
-		if( UseVR() )
-		{
-			if( g_ClientVirtualReality.ShouldRenderHUDInWorld() )
-			{
-				pTexture = materials->FindTexture( "_rt_gui", NULL, false );
-				if( pTexture )
-				{
-					bPaintMainMenu = true;
-					bClear = true;
-					viewX = 0;
-					viewY = 0;
-					viewActualWidth = pTexture->GetActualWidth();
-					viewActualHeight = pTexture->GetActualHeight();
-
-					vgui::surface()->GetScreenSize( viewWidth, viewHeight );
-
-					viewFramebufferX = 0;
-					if( view.m_eStereoEye == STEREO_EYE_RIGHT && !saveRenderTarget )
-						viewFramebufferX = viewFramebufferWidth;
-					viewFramebufferY = 0;
-				}
-			}
-			else
-			{
-				viewFramebufferX = view.m_eStereoEye == STEREO_EYE_RIGHT ? viewWidth : 0;
-				viewFramebufferY = 0;
-			}
-		}
 
 		// Get the render context out of materials to avoid some debug stuff.
 		// WARNING THIS REQUIRES THE .SafeRelease below or it'll never release the ref
@@ -2246,10 +2171,10 @@ void CViewRender::RenderView( const CViewSetup &view, int nClearFlags, int whatT
 		}
 
 		// let vgui know where to render stuff for the forced-to-framebuffer panels
-		if( UseVR() )
-		{
-			g_pMatSystemSurface->SetFullscreenViewportAndRenderTarget( viewFramebufferX, viewFramebufferY, viewFramebufferWidth, viewFramebufferHeight, saveRenderTarget );
-		}
+		//if( UseVR() )
+		//{
+		//	g_pMatSystemSurface->SetFullscreenViewportAndRenderTarget( viewFramebufferX, viewFramebufferY, viewFramebufferWidth, viewFramebufferHeight, saveRenderTarget );
+		//}
 
 		// clear the render target if we need to
 		if( bClear )
@@ -3098,7 +3023,6 @@ bool CViewRender::DrawOneMonitor( ITexture *pRenderTarget, int cameraNum, C_Poin
 	monitorView.fov = pCameraEnt->GetFOV();
 	monitorView.m_bOrtho = false;
 	monitorView.m_flAspectRatio = pCameraEnt->UseScreenAspectRatio() ? 0.0f : 1.0f;
-	monitorView.m_bViewToProjectionOverride = false;
 
 	// @MULTICORE (toml 8/11/2006): this should be a renderer....
 	Frustum frustum;
@@ -4880,11 +4804,6 @@ void CSkyboxView::Draw()
 
 	ITexture *pRTColor = NULL;
 	ITexture *pRTDepth = NULL;
-	if( m_eStereoEye != STEREO_EYE_MONO )
-	{
-		pRTColor = g_pSourceVR->GetRenderTarget( (ISourceVirtualReality::VREye)(m_eStereoEye-1), ISourceVirtualReality::RT_Color );
-		pRTDepth = g_pSourceVR->GetRenderTarget( (ISourceVirtualReality::VREye)(m_eStereoEye-1), ISourceVirtualReality::RT_Depth );
-	}
 
 	DrawInternal(VIEW_3DSKY, true, pRTColor, pRTDepth );
 }
@@ -5088,19 +5007,6 @@ void CFreezeFrameView::Draw( void )
 	int nTexX1 = width, nTexY1 = height;
 	int nTexWidth = width, nTexHeight = height;
 
-	switch( m_eStereoEye )
-	{
-	case STEREO_EYE_LEFT:
-		nTexX1 = width;
-		nTexWidth *= 2;
-		break;
-
-	case STEREO_EYE_RIGHT:
-		nTexX0 = width;
-		nTexX1 = width*2;
-		nTexWidth *= 2;
-		break;
-	}
 
 	pRenderContext->DrawScreenSpaceRectangle( m_pFreezeFrame, x, y, width, height,
 		nTexX0, nTexY0, nTexX1-1, nTexY1-1, nTexWidth, nTexHeight );
@@ -5149,14 +5055,6 @@ bool CBaseWorldView::AdjustView( float waterHeight )
 	{
 		ITexture *pTexture = GetWaterReflectionTexture();
 
-		// If the main view is overriding the projection matrix (for Stereo or
-		// some other nefarious purpose) make sure to include any Y offset in 
-		// the custom projection matrix in our reflected overridden projection
-		// matrix.
-		if( m_bViewToProjectionOverride )
-		{
-			m_ViewToProjection[1][2] = -m_ViewToProjection[1][2];
-		}
 
 		// Use the aspect ratio of the main view! So, don't recompute it here
 		x = y = 0;
