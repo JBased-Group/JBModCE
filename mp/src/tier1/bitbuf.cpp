@@ -80,6 +80,41 @@ void SetBitBufErrorHandler( BitBufErrorHandler fn )
 	g_BitBufErrorHandler = fn;
 }
 
+const uint32 bf_read::s_nMaskTable[33] = {
+	0,
+	(1 << 1) - 1,
+	(1 << 2) - 1,
+	(1 << 3) - 1,
+	(1 << 4) - 1,
+	(1 << 5) - 1,
+	(1 << 6) - 1,
+	(1 << 7) - 1,
+	(1 << 8) - 1,
+	(1 << 9) - 1,
+	(1 << 10) - 1,
+	(1 << 11) - 1,
+	(1 << 12) - 1,
+	(1 << 13) - 1,
+	(1 << 14) - 1,
+	(1 << 15) - 1,
+	(1 << 16) - 1,
+	(1 << 17) - 1,
+	(1 << 18) - 1,
+	(1 << 19) - 1,
+	(1 << 20) - 1,
+	(1 << 21) - 1,
+	(1 << 22) - 1,
+	(1 << 23) - 1,
+	(1 << 24) - 1,
+	(1 << 25) - 1,
+	(1 << 26) - 1,
+	(1 << 27) - 1,
+	(1 << 28) - 1,
+	(1 << 29) - 1,
+	(1 << 30) - 1,
+	0x7fffffff,
+	0xffffffff,
+};
 
 // #define BB_PROFILING
 
@@ -790,23 +825,21 @@ bool bf_write::WriteString(const char *pStr)
 bf_read::bf_read()
 {
 	m_pData = NULL;
+	m_pDataIn = NULL;
 	m_nDataBytes = 0;
 	m_nDataBits = -1; // set to -1 so we overflow on any operation
-	m_iCurBit = 0;
 	m_bOverflow = false;
-	m_bAssertOnOverflow = true;
+	m_pBufferEnd = 0;
 	m_pDebugName = NULL;
 }
 
 bf_read::bf_read( const void *pData, int nBytes, int nBits )
 {
-	m_bAssertOnOverflow = true;
 	StartReading( pData, nBytes, 0, nBits );
 }
 
 bf_read::bf_read( const char *pDebugName, const void *pData, int nBytes, int nBits )
 {
-	m_bAssertOnOverflow = true;
 	m_pDebugName = pDebugName;
 	StartReading( pData, nBytes, 0, nBits );
 }
@@ -816,7 +849,7 @@ void bf_read::StartReading( const void *pData, int nBytes, int iStartBit, int nB
 	// Make sure we're dword aligned.
 	Assert(((size_t)pData & 3) == 0);
 
-	m_pData = (unsigned char*)pData;
+	m_pData = (const uint32*)pData;
 	m_nDataBytes = nBytes;
 
 	if ( nBits == -1 )
@@ -829,19 +862,19 @@ void bf_read::StartReading( const void *pData, int nBytes, int iStartBit, int nB
 		m_nDataBits = nBits;
 	}
 
-	m_iCurBit = iStartBit;
+	Seek(iStartBit);
 	m_bOverflow = false;
 }
 
 void bf_read::Reset()
 {
-	m_iCurBit = 0;
+	Seek(0);
 	m_bOverflow = false;
 }
 
 void bf_read::SetAssertOnOverflow( bool bAssert )
 {
-	m_bAssertOnOverflow = bAssert;
+	
 }
 
 void bf_read::SetDebugName( const char *pName )
@@ -851,10 +884,6 @@ void bf_read::SetDebugName( const char *pName )
 
 void bf_read::SetOverflowFlag()
 {
-	if ( m_bAssertOnOverflow )
-	{
-		Assert( false );
-	}
 	m_bOverflow = true;
 }
 
@@ -869,7 +898,7 @@ unsigned int bf_read::CheckReadUBitLong(int numbits)
 		nBitValue = ReadOneBitNoCheck();
 		r |= nBitValue << i;
 	}
-	m_iCurBit -= numbits;
+	SeekRelative(-numbits);
 	
 	return r;
 }
@@ -999,7 +1028,7 @@ unsigned int bf_read::ReadUBitLongNoInline( int numbits )
 
 unsigned int bf_read::ReadUBitVarInternal( int encodingType )
 {
-	m_iCurBit -= 4;
+	SeekRelative(-4);
 	// int bits = { 4, 8, 12, 32 }[ encodingType ];
 	int bits = 4 + encodingType*4 + (((2 - encodingType) >> 31) & 16);
 	return ReadUBitLong( bits );

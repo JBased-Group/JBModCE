@@ -584,20 +584,10 @@ public:
 	virtual void			MarkPathIDByRequestOnly( const char *pPathID, bool bRequestOnly ) = 0;
 
 	// converts a partial path into a full path
-	// Prefer using the RelativePathToFullPath_safe template wrapper to calling this directly
-	virtual const char		*RelativePathToFullPath( const char *pFileName, const char *pPathID, OUT_Z_CAP(maxLenInChars) char *pDest, int maxLenInChars, PathTypeFilter_t pathFilter = FILTER_NONE, PathTypeQuery_t *pPathType = NULL ) = 0;
-	template <size_t maxLenInChars> const char *RelativePathToFullPath_safe( const char *pFileName, const char *pPathID, OUT_Z_ARRAY char (&pDest)[maxLenInChars], PathTypeFilter_t pathFilter = FILTER_NONE, PathTypeQuery_t *pPathType = NULL )
-	{
-		return RelativePathToFullPath( pFileName, pPathID, pDest, (int)maxLenInChars, pathFilter, pPathType );
-	}
+	virtual const char		*RelativePathToFullPath( const char *pFileName, const char *pPathID, char *pLocalPath, int localPathBufferSize, PathTypeFilter_t pathFilter = FILTER_NONE, PathTypeQuery_t *pPathType = NULL ) = 0;
 
 	// Returns the search path, each path is separated by ;s. Returns the length of the string returned
-	// Prefer using the GetSearchPath_safe template wrapper to calling this directly
-	virtual int				GetSearchPath( const char *pathID, bool bGetPackFiles, OUT_Z_CAP(maxLenInChars) char *pDest, int maxLenInChars ) = 0;
-	template <size_t maxLenInChars> int GetSearchPath_safe( const char *pathID, bool bGetPackFiles, OUT_Z_ARRAY char (&pDest)[maxLenInChars] )
-	{
-		return GetSearchPath( pathID, bGetPackFiles, pDest, (int)maxLenInChars );
-	}
+	virtual int				GetSearchPath( const char *pathID, bool bGetPackFiles, char *pPath, int nMaxLen ) = 0;
 
 	// interface for custom pack files > 4Gb
 	virtual bool			AddPackFile( const char *fullpath, const char *pathID ) = 0;
@@ -631,7 +621,7 @@ public:
 	virtual bool			EndOfFile( FileHandle_t file ) = 0;
 
 	virtual char			*ReadLine( char *pOutput, int maxChars, FileHandle_t file ) = 0;
-	virtual int				FPrintf( FileHandle_t file, PRINTF_FORMAT_STRING const char *pFormat, ... ) = 0;
+	virtual int				FPrintf( FileHandle_t file, const char *pFormat, ... ) FMTFUNCTION( 3, 4 ) = 0;
 
 	//--------------------------------------------------------
 	// Dynamic library operations
@@ -664,21 +654,11 @@ public:
 
 	// FIXME: This method is obsolete! Use RelativePathToFullPath instead!
 	// converts a partial path into a full path
-	// Prefer using the GetLocalPath_safe template wrapper to calling this directly
-	virtual const char		*GetLocalPath( const char *pFileName, OUT_Z_CAP(maxLenInChars) char *pDest, int maxLenInChars ) = 0;
-	template <size_t maxLenInChars> const char *GetLocalPath_safe( const char *pFileName, OUT_Z_ARRAY char (&pDest)[maxLenInChars] )
-	{
-		return GetLocalPath( pFileName, pDest, (int)maxLenInChars );
-	}
+	virtual const char		*GetLocalPath( const char *pFileName, char *pLocalPath, int localPathBufferSize ) = 0;
 
 	// Returns true on success ( based on current list of search paths, otherwise false if 
 	//  it can't be resolved )
-	// Prefer using the FullPathToRelativePath_safe template wrapper to calling this directly
-	virtual bool			FullPathToRelativePath( const char *pFullpath, OUT_Z_CAP(maxLenInChars) char *pDest, int maxLenInChars ) = 0;
-	template <size_t maxLenInChars> bool FullPathToRelativePath_safe( const char *pFullpath, OUT_Z_ARRAY char (&pDest)[maxLenInChars] )
-	{
-		return FullPathToRelativePath( pFullpath, pDest, (int)maxLenInChars );
-	}
+	virtual bool			FullPathToRelativePath( const char *pFullpath, char *pRelative, int maxlen ) = 0;
 
 	// Gets the current working directory
 	virtual bool			GetCurrentDirectory( char* pDirectory, int maxlen ) = 0;
@@ -758,7 +738,7 @@ public:
 	virtual void			PrintSearchPaths( void ) = 0;
 
 	// output
-	virtual void			SetWarningFunc( void (*pfnWarning)( PRINTF_FORMAT_STRING const char *fmt, ... ) ) = 0;
+	virtual void			SetWarningFunc( void (*pfnWarning)( const char *fmt, ... ) ) = 0;
 	virtual void			SetWarningLevel( FileWarningLevel_t level ) = 0;
 	virtual void			AddLoggingFunc( void (*pfnLogFunc)( const char *fileName, const char *accessType ) ) = 0;
 	virtual void			RemoveLoggingFunc( FileSystemLoggingFunc_t logFunc ) = 0;
@@ -797,7 +777,6 @@ public:
 		NUM_PRELOAD_TYPES
 	};
 
-
 	// If the "PreloadedData" hasn't been purged, then this'll try and instance the KeyValues using the fast path of compiled keyvalues loaded during startup.
 	// Otherwise, it'll just fall through to the regular KeyValues loading routines
 	virtual KeyValues	*LoadKeyValues( KeyValuesPreloadType_t type, char const *filename, char const *pPathID = 0 ) = 0;
@@ -809,9 +788,9 @@ public:
 	FSAsyncStatus_t			AsyncReadCreditAlloc( const FileAsyncRequest_t &request, const char *pszFile, int line, FSAsyncControl_t *phControl = NULL )	{ return AsyncReadMultipleCreditAlloc( &request, 1, pszFile, line, phControl ); 	}
 	virtual FSAsyncStatus_t	AsyncReadMultipleCreditAlloc( const FileAsyncRequest_t *pRequests, int nRequests, const char *pszFile, int line, FSAsyncControl_t *phControls = NULL ) = 0;
 
-	virtual FSAsyncStatus_t AsyncDirectoryScan(const char* pSearchSpec, bool recurseFolders, void* pContext, FSAsyncScanAddFunc_t pfnAdd, FSAsyncScanCompleteFunc_t pfnDone, FSAsyncControl_t* pControl = NULL) = 0;
+	virtual FSAsyncStatus_t AsyncDirectoryScan( const char* pSearchSpec, bool recurseFolders,  void* pContext, FSAsyncScanAddFunc_t pfnAdd, FSAsyncScanCompleteFunc_t pfnDone, FSAsyncControl_t *pControl = NULL ) = 0;
 
-	virtual bool			GetFileTypeForFullPath( char const *pFullPath, OUT_Z_BYTECAP(bufSizeInBytes) wchar_t *buf, size_t bufSizeInBytes ) = 0;
+	virtual bool			GetFileTypeForFullPath( char const *pFullPath, wchar_t *buf, size_t bufSizeInBytes ) = 0;
 
 	//--------------------------------------------------------
 	//--------------------------------------------------------
@@ -832,12 +811,7 @@ public:
 	virtual void		EndMapAccess() = 0;
 
 	// Returns true on success, otherwise false if it can't be resolved
-	// Prefer using the FullPathToRelativePathEx_safe template wrapper to calling this directly
-	virtual bool		FullPathToRelativePathEx( const char *pFullpath, const char *pPathId, OUT_Z_CAP(maxLenInChars) char *pDest, int maxLenInChars ) = 0;
-	template <size_t maxLenInChars> bool FullPathToRelativePathEx_safe( const char *pFullpath, OUT_Z_ARRAY char (&pDest)[maxLenInChars] )
-	{
-		return FullPathToRelativePathEx( pFullpath, pDest, (int)maxLenInChars );
-	}
+	virtual bool		FullPathToRelativePathEx( const char *pFullpath, const char *pPathId, char *pRelative, int maxlen ) = 0;
 
 	virtual int			GetPathIndex( const FileNameHandle_t &handle ) = 0;
 	virtual long		GetPathTime( const char *pPath, const char *pPathID ) = 0;
@@ -850,10 +824,29 @@ public:
 
 	// This should be called ONCE at startup. Multiplayer games (gameinfo.txt does not contain singleplayer_only)
 	// want to enable this so sv_pure works.
-	virtual void			EnableWhitelistFileTracking( bool bEnable, bool bCacheAllVPKHashes, bool bRecalculateAndCheckHashes ) = 0;
+	virtual void			EnableWhitelistFileTracking( bool bEnable ) = 0;
 
 	// This is called when the client connects to a server using a pure_server_whitelist.txt file.
-	virtual void			RegisterFileWhitelist( IPureServerWhitelist *pWhiteList, IFileList **pFilesToReload ) = 0;
+	//
+	// Files listed in pWantCRCList will have CRCs calculated for them IF they come off disk
+	// (and those CRCs will come out of GetUnverifiedCRCFiles).
+	//
+	// Files listed in pAllowFromDiskList will be allowed to load from disk. All other files will
+	// be forced to come from Steam.
+	//
+	// The filesystem hangs onto the whitelists you pass in here, and it will Release() them when it closes down
+	// or when you call this function again.
+	//
+	// NOTE: The whitelists you pass in here will be accessed from multiple threads, so make sure the 
+	//       IsFileInList function is thread safe.
+	//
+	// If pFilesToReload is non-null, the filesystem will hand back a list of files that should be reloaded because they
+	// are now "dirty". For example, if you were on a non-pure server and you loaded a certain model, and then you connected
+	// to a pure server that said that model had to come from Steam, then pFilesToReload would specify that model
+	// and the engine should reload it so it can come from Steam.
+	//
+	// Be sure to call Release() on pFilesToReload.
+	virtual void			RegisterFileWhitelist( IFileList *pWantCRCList, IFileList *pAllowFromDiskList, IFileList **pFilesToReload ) = 0;
 
 	// Called when the client logs onto a server. Any files that came off disk should be marked as 
 	// unverified because this server may have a different set of files it wants to guarantee.
@@ -862,7 +855,7 @@ public:
 	// As the server loads whitelists when it transitions maps, it calls this to calculate CRCs for any files marked
 	// with check_crc.   Then it calls CheckCachedFileCRC later when it gets client requests to verify CRCs.
 	virtual void			CacheFileCRCs( const char *pPathname, ECacheCRCType eType, IFileList *pFilter ) = 0;
-	virtual EFileCRCStatus	CheckCachedFileHash( const char *pPathID, const char *pRelativeFilename, int nFileFraction, FileHash_t *pFileHash ) = 0;
+	virtual EFileCRCStatus	CheckCachedFileCRC( const char *pPathID, const char *pRelativeFilename, CRC32_t *pCRC ) = 0;
 
 	// Fills in the list of files that have been loaded off disk and have not been verified.
 	// Returns the number of files filled in (between 0 and nMaxFiles).
@@ -870,7 +863,7 @@ public:
 	// This also removes any files it's returning from the unverified CRC list, so they won't be
 	// returned from here again.
 	// The client sends batches of these to the server to verify.
-	virtual int				GetUnverifiedFileHashes( CUnverifiedFileHash *pFiles, int nMaxFiles ) = 0;
+	virtual int				GetUnverifiedCRCFiles( CUnverifiedCRCFile *pFiles, int nMaxFiles ) = 0;
 	
 	// Control debug message output.
 	// Pass a combination of WHITELIST_SPEW_ flags.
@@ -880,48 +873,36 @@ public:
 	// Installs a callback used to display a dirty disk dialog
 	virtual void			InstallDirtyDiskReportFunc( FSDirtyDiskReportFunc_t func ) = 0;
 
-	//--------------------------------------------------------
-	// Low-level file caching. Cached files are loaded into memory and used
-	// to satisfy read requests (sync and async) until the cache is destroyed.
-	// NOTE: this could defeat file whitelisting, if a file were loaded in
-	// a non-whitelisted environment and then reused. Clients should not cache
-	// files across moves between pure/non-pure environments.
-	//--------------------------------------------------------
-	virtual FileCacheHandle_t CreateFileCache() = 0;
-	virtual void AddFilesToFileCache( FileCacheHandle_t cacheId, const char **ppFileNames, int nFileNames, const char *pPathID ) = 0;
-	virtual bool IsFileCacheFileLoaded( FileCacheHandle_t cacheId, const char* pFileName ) = 0;
-	virtual bool IsFileCacheLoaded( FileCacheHandle_t cacheId ) = 0;
-	virtual void DestroyFileCache( FileCacheHandle_t cacheId ) = 0;
+	virtual bool			IsLaunchedFromXboxHDD() = 0;
+	virtual bool			IsInstalledToXboxHDDCache() = 0;
+	virtual bool			IsDVDHosted() = 0;
+	virtual bool			IsInstallAllowed() = 0;
 
-	// XXX For now, we assume that all path IDs are "GAME", never cache files
-	// outside of the game search path, and preferentially return those files
-	// whenever anyone searches for a match even if an on-disk file in another
-	// folder would have been found first in a traditional search. extending
-	// the memory cache to cover non-game files isn't necessary right now, but
-	// should just be a matter of defining a more complex key type. (henryg)
+	virtual int				GetSearchPathID( char *pPath, int nMaxLen ) = 0;
+	virtual bool			FixupSearchPathsAfterInstall() = 0;
+	
+	virtual FSDirtyDiskReportFunc_t		GetDirtyDiskReportFunc() = 0;
 
-	// Register a CMemoryFileBacking; must balance with UnregisterMemoryFile.
-	// Returns false and outputs an ref-bumped pointer to the existing entry
-	// if the same file has already been registered by someone else; this must
-	// be Unregistered to maintain the balance.
-	virtual bool RegisterMemoryFile( CMemoryFileBacking *pFile, CMemoryFileBacking **ppExistingFileWithRef ) = 0;
+	virtual void AddVPKFile( char const *pszName, SearchPathAdd_t addType = PATH_ADD_TO_TAIL ) = 0;
+	virtual void RemoveVPKFile( char const *pszName ) = 0;
+	virtual void GetVPKFileNames( CUtlVector<CUtlString> &destVector ) = 0;
+	virtual void			RemoveAllMapSearchPaths() = 0;
+	virtual void			SyncDvdDevCache() = 0;
 
-	// Unregister a CMemoryFileBacking; must balance with RegisterMemoryFile.
-	virtual void UnregisterMemoryFile( CMemoryFileBacking *pFile ) = 0;
+	virtual bool			GetStringFromKVPool( CRC32_t poolKey, unsigned int key, char *pOutBuff, int buflen ) = 0;
 
-	virtual void			CacheAllVPKFileHashes( bool bCacheAllVPKHashes, bool bRecalculateAndCheckHashes ) = 0;
-	virtual bool			CheckVPKFileHash( int PackFileID, int nPackFileNumber, int nFileFraction, MD5Value_t &md5Value ) = 0;
+	virtual bool			DiscoverDLC( int iController ) = 0;
+	virtual int				IsAnyDLCPresent( bool *pbDLCSearchPathMounted = NULL ) = 0;
+	virtual bool			GetAnyDLCInfo( int iDLC, unsigned int *pLicenseMask, wchar_t *pTitleBuff, int nOutTitleSize ) = 0;
+	virtual int				IsAnyCorruptDLC() = 0;
+	virtual bool			GetAnyCorruptDLCInfo( int iCorruptDLC, wchar_t *pTitleBuff, int nOutTitleSize ) = 0;
+	virtual bool			AddDLCSearchPaths() = 0;
+	virtual bool			IsSpecificDLCPresent( unsigned int nDLCPackage ) = 0;
 
-	// Called when we unload a file, to remove that file's info for pure server purposes.
-	virtual void			NotifyFileUnloaded( const char *pszFilename, const char *pPathId ) = 0;
-
-	// Returns true on successfully retrieve case-sensitive full path, otherwise false
-	// Prefer using the GetCaseCorrectFullPath template wrapper to calling this directly
-	virtual bool			GetCaseCorrectFullPath_Ptr( const char *pFullPath, OUT_Z_CAP( maxLenInChars ) char *pDest, int maxLenInChars ) = 0;
-	template <size_t maxLenInChars> bool GetCaseCorrectFullPath( const char *pFullPath, OUT_Z_ARRAY char( &pDest )[maxLenInChars] )
-	{
-		return GetCaseCorrectFullPath_Ptr( pFullPath, pDest, (int)maxLenInChars );
-	}
+	// call this to look for CPU-hogs during loading processes. When you set this, a breakpoint
+	// will be issued whenever the indicated # of seconds go by without an i/o request.  Passing
+	// 0.0 will turn off the functionality.
+	virtual void            SetIODelayAlarm( float flThreshhold ) = 0;
 };
 
 //-----------------------------------------------------------------------------

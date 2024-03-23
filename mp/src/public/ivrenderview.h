@@ -81,6 +81,14 @@ enum
 };
 
 
+struct WorldListLeafData_t
+{
+	LeafIndex_t	leafIndex;	// 16 bits
+	int16	waterData;
+	uint16 	firstTranslucentSurface;	// engine-internal list index
+	uint16	translucentSurfaceCount;	// count of translucent surfaces+disps
+};
+
 //-----------------------------------------------------------------------------
 // Describes the leaves to be rendered this view, set by BuildWorldLists
 //-----------------------------------------------------------------------------
@@ -88,8 +96,8 @@ struct WorldListInfo_t
 {
 	int		m_ViewFogVolume;
 	int		m_LeafCount;
-	LeafIndex_t*		m_pLeafList;
-	LeafFogVolume_t*	m_pLeafFogVolume;
+	bool	m_bHasWater;
+	WorldListLeafData_t* m_pLeafDataList;
 };
 
 class IWorldRenderList : public IRefCounted
@@ -184,7 +192,7 @@ enum DrawBrushModelMode_t
 class IVRenderView
 {
 public:
-
+	
 	// Draw normal brush model.
 	// If pMaterialOverride is non-null, then all the faces of the bmodel will
 	// set this material rather than their regular material.
@@ -193,7 +201,7 @@ public:
 		model_t *model, 
 		const Vector& origin, 
 		const QAngle& angles, 
-		bool bUnused ) = 0;
+		bool sort ) = 0;
 	
 	// Draw brush model that has no origin/angles change ( uses identity transform )
 	// FIXME, Material proxy IClientEntity *baseentity is unused right now, use DrawBrushModel for brushes with
@@ -227,6 +235,7 @@ public:
 
 	virtual void			BuildWorldLists( IWorldRenderList *pList, WorldListInfo_t* pInfo, int iForceFViewLeaf, const VisOverrideData_t* pVisData = NULL, bool bShadowDepth = false, float *pReflectionWaterHeight = NULL ) = 0;
 	virtual void			DrawWorldLists( IWorldRenderList *pList, unsigned long flags, float waterZAdjust ) = 0;
+	virtual int				GetNumIndicesForWorldLists( IWorldRenderList *pList, unsigned long nFlags ) = 0;
 
 	// Optimization for top view
 	virtual void			DrawTopView( bool enable ) = 0;
@@ -237,8 +246,8 @@ public:
 	// FIXME:  This function is a stub, doesn't do anything in the engine right now
 	virtual void			DrawMaskEntities( void ) = 0;
 
-	// Draw surfaces with alpha
-	virtual void			DrawTranslucentSurfaces( IWorldRenderList *pList, int sortIndex, unsigned long flags, bool bShadowDepth ) = 0;
+	// Draw surfaces with alpha, don't call in shadow depth pass
+	virtual void			DrawTranslucentSurfaces( IWorldRenderList *pList, int *pSortList, int sortCount, unsigned long flags ) = 0;
 
 	// Draw Particles ( just draws the linefine for debugging map leaks )
 	virtual void			DrawLineFile( void ) = 0;
@@ -259,6 +268,7 @@ public:
 	virtual colorVec		GetLightAtPoint( Vector& pos ) = 0;
 	// Whose eyes are we looking through?
 	virtual int				GetViewEntity( void ) = 0;
+	virtual bool			IsViewEntity( int entindex ) = 0;
 	// Get engine field of view setting
 	virtual float			GetFieldOfView( void ) = 0;
 	// 1 == ducking, 0 == not
@@ -304,7 +314,7 @@ public:
 	//replaces the current view frustum with a rhyming replacement of your choice
 	virtual void			OverrideViewFrustum( Frustum custom ) = 0;
 
-	virtual void			DrawBrushModelShadowDepth( IClientEntity *baseentity, model_t *model, const Vector& origin, const QAngle& angles, ERenderDepthMode DepthMode ) = 0;
+	virtual void			DrawBrushModelShadowDepth( IClientEntity *baseentity, model_t *model, const Vector& origin, const QAngle& angles, bool bSort ) = 0;
 	virtual void			UpdateBrushModelLightmap( model_t *model, IClientRenderable *pRenderable ) = 0;
 	virtual void			BeginUpdateLightmaps( void ) = 0;
 	virtual void			EndUpdateLightmaps( void ) = 0;
@@ -312,7 +322,6 @@ public:
 	virtual void			OLD_SetProjectionMatrixOrtho( float left, float top, float right, float bottom, float zNear, float zFar ) = 0;
 	virtual void			Push3DView( const CViewSetup &view, int nFlags, ITexture* pRenderTarget, Frustum frustumPlanes, ITexture* pDepthTexture ) = 0;
 	virtual void			GetMatricesForView( const CViewSetup &view, VMatrix *pWorldToView, VMatrix *pViewToProjection, VMatrix *pWorldToProjection, VMatrix *pWorldToPixels ) = 0;
-	virtual void			DrawBrushModelEx( IClientEntity *baseentity, model_t *model, const Vector& origin, const QAngle& angles, DrawBrushModelMode_t mode ) = 0;
 };
 
 // change this when the new version is incompatable with the old

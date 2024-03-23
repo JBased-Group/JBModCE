@@ -51,18 +51,25 @@ typedef size_t (*MemAllocFailHandler_t)( size_t );
 //-----------------------------------------------------------------------------
 abstract_class IMemAlloc
 {
-public:
+private:
 	// Release versions
-	virtual void *Alloc( size_t nSize ) = 0;
+	virtual void *PrivateAlloc( size_t nSize ) = 0;
+public:
 	virtual void *Realloc( void *pMem, size_t nSize ) = 0;
+
 	virtual void Free( void *pMem ) = 0;
     virtual void *Expand_NoLongerSupported( void *pMem, size_t nSize ) = 0;
 
+private:
 	// Debug versions
-    virtual void *Alloc( size_t nSize, const char *pFileName, int nLine ) = 0;
+    virtual void *PrivateAlloc( size_t nSize, const char *pFileName, int nLine ) = 0;
+public:
     virtual void *Realloc( void *pMem, size_t nSize, const char *pFileName, int nLine ) = 0;
     virtual void  Free( void *pMem, const char *pFileName, int nLine ) = 0;
     virtual void *Expand_NoLongerSupported( void *pMem, size_t nSize, const char *pFileName, int nLine ) = 0;
+
+	inline void *Alloc( size_t nSize )										{ return PrivateAlloc( nSize ); }
+	inline void *Alloc( size_t nSize, const char *pFileName, int nLine )	{ return PrivateAlloc( nSize, pFileName, nLine ); }
 
 	// Returns size of a particular allocation
 	virtual size_t GetSize( void *pMem ) = 0;
@@ -73,7 +80,7 @@ public:
 
 	// FIXME: Remove when we have our own allocator
 	// these methods of the Crt debug code is used in our codebase currently
-	virtual long CrtSetBreakAlloc( long lNewBreakAlloc ) = 0;
+	virtual int32 CrtSetBreakAlloc( int32 lNewBreakAlloc ) = 0;
 	virtual	int CrtSetReportMode( int nReportType, int nReportMode ) = 0;
 	virtual int CrtIsValidHeapPointer( const void *pMem ) = 0;
 	virtual int CrtIsValidPointer( const void *pMem, unsigned int size, int access ) = 0;
@@ -84,6 +91,7 @@ public:
 	// FIXME: Make a better stats interface
 	virtual void DumpStats() = 0;
 	virtual void DumpStatsFileBase( char const *pchFileBase ) = 0;
+	virtual size_t ComputeMemoryUsedBy( char const *pchSubStr ) = 0;
 
 	// FIXME: Remove when we have our own allocator
 	virtual void* CrtSetReportFile( int nRptType, void* hFile ) = 0;
@@ -96,8 +104,8 @@ public:
 	virtual bool IsDebugHeap() = 0;
 
 	virtual void GetActualDbgInfo( const char *&pFileName, int &nLine ) = 0;
-	virtual void RegisterAllocation( const char *pFileName, int nLine, int nLogicalSize, int nActualSize, unsigned nTime ) = 0;
-	virtual void RegisterDeallocation( const char *pFileName, int nLine, int nLogicalSize, int nActualSize, unsigned nTime ) = 0;
+	virtual void RegisterAllocation( const char *pFileName, int nLine, size_t nLogicalSize, size_t nActualSize, unsigned nTime ) = 0;
+	virtual void RegisterDeallocation( const char *pFileName, int nLine, size_t nLogicalSize, size_t nActualSize, unsigned nTime ) = 0;
 
 	virtual int GetVersion() = 0;
 
@@ -113,17 +121,19 @@ public:
 #endif
 
 	// Returns 0 if no failure, otherwise the size_t of the last requested chunk
-	//  "I'm sure this is completely thread safe!" Brian Deen 7/19/2012.
 	virtual size_t MemoryAllocFailed() = 0;
 
-	// handles storing allocation info for coroutines
-	virtual uint32 GetDebugInfoSize() = 0;
-	virtual void SaveDebugInfo( void *pvDebugInfo ) = 0;
-	virtual void RestoreDebugInfo( const void *pvDebugInfo ) = 0;	
-	virtual void InitDebugInfo( void *pvDebugInfo, const char *pchRootFileName, int nLine ) = 0;
+	virtual void CompactIncremental() = 0; 
+
+	virtual void OutOfMemory( size_t nBytesAttempted = 0 ) = 0;
+
+	// Region-based allocations
+	virtual void *RegionAlloc( int region, size_t nSize ) = 0;
+	virtual void *RegionAlloc( int region, size_t nSize, const char *pFileName, int nLine ) = 0;
 
 	// Replacement for ::GlobalMemoryStatus which accounts for unused memory in our system
 	virtual void GlobalMemoryStatus( size_t *pUsedMemory, size_t *pFreeMemory ) = 0;
+
 };
 
 //-----------------------------------------------------------------------------

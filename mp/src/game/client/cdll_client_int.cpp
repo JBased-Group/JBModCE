@@ -769,7 +769,7 @@ public:
 	virtual vgui::VPANEL	GetFullscreenClientDLLVPanel(void) { /*Msg("IMPLEMENT " __FUNCTION__ " !!!\n");*/ return 0; };
 	virtual void			MarkEntitiesAsTouching(IClientEntity* e1, IClientEntity* e2) { Msg("IMPLEMENT " __FUNCTION__ " !!!\n"); };
 	virtual void			OnKeyBindingChanged(ButtonCode_t buttonCode, char const* pchKeyName, char const* pchNewBinding) { Msg("IMPLEMENT " __FUNCTION__ " !!!\n"); };
-	virtual bool			HandleGameUIEvent(const InputEvent_t& event) { Msg("IMPLEMENT " __FUNCTION__ " !!!\n");  return true; };
+	virtual bool			HandleGameUIEvent(const InputEvent_t& event) {/* Msg("IMPLEMENT " __FUNCTION__ " !!!\n");*/  return false; };
 
 public:
 	void PrecacheMaterial(const char* pMaterialName);
@@ -1951,7 +1951,7 @@ int Squirrel_GetModelList(SquirrelScript script)
 	g_pSquirrel->PushArray(script);
 	FileFindHandle_t newhandle;
 	const char* pszFileName = g_pFullFileSystem->FindFirst("models/*.mdl", &newhandle);
-	if (pszFileName)
+	if (pszFileName && newhandle)
 	{
 		SquirrelValue ret;
 		ret.type = SQUIRREL_STRING;
@@ -2383,7 +2383,7 @@ void OnMaterialStringTableChanged( void *object, INetworkStringTable *stringTabl
 void OnParticleSystemStringTableChanged( void *object, INetworkStringTable *stringTable, int stringNumber, const char *newString, void const *newData )
 {
 	// Make sure this puppy is precached
-	g_pParticleSystemMgr->PrecacheParticleSystem( newString );
+	//g_pParticleSystemMgr->PrecacheParticleSystem( newString );
 	RequestCacheUsedMaterials();
 }
 

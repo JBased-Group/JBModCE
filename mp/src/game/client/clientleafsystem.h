@@ -189,7 +189,7 @@ public:
 	virtual void ProjectFlashlight( ClientLeafShadowHandle_t handle, int nLeafCount, const int *pLeafList ) = 0;
 
 	// Find all shadow casters in a set of leaves
-	virtual void EnumerateShadowsInLeaves( int leafCount, LeafIndex_t* pLeaves, IClientLeafShadowEnum* pEnum ) = 0;
+	virtual void EnumerateShadowsInLeaves( int leafCount, WorldListLeafData_t* pLeaves, IClientLeafShadowEnum* pEnum ) = 0;
 
 	// Fill in a list of the leaves this renderable is in.
 	// Returns -1 if the handle is invalid.

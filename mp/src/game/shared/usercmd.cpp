@@ -201,6 +201,8 @@ void ReadUsercmd( bf_read *buf, CUserCmd *move, CUserCmd *from )
 	// Assume no change
 	*move = *from;
 
+	Assert(!buf->IsOverflowed());
+
 	if ( buf->ReadOneBit() )
 	{
 		move->command_number = buf->ReadUBitLong( 32 );
@@ -210,6 +212,8 @@ void ReadUsercmd( bf_read *buf, CUserCmd *move, CUserCmd *from )
 		// Assume steady increment
 		move->command_number = from->command_number + 1;
 	}
+
+	Assert(!buf->IsOverflowed());
 
 	if ( buf->ReadOneBit() )
 	{
@@ -221,21 +225,29 @@ void ReadUsercmd( bf_read *buf, CUserCmd *move, CUserCmd *from )
 		move->tick_count = from->tick_count + 1;
 	}
 
+	Assert(!buf->IsOverflowed());
+
 	// Read direction
 	if ( buf->ReadOneBit() )
 	{
 		move->viewangles[0] = buf->ReadFloat();
 	}
 
+	Assert(!buf->IsOverflowed());
+
 	if ( buf->ReadOneBit() )
 	{
 		move->viewangles[1] = buf->ReadFloat();
 	}
 
+	Assert(!buf->IsOverflowed());
+
 	if ( buf->ReadOneBit() )
 	{
 		move->viewangles[2] = buf->ReadFloat();
 	}
+
+	Assert(!buf->IsOverflowed());
 
 	// Moved value validation and clamping to CBasePlayer::ProcessUsercmds()
 
@@ -245,15 +257,21 @@ void ReadUsercmd( bf_read *buf, CUserCmd *move, CUserCmd *from )
 		move->forwardmove = buf->ReadFloat();
 	}
 
+	Assert(!buf->IsOverflowed());
+
 	if ( buf->ReadOneBit() )
 	{
 		move->sidemove = buf->ReadFloat();
 	}
 
+	Assert(!buf->IsOverflowed());
+
 	if ( buf->ReadOneBit() )
 	{
 		move->upmove = buf->ReadFloat();
 	}
+
+	Assert(!buf->IsOverflowed());
 
 	// read buttons
 	if ( buf->ReadOneBit() )
@@ -261,10 +279,14 @@ void ReadUsercmd( bf_read *buf, CUserCmd *move, CUserCmd *from )
 		move->buttons = buf->ReadUBitLong( 32 );
 	}
 
+	Assert(!buf->IsOverflowed());
+
 	if ( buf->ReadOneBit() )
 	{
 		move->impulse = buf->ReadUBitLong( 8 );
 	}
+
+	Assert(!buf->IsOverflowed());
 
 
 	if ( buf->ReadOneBit() )
@@ -276,22 +298,33 @@ void ReadUsercmd( bf_read *buf, CUserCmd *move, CUserCmd *from )
 		}
 	}
 
+	Assert(!buf->IsOverflowed());
+
 
 	move->random_seed = MD5_PseudoRandom( move->command_number ) & 0x7fffffff;
+
+	Assert(!buf->IsOverflowed());
 
 	if ( buf->ReadOneBit() )
 	{
 		move->mousedx = buf->ReadShort();
 	}
 
+
+	Assert(!buf->IsOverflowed());
+
 	if ( buf->ReadOneBit() )
 	{
 		move->mousedy = buf->ReadShort();
 	}
+	
+	Assert(!buf->IsOverflowed());
 
 #if defined( HL2_DLL )
 	if ( buf->ReadOneBit() )
 	{
+
+		Assert(!buf->IsOverflowed());
 		move->entitygroundcontact.SetCount( buf->ReadShort() );
 
 		int i;
@@ -300,6 +333,7 @@ void ReadUsercmd( bf_read *buf, CUserCmd *move, CUserCmd *from )
 			move->entitygroundcontact[i].entindex = buf->ReadUBitLong( MAX_EDICT_BITS );
 			move->entitygroundcontact[i].minheight = buf->ReadBitCoord( );
 			move->entitygroundcontact[i].maxheight = buf->ReadBitCoord( );
+			Assert(!buf->IsOverflowed());
 		}
 	}
 #endif

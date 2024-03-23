@@ -285,6 +285,8 @@ public:
 	virtual IClientEntity*			GetIClientEntity()		{ return this; }
 	virtual C_BaseEntity*			GetBaseEntity()			{ return this; }
 	virtual IClientThinkable*		GetClientThinkable()	{ return this; }
+	virtual IClientModelRenderable* GetClientModelRenderable() { return NULL; }
+	virtual IClientAlphaProperty* GetClientAlphaProperty() { return NULL; };
 
 
 // Methods of IClientRenderable

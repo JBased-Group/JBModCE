@@ -1451,7 +1451,7 @@ void CParticleMgr::Simulate( float flTimeDelta )
 
 	if(!m_pMaterialSystem)
 	{
-		Assert(false);
+		//Assert(false);
 		return;
 	}
 

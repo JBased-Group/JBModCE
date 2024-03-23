@@ -247,7 +247,7 @@ void CVoiceGameMgr::UpdateMasks()
 		{
 			g_SentGameRulesMasks[iClient] = gameRulesMask;
 			g_SentBanMasks[iClient] = g_BanMasks[iClient];
-
+			/*
 			UserMessageBegin( user, "VoiceMask" );
 				int dw;
 				for(dw=0; dw < VOICE_MAX_PLAYERS_DW; dw++)
@@ -257,6 +257,7 @@ void CVoiceGameMgr::UpdateMasks()
 				}
 				WRITE_BYTE( !!g_PlayerModEnable[iClient] );
 			MessageEnd();
+			*/
 		}
 
 		// Tell the engine.

@@ -232,7 +232,7 @@ struct ClientWorldListInfo_t : public CRefCounted1<WorldListInfo_t>
 	ClientWorldListInfo_t() 
 	{ 
 		memset( (WorldListInfo_t *)this, 0, sizeof(WorldListInfo_t) ); 
-		m_pActualLeafIndex = NULL;
+		m_pOriginalLeafIndex = NULL;
 		m_bPooledAlloc = false;
 	}
 
@@ -242,7 +242,7 @@ struct ClientWorldListInfo_t : public CRefCounted1<WorldListInfo_t>
 	// Because we remap leaves to eliminate unused leaves, we need a remap
 	// when drawing translucent surfaces, which requires the *original* leaf index
 	// using m_pActualLeafMap[ remapped leaf index ] == actual leaf index
-	LeafIndex_t *m_pActualLeafIndex;
+	uint16* m_pOriginalLeafIndex;
 
 private:
 	virtual bool OnFinalRelease();
@@ -3182,26 +3182,24 @@ void CViewRender::DrawMonitors( const CViewSetup &cameraView )
 
 ClientWorldListInfo_t *ClientWorldListInfo_t::AllocPooled( const ClientWorldListInfo_t &exemplar )
 {
-	size_t nBytes = AlignValue( ( exemplar.m_LeafCount * ((sizeof(LeafIndex_t) * 2) + sizeof(LeafFogVolume_t)) ), 4096 );
+	ClientWorldListInfo_t* pResult = gm_Pool.GetObject();
 
-	ClientWorldListInfo_t *pResult = gm_Pool.GetObject();
+	size_t nBytes = AlignValue((exemplar.m_LeafCount * (sizeof(WorldListLeafData_t) + sizeof(exemplar.m_pLeafDataList[0]))), 4096);
+	byte* pMemory = (byte*)pResult->m_pLeafDataList;
 
-	byte *pMemory = (byte *)pResult->m_pLeafList;
-
-	if ( pMemory )
+	if (pMemory)
 	{
 		// Previously allocated, add a reference. Otherwise comes out of GetObject as a new object with a refcount of 1
 		pResult->AddRef();
 	}
 
-	if ( !pMemory || _msize( pMemory ) < nBytes )
+	if (!pMemory || _msize(pMemory) < nBytes)
 	{
-		pMemory = (byte *)realloc( pMemory, nBytes );
+		pMemory = (byte*)realloc(pMemory, nBytes);
 	}
 
-	pResult->m_pLeafList = (LeafIndex_t*)pMemory;
-	pResult->m_pLeafFogVolume = (LeafFogVolume_t*)( pMemory + exemplar.m_LeafCount * sizeof(LeafIndex_t) );
-	pResult->m_pActualLeafIndex = (LeafIndex_t*)( (byte *)( pResult->m_pLeafFogVolume ) + exemplar.m_LeafCount * sizeof(LeafFogVolume_t) );
+	pResult->m_pLeafDataList = (WorldListLeafData_t*)pMemory;
+	pResult->m_pOriginalLeafIndex = (uint16*)((byte*)(pResult->m_pLeafDataList) + exemplar.m_LeafCount * sizeof(exemplar.m_pLeafDataList[0]));
 
 	pResult->m_bPooledAlloc = true;
 
@@ -3212,7 +3210,6 @@ bool ClientWorldListInfo_t::OnFinalRelease()
 {
 	if ( m_bPooledAlloc )
 	{
-		Assert( m_pLeafList );
 		gm_Pool.PutObject( this );
 		return false;
 	}
@@ -3401,16 +3398,18 @@ void CRendering3dView::PruneWorldListInfo()
 {
 	// Drawing everything? Just return the world list info as-is 
 	int nWaterDrawFlags = m_DrawFlags & (DF_RENDER_UNDERWATER | DF_RENDER_ABOVEWATER);
-	if ( nWaterDrawFlags == (DF_RENDER_UNDERWATER | DF_RENDER_ABOVEWATER) )
+	if (nWaterDrawFlags == (DF_RENDER_UNDERWATER | DF_RENDER_ABOVEWATER))
 	{
 		return;
 	}
 
-	ClientWorldListInfo_t *pNewInfo;
+	if (nWaterDrawFlags == DF_RENDER_ABOVEWATER && !m_pWorldListInfo->m_bHasWater)
+		return;
+	ClientWorldListInfo_t* pNewInfo;
 	// Only allocate memory if actually will draw something
-	if ( m_pWorldListInfo->m_LeafCount > 0 && nWaterDrawFlags )
+	if (m_pWorldListInfo->m_LeafCount > 0 && nWaterDrawFlags)
 	{
-		pNewInfo = ClientWorldListInfo_t::AllocPooled( *m_pWorldListInfo );
+		pNewInfo = ClientWorldListInfo_t::AllocPooled(*m_pWorldListInfo);
 	}
 	else
 	{
@@ -3418,22 +3417,25 @@ void CRendering3dView::PruneWorldListInfo()
 	}
 
 	pNewInfo->m_ViewFogVolume = m_pWorldListInfo->m_ViewFogVolume;
+	pNewInfo->m_bHasWater = m_pWorldListInfo->m_bHasWater;
 	pNewInfo->m_LeafCount = 0;
 
-	// Not drawing anything? Then don't bother with renderable lists
-	if ( nWaterDrawFlags != 0 )
+	if (nWaterDrawFlags != DF_RENDER_UNDERWATER || m_pWorldListInfo->m_bHasWater)
 	{
-		// Create a sub-list based on the actual leaves being rendered
-		bool bRenderingUnderwater = (nWaterDrawFlags & DF_RENDER_UNDERWATER) != 0;
-		for ( int i = 0; i < m_pWorldListInfo->m_LeafCount; ++i )
+		// Not drawing anything? Then don't bother with renderable lists
+		if (nWaterDrawFlags != 0)
 		{
-			bool bLeafIsUnderwater = ( m_pWorldListInfo->m_pLeafFogVolume[i] != -1 );
-			if ( bRenderingUnderwater == bLeafIsUnderwater )
+			// Create a sub-list based on the actual leaves being rendered
+			bool bRenderingUnderwater = (nWaterDrawFlags & DF_RENDER_UNDERWATER) != 0;
+			for (int i = 0; i < m_pWorldListInfo->m_LeafCount; ++i)
 			{
-				pNewInfo->m_pLeafList[ pNewInfo->m_LeafCount ] = m_pWorldListInfo->m_pLeafList[ i ];
-				pNewInfo->m_pLeafFogVolume[ pNewInfo->m_LeafCount ] = m_pWorldListInfo->m_pLeafFogVolume[ i ];
-				pNewInfo->m_pActualLeafIndex[ pNewInfo->m_LeafCount ] = i;
-				++pNewInfo->m_LeafCount;
+				bool bLeafIsUnderwater = (m_pWorldListInfo->m_pLeafDataList[i].waterData != -1);
+				if (bRenderingUnderwater == bLeafIsUnderwater)
+				{
+					pNewInfo->m_pLeafDataList[pNewInfo->m_LeafCount] = m_pWorldListInfo->m_pLeafDataList[i];
+					pNewInfo->m_pOriginalLeafIndex[pNewInfo->m_LeafCount] = i;
+					++pNewInfo->m_LeafCount;
+				}
 			}
 		}
 	}
@@ -3464,15 +3466,6 @@ void CRendering3dView::BuildRenderableRenderLists( int viewID )
 
 	m_pMainView->IncRenderablesListsNumber();
 
-	ClientWorldListInfo_t& info = *m_pWorldListInfo;
-
-	// For better sorting, find out the leaf *nearest* to the camera
-	// and render translucent objects as if they are in that leaf.
-	if( m_pMainView->ShouldDrawEntities() && ( viewID != VIEW_SHADOW_DEPTH_TEXTURE ) )
-	{
-		ClientLeafSystem()->ComputeTranslucentRenderLeaf( 
-			info.m_LeafCount, info.m_pLeafList, info.m_pLeafFogVolume, m_pMainView->BuildRenderablesListsNumber(), viewID );
-	}
 
 	SetupRenderablesList( viewID );
 
@@ -4141,17 +4134,25 @@ void CRendering3dView::DrawOpaqueRenderables( ERenderDepthMode DepthMode )
 //-----------------------------------------------------------------------------
 void CRendering3dView::DrawTranslucentWorldInLeaves( bool bShadowDepth )
 {
-	VPROF_BUDGET( "CViewRender::DrawTranslucentWorldInLeaves", VPROF_BUDGETGROUP_WORLD_RENDERING );
+	if (bShadowDepth)
+		return;
+
+	VPROF_BUDGET("CViewRender::DrawTranslucentWorldInLeaves", VPROF_BUDGETGROUP_WORLD_RENDERING);
 	const ClientWorldListInfo_t& info = *m_pWorldListInfo;
-	for( int iCurLeafIndex = info.m_LeafCount - 1; iCurLeafIndex >= 0; iCurLeafIndex-- )
+	CUtlVectorFixedGrowable<int, 32> transSortIndexList;
+	for (int iCurLeafIndex = info.m_LeafCount - 1; iCurLeafIndex >= 0; iCurLeafIndex--)
 	{
-		int nActualLeafIndex = info.m_pActualLeafIndex ? info.m_pActualLeafIndex[ iCurLeafIndex ] : iCurLeafIndex;
-		Assert( nActualLeafIndex != INVALID_LEAF_INDEX );
-		if ( render->LeafContainsTranslucentSurfaces( m_pWorldRenderList, nActualLeafIndex, m_DrawFlags ) )
+		if (info.m_pLeafDataList[iCurLeafIndex].translucentSurfaceCount)
 		{
-			// Now draw the surfaces in this leaf
-			render->DrawTranslucentSurfaces( m_pWorldRenderList, nActualLeafIndex, m_DrawFlags, bShadowDepth );
+			int nActualLeafIndex = info.m_pOriginalLeafIndex ? info.m_pOriginalLeafIndex[iCurLeafIndex] : iCurLeafIndex;
+			Assert(nActualLeafIndex != INVALID_LEAF_INDEX);
+			transSortIndexList.AddToTail(nActualLeafIndex);
 		}
+	}
+	if (transSortIndexList.Count())
+	{
+		// Now draw the surfaces in this leaf
+		render->DrawTranslucentSurfaces(m_pWorldRenderList, transSortIndexList.Base(), transSortIndexList.Count(), m_DrawFlags);
 	}
 }
 
@@ -4161,28 +4162,43 @@ void CRendering3dView::DrawTranslucentWorldInLeaves( bool bShadowDepth )
 //-----------------------------------------------------------------------------
 void CRendering3dView::DrawTranslucentWorldAndDetailPropsInLeaves( int iCurLeafIndex, int iFinalLeafIndex, int nEngineDrawFlags, int &nDetailLeafCount, LeafIndex_t* pDetailLeafList, bool bShadowDepth )
 {
+	if ( bShadowDepth )
+		return;
+
+	CUtlVectorFixedGrowable<int, 32> transSortIndexList;
 	VPROF_BUDGET( "CViewRender::DrawTranslucentWorldAndDetailPropsInLeaves", VPROF_BUDGETGROUP_WORLD_RENDERING );
 	const ClientWorldListInfo_t& info = *m_pWorldListInfo;
 	for( ; iCurLeafIndex >= iFinalLeafIndex; iCurLeafIndex-- )
 	{
-		int nActualLeafIndex = info.m_pActualLeafIndex ? info.m_pActualLeafIndex[ iCurLeafIndex ] : iCurLeafIndex;
-		Assert( nActualLeafIndex != INVALID_LEAF_INDEX );
-		if ( render->LeafContainsTranslucentSurfaces( m_pWorldRenderList, nActualLeafIndex, nEngineDrawFlags ) )
+		if ( info.m_pLeafDataList[iCurLeafIndex].translucentSurfaceCount )
 		{
+			int nActualLeafIndex = info.m_pOriginalLeafIndex ? info.m_pOriginalLeafIndex[ iCurLeafIndex ] : iCurLeafIndex;
+			Assert( nActualLeafIndex != INVALID_LEAF_INDEX );
 			// First draw any queued-up detail props from previously visited leaves
-			DetailObjectSystem()->RenderTranslucentDetailObjects( CurrentViewOrigin(), CurrentViewForward(), CurrentViewRight(), CurrentViewUp(), nDetailLeafCount, pDetailLeafList );
-			nDetailLeafCount = 0;
-
-			// Now draw the surfaces in this leaf
-			render->DrawTranslucentSurfaces( m_pWorldRenderList, nActualLeafIndex, nEngineDrawFlags, bShadowDepth );
+			if ( nDetailLeafCount )
+			{
+				DetailObjectSystem()->RenderTranslucentDetailObjects( /*m_pRenderablesList->m_DetailFade, */ CurrentViewOrigin(), CurrentViewForward(), CurrentViewRight(), CurrentViewUp(), nDetailLeafCount, pDetailLeafList);
+				nDetailLeafCount = 0;
+			}
+			transSortIndexList.AddToTail(nActualLeafIndex);
 		}
 
 		// Queue up detail props that existed in this leaf
-		if ( ClientLeafSystem()->ShouldDrawDetailObjectsInLeaf( info.m_pLeafList[iCurLeafIndex], m_pMainView->BuildWorldListsNumber() ) )
+		if ( ClientLeafSystem()->ShouldDrawDetailObjectsInLeaf( info.m_pLeafDataList[iCurLeafIndex].leafIndex, m_pMainView->BuildWorldListsNumber() ) )
 		{
-			pDetailLeafList[nDetailLeafCount] = info.m_pLeafList[iCurLeafIndex];
+			if ( transSortIndexList.Count() )
+			{
+				// Now draw the surfaces in this leaf
+				render->DrawTranslucentSurfaces( m_pWorldRenderList, transSortIndexList.Base(), transSortIndexList.Count(), nEngineDrawFlags );
+			}
+			pDetailLeafList[nDetailLeafCount] = info.m_pLeafDataList[iCurLeafIndex].leafIndex;
 			++nDetailLeafCount;
 		}
+	}
+	if ( transSortIndexList.Count() )
+	{
+		// Now draw the surfaces in this leaf
+		render->DrawTranslucentSurfaces( m_pWorldRenderList, transSortIndexList.Base(), transSortIndexList.Count(), nEngineDrawFlags );
 	}
 }
 
@@ -4449,10 +4465,9 @@ void CRendering3dView::DrawTranslucentRenderables( bool bInSkybox, bool bShadowD
 			// We're traversing the leaf list backwards to get the appropriate sort ordering (back to front)
 			iPrevLeaf = iThisLeaf - 1;
 
-			// Draw all the translucent entities with this leaf.
-			int nLeaf = info.m_pLeafList[iThisLeaf];
 
-			bool bDrawDetailProps = ClientLeafSystem()->ShouldDrawDetailObjectsInLeaf( nLeaf, m_pMainView->BuildWorldListsNumber() );
+			//bool bDrawDetailProps = ClientLeafSystem()->ShouldDrawDetailObjectsInLeaf( nLeaf, m_pMainView->BuildWorldListsNumber() );
+		/*
 			if ( bDrawDetailProps )
 			{
 				// Draw detail props up to but not including this leaf
@@ -4502,7 +4517,7 @@ void CRendering3dView::DrawTranslucentRenderables( bool bInSkybox, bool bShadowD
 				// Draw all remaining props in this leaf
 				DetailObjectSystem()->RenderTranslucentDetailObjectsInLeaf( CurrentViewOrigin(), CurrentViewForward(), CurrentViewRight(), CurrentViewUp(), nLeaf, NULL );
 			}
-			else
+			else*/
 			{
 				// Draw queued up detail props (we know that the list of detail leaves won't include this leaf, since ShouldDrawDetailObjectsInLeaf is false)
 				// Therefore no fixup on nDetailLeafCount is required as in the above section
@@ -4789,7 +4804,7 @@ void CSkyboxView::DrawInternal( view_id_t iSkyBoxViewID, bool bInvokePreAndPostR
 	BuildRenderableRenderLists( iSkyBoxViewID );
 	render->EndUpdateLightmaps();
 
-	g_pClientShadowMgr->ComputeShadowTextures( (*this), m_pWorldListInfo->m_LeafCount, m_pWorldListInfo->m_pLeafList );
+	g_pClientShadowMgr->ComputeShadowTextures( (*this), m_pWorldListInfo->m_LeafCount, m_pWorldListInfo->m_pLeafDataList);
 
 	DrawWorld( 0.0f );
 
@@ -5359,7 +5374,7 @@ void CBaseWorldView::DrawExecute( float waterHeight, view_id_t viewID, float wat
 	// @MULTICORE (toml 8/16/2006): rethink how, where, and when this is done...
 	g_CurrentViewID = VIEW_SHADOW_DEPTH_TEXTURE;
 	MaybeInvalidateLocalPlayerAnimation();
-	g_pClientShadowMgr->ComputeShadowTextures( *this, m_pWorldListInfo->m_LeafCount, m_pWorldListInfo->m_pLeafList );
+	g_pClientShadowMgr->ComputeShadowTextures( *this, m_pWorldListInfo->m_LeafCount, m_pWorldListInfo->m_pLeafDataList);
 	MaybeInvalidateLocalPlayerAnimation();
 
 	// Make sure sound doesn't stutter

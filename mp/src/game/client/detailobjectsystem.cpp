@@ -135,6 +135,8 @@ public:
 	virtual IClientEntity*		GetIClientEntity()		{ return 0; }
 	virtual C_BaseEntity*		GetBaseEntity()			{ return 0; }
 	virtual IClientThinkable*	GetClientThinkable()	{ return 0; }
+	virtual IClientModelRenderable* GetClientModelRenderable() { return 0; }
+	virtual IClientAlphaProperty* GetClientAlphaProperty() { return 0; }
 
 
 	// IClientRenderable overrides.

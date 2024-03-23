@@ -68,7 +68,7 @@ public:
 		IClientRenderable* pRenderable, ShadowReceiver_t type ) = 0;
 
 	// Re-renders all shadow textures for shadow casters that lie in the leaf list
-	virtual void ComputeShadowTextures( const CViewSetup &view, int leafCount, LeafIndex_t* pLeafList ) = 0;
+	virtual void ComputeShadowTextures( const CViewSetup &view, int leafCount, WorldListLeafData_t* pLeafList ) = 0;
 
 	// Frees shadow depth textures for use in subsequent view/frame
 	virtual void UnlockAllShadowDepthTextures() = 0;

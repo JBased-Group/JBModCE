@@ -486,7 +486,7 @@ void CConsolePanel::RebuildCompletionList(const char *text)
 		int count = pCommand->AutoCompleteSuggest( text, commands );
 		Assert( count <= COMMAND_COMPLETION_MAXITEMS );
 		int i;
-		Msg("count: %i\n", count);
+		//Msg("count: %i\n", count);
 		for ( i = 0; i < count; i++ )
 		{
 			// match found, add to list
@@ -494,7 +494,7 @@ void CConsolePanel::RebuildCompletionList(const char *text)
 			m_CompletionList.AddToTail( item );
 			item->m_bIsCommand = false;
 			item->m_pCommand = NULL;
-			Msg("i: %i\n", i);
+			//Msg("i: %i\n", i);
 			item->m_pText = new CHistoryItem( commands[ i ].String() );
 		}
 	}

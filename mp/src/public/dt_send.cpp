@@ -276,7 +276,7 @@ void SendProxy_UInt64ToInt64( const SendProp *pProp, const void *pStruct, const 
 
 void SendProxy_StringToString( const SendProp *pProp, const void *pStruct, const void *pData, DVariant *pOut, int iElement, int objectID)
 {
-	pOut->m_pString = (const char*)pData;
+	pOut->m_pString = (char*)pData;
 }
 
 void* SendProxy_DataTableToDataTable( const SendProp *pProp, const void *pStructBase, const void *pData, CSendProxyRecipients *pRecipients, int objectID )

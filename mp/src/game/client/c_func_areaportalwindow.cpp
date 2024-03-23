@@ -98,7 +98,7 @@ int C_FuncAreaPortalWindow::DrawModel( int flags )
 		mode = ( flags & STUDIO_TRANSPARENCY ) ? DBM_DRAW_TRANSLUCENT_ONLY : DBM_DRAW_OPAQUE_ONLY;
 	}
 
-	render->DrawBrushModelEx( 
+	render->DrawBrushModel( 
 		this, 
 		(model_t *)GetModel(), 
 		GetAbsOrigin(), 
@@ -113,7 +113,7 @@ int C_FuncAreaPortalWindow::DrawModel( int flags )
 		model_t *pBackground = ( model_t * )modelinfo->GetModel( m_iBackgroundModelIndex );
 		if( pBackground && modelinfo->GetModelType( pBackground ) == mod_brush )
 		{
-			render->DrawBrushModelEx( 
+			render->DrawBrushModel( 
 				this, 
 				pBackground, 
 				GetAbsOrigin(), 

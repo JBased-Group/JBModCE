@@ -139,6 +139,10 @@ int CClientEntityList::HandleToEntIndex( ClientEntityHandle_t handle )
 	return pEnt ? pEnt->entindex() : -1; 
 }
 
+EntityCacheInfo_t* CClientEntityList::GetClientNetworkableArray()
+{
+	return m_EntityCacheInfo;
+}
 
 //-----------------------------------------------------------------------------
 // Purpose: Because m_iNumServerEnts != last index

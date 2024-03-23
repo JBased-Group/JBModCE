@@ -540,7 +540,7 @@ protected:
 public:
 
 	// Get the base pointer.
-	const unsigned char*	GetBasePointer() { return m_pData; }
+	const unsigned char*	GetBasePointer() { return reinterpret_cast<unsigned char const*>(m_pData); }
 
 	BITBUF_INLINE int TotalBytesAvailable( void ) const
 	{
@@ -637,6 +637,7 @@ public:
 	int				GetNumBytesRead();
 	int				GetNumBitsLeft();
 	int				GetNumBitsRead() const;
+	inline void            GrabNextDWord(bool bOverFlowImmediately);
 
 	// Has the buffer overflowed?
 	inline bool		IsOverflowed() const {return m_bOverflow;}
@@ -650,23 +651,19 @@ public:
 
 public:
 
-	// The current buffer.
-	const unsigned char* RESTRICT m_pData;
-	int						m_nDataBytes;
-	int						m_nDataBits;
+	char const* m_pDebugName;
+	bool m_bOverflow;
+	int m_nDataBits;
+	size_t m_nDataBytes;
 	
-	// Where we are in the buffer.
-	int				m_iCurBit;
+	uint32 m_nInBufWord;
+	int m_nBitsAvail;
+	uint32 const* m_pDataIn;
+	uint32 const* m_pBufferEnd;
+	uint32 const* m_pData;
 
+	static const uint32 s_nMaskTable[33];							// 0 1 3 7 15 ..
 
-private:	
-	// Errors?
-	bool			m_bOverflow;
-
-	// For debugging..
-	bool			m_bAssertOnOverflow;
-
-	const char		*m_pDebugName;
 };
 
 //-----------------------------------------------------------------------------
@@ -675,12 +672,12 @@ private:
 
 inline int bf_read::GetNumBytesRead()	
 {
-	return BitByte(m_iCurBit);
+	return BitByte(GetNumBitsRead());
 }
 
 inline int bf_read::GetNumBitsLeft()	
 {
-	return m_nDataBits - m_iCurBit;
+	return m_nDataBits - GetNumBitsRead();
 }
 
 inline int bf_read::GetNumBytesLeft()	
@@ -690,33 +687,95 @@ inline int bf_read::GetNumBytesLeft()
 
 inline int bf_read::GetNumBitsRead() const
 {
-	return m_iCurBit;
+	if (!m_pData)									   // pesky null ptr bitbufs. these happen.
+		return 0;
+	int nCurOfs = (32 - m_nBitsAvail) + (8 * sizeof(m_pData[0]) * (m_pDataIn - m_pData - 1));
+	int nAdjust = 8 * (m_nDataBytes & 3);
+	return MIN(nCurOfs + nAdjust, m_nDataBits);
 }
 
-inline bool bf_read::Seek(int iBit)
+inline bool bf_read::Seek(int param_2)
+
 {
-	if(iBit < 0 || iBit > m_nDataBits)
-	{
-		SetOverflowFlag();
-		m_iCurBit = m_nDataBits;
-		return false;
+	bool bVar1;
+	uint32* pUVar2;
+	int iVar3;
+	const uint32* pUVar4;
+	uint uVar5;
+	uint uVar6;
+
+	bVar1 = true;
+	if (((int)param_2 < 0) || (this->m_nDataBits < (int)param_2)) {
+		param_2 = this->m_nDataBits;
+		this->m_bOverflow = true;
+		bVar1 = false;
 	}
-	else
-	{
-		m_iCurBit = iBit;
-		return true;
+	uVar6 = this->m_nDataBytes & 3;
+	if ((this->m_nDataBytes < 4) ||
+		((uVar6 != 0 && ((int)(param_2 + ((int)param_2 >> 0x1f & 7U)) >> 3 < (int)uVar6)))) {
+		pUVar4 = this->m_pData;
+		if (pUVar4 != (uint32*)0x0) {
+			this->m_nInBufWord = (uint) * (byte*)pUVar4;
+			pUVar2 = (uint32*)((int)pUVar4 + 1);
+			if (1 < uVar6) {
+				this->m_nInBufWord = this->m_nInBufWord | (uint) * (byte*)(uint32*)((int)pUVar4 + 1) << 8;
+				pUVar2 = (uint32*)((int)pUVar4 + 2);
+			}
+			pUVar4 = pUVar2;
+			if (2 < uVar6) {
+				this->m_nInBufWord = this->m_nInBufWord | (uint) * (byte*)pUVar4 << 0x10;
+				pUVar4 = (uint32*)((int)pUVar4 + 1);
+			}
+		}
+		this->m_pDataIn = pUVar4;
+		this->m_nInBufWord = this->m_nInBufWord >> (char)(param_2 & 0x1f);
+		iVar3 = uVar6 * 8 - (param_2 & 0x1f);
+		goto LAB_102584d9;
 	}
+	uVar5 = param_2 + uVar6 * -8;
+	pUVar4 = (uint32*)
+		((int)this->m_pData + uVar6 + ((int)(uVar5 + ((int)uVar5 >> 0x1f & 0x1fU)) >> 5) * 4);
+	this->m_pDataIn = pUVar4;
+	if (this->m_pData == (uint32*)0x0) {
+	LAB_10258454:
+		this->m_nBitsAvail = 1;
+	LAB_1025845b:
+		this->m_nInBufWord = 0;
+	}
+	else {
+		this->m_nBitsAvail = 0x20;
+		if (pUVar4 == this->m_pBufferEnd) {
+			this->m_pDataIn = pUVar4 + 1;
+			goto LAB_10258454;
+		}
+		if (this->m_pBufferEnd < pUVar4) {
+			this->m_bOverflow = true;
+			goto LAB_1025845b;
+		}
+		this->m_nInBufWord = *pUVar4;
+		this->m_pDataIn = pUVar4 + 1;
+	}
+	this->m_nInBufWord = this->m_nInBufWord >> (char)(uVar5 & 0x1f);
+	iVar3 = 0x20 - (uVar5 & 0x1f);
+	if (this->m_nBitsAvail < iVar3) {
+		this->m_nBitsAvail = this->m_nBitsAvail;
+		return bVar1;
+	}
+LAB_102584d9:
+	this->m_nBitsAvail = iVar3;
+	return bVar1;
 }
+
 
 // Seek to an offset from the current position.
 inline bool	bf_read::SeekRelative(int iBitDelta)		
 {
-	return Seek(m_iCurBit+iBitDelta);
+	return Seek(GetNumBitsRead()+iBitDelta);
 }	
 
 inline bool bf_read::CheckForOverflow(int nBits)
 {
-	if( m_iCurBit + nBits > m_nDataBits )
+	if(GetNumBitsRead() + nBits > m_nDataBits )
 	{
 		SetOverflowFlag();
 		CallErrorHandler( BITBUFERROR_BUFFER_OVERRUN, GetDebugName() );
@@ -728,11 +787,11 @@ inline bool bf_read::CheckForOverflow(int nBits)
 inline int bf_read::ReadOneBitNoCheck()
 {
 #if VALVE_LITTLE_ENDIAN
-	unsigned int value = ((unsigned long * RESTRICT)m_pData)[m_iCurBit >> 5] >> (m_iCurBit & 31);
+	unsigned int value = ((unsigned long * RESTRICT)m_pData)[GetNumBitsRead() >> 5] >> (GetNumBitsRead() & 31);
 #else
 	unsigned char value = m_pData[m_iCurBit >> 3] >> (m_iCurBit & 7);
 #endif
-	++m_iCurBit;
+	SeekRelative(1);
 	return value & 1;
 }
 
@@ -766,42 +825,65 @@ BITBUF_INLINE unsigned int bf_read::ReadUBitVar()
 	return sixbits >> 2;
 }
 
-BITBUF_INLINE unsigned int bf_read::ReadUBitLong( int numbits ) RESTRICT
+BITBUF_INLINE void bf_read::GrabNextDWord(bool bOverFlowImmediately)
 {
-	Assert( numbits > 0 && numbits <= 32 );
-
-	if ( GetNumBitsLeft() < numbits )
+	if (m_pDataIn == m_pBufferEnd)
 	{
-		m_iCurBit = m_nDataBits;
-		SetOverflowFlag();
-		CallErrorHandler( BITBUFERROR_BUFFER_OVERRUN, GetDebugName() );
-		return 0;
+		m_nBitsAvail = 1;									// so that next read will run out of words
+		m_nInBufWord = 0;
+		m_pDataIn++;										// so seek count increments like old
+		if (bOverFlowImmediately)
+			SetOverflowFlag();
 	}
+	else
+		if (m_pDataIn > m_pBufferEnd)
+		{
+			SetOverflowFlag();
+			m_nInBufWord = 0;
+		}
+		else
+		{
+			Assert(reinterpret_cast<int>(m_pDataIn) + 3 < reinterpret_cast<int>(m_pBufferEnd));
+			m_nInBufWord = LittleDWord(*(m_pDataIn++));
+		}
+}
 
-	unsigned int iStartBit = m_iCurBit & 31u;
-	int iLastBit = m_iCurBit + numbits - 1;
-	unsigned int iWordOffset1 = m_iCurBit >> 5;
-	unsigned int iWordOffset2 = iLastBit >> 5;
-	m_iCurBit += numbits;
-	
-#if __i386__
-	unsigned int bitmask = (2 << (numbits-1)) - 1;
-#else
-	extern unsigned long g_ExtraMasks[33];
-	unsigned int bitmask = g_ExtraMasks[numbits];
-#endif
-
-	unsigned int dw1 = LoadLittleDWord( (unsigned long* RESTRICT)m_pData, iWordOffset1 ) >> iStartBit;
-	unsigned int dw2 = LoadLittleDWord( (unsigned long* RESTRICT)m_pData, iWordOffset2 ) << (32 - iStartBit);
-
-	return (dw1 | dw2) & bitmask;
+BITBUF_INLINE unsigned int bf_read::ReadUBitLong(int numbits)
+{
+	if (m_nBitsAvail >= numbits)
+	{
+		unsigned int nRet = m_nInBufWord & s_nMaskTable[numbits];
+		m_nBitsAvail -= numbits;
+		if (m_nBitsAvail)
+		{
+			m_nInBufWord >>= numbits;
+		}
+		else
+		{
+			m_nBitsAvail = 32;
+			GrabNextDWord(false);
+		}
+		return nRet;
+	}
+	else
+	{
+		// need to merge words
+		unsigned int nRet = m_nInBufWord;
+		numbits -= m_nBitsAvail;
+		GrabNextDWord(true);
+		if (m_bOverflow)
+			return 0;
+		nRet |= ((m_nInBufWord & s_nMaskTable[numbits]) << m_nBitsAvail);
+		m_nBitsAvail = 32 - numbits;
+		m_nInBufWord >>= numbits;
+		return nRet;
+	}
 }
 
 BITBUF_INLINE int bf_read::CompareBits( bf_read * RESTRICT other, int numbits ) RESTRICT
 {
 	return (ReadUBitLong(numbits) != other->ReadUBitLong(numbits));
 }
-
 
 #endif
 

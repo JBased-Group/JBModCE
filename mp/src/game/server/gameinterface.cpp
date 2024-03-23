@@ -801,7 +801,7 @@ void			CServerGameDLL::GetMatchmakingGameData(char* buf, size_t bufSize)
 bool			CServerGameDLL::SupportsRandomMaps()
 {
 	//Msg("IMPLEMENT " __FUNCTION__ " !!!\n");
-	return true;
+	return false;
 }
 
 // return true to disconnect client due to timeout (used to do stricter timeouts when the game is sure the client isn't loading a map)

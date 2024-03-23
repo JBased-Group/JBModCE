@@ -184,7 +184,7 @@ public:
 	virtual void ProjectFlashlight( ClientLeafShadowHandle_t handle, int nLeafCount, const int *pLeafList );
 
 	// Find all shadow casters in a set of leaves
-	virtual void EnumerateShadowsInLeaves( int leafCount, LeafIndex_t* pLeaves, IClientLeafShadowEnum* pEnum );
+	virtual void EnumerateShadowsInLeaves( int leafCount, WorldListLeafData_t* pLeaves, IClientLeafShadowEnum* pEnum );
 
 	// methods of ISpatialLeafEnumerator
 public:
@@ -1472,7 +1472,7 @@ void CClientLeafSystem::ProjectFlashlight( ClientLeafShadowHandle_t handle, int 
 //-----------------------------------------------------------------------------
 // Find all shadow casters in a set of leaves
 //-----------------------------------------------------------------------------
-void CClientLeafSystem::EnumerateShadowsInLeaves( int leafCount, LeafIndex_t* pLeaves, IClientLeafShadowEnum* pEnum )
+void CClientLeafSystem::EnumerateShadowsInLeaves( int leafCount, WorldListLeafData_t* pLeaves, IClientLeafShadowEnum* pEnum )
 {
 	if (leafCount == 0)
 		return;
@@ -1482,7 +1482,7 @@ void CClientLeafSystem::EnumerateShadowsInLeaves( int leafCount, LeafIndex_t* pL
 
 	for (int i = 0; i < leafCount; ++i)
 	{
-		int leaf = pLeaves[i];
+		int leaf = pLeaves[i].leafIndex;
 
 		unsigned short j = m_ShadowsInLeaf.FirstElement( leaf );
 		while ( j != m_ShadowsInLeaf.InvalidIndex() )
@@ -2221,7 +2221,7 @@ void CClientLeafSystem::BuildRenderablesList( const SetupRenderInfo_t &info )
 		int nTranslucent = nTranslucentEntries;
 
 		// Add renderables from this leaf...
-		CollateRenderablesInLeaf( info.m_pWorldListInfo->m_pLeafList[i], i, info );
+		CollateRenderablesInLeaf( info.m_pWorldListInfo->m_pLeafDataList[i].leafIndex, i, info );
 
 		int nNewTranslucent = nTranslucentEntries - nTranslucent;
 		if( (nNewTranslucent != 0 ) && info.m_bDrawTranslucentObjects )

@@ -743,7 +743,7 @@ public:
 	void RemoveAllShadowsFromReceiver( IClientRenderable* pRenderable, ShadowReceiver_t type );
 
 	// Re-renders all shadow textures for shadow casters that lie in the leaf list
-	void ComputeShadowTextures( const CViewSetup &view, int leafCount, LeafIndex_t* pLeafList );
+	void ComputeShadowTextures( const CViewSetup &view, int leafCount, WorldListLeafData_t* pLeafList );
 
 	// Kicks off rendering into shadow depth maps (if any)
 	void ComputeShadowDepthTextures( const CViewSetup &view );
@@ -998,7 +998,7 @@ class CVisibleShadowList : public IClientLeafShadowEnum
 public:
 
 	CVisibleShadowList();
-	int FindShadows( const CViewSetup *pView, int nLeafCount, LeafIndex_t *pLeafList );
+	int FindShadows( const CViewSetup *pView, int nLeafCount, WorldListLeafData_t *pLeafList );
 	int GetVisibleShadowCount() const;
 
 	const VisibleShadowInfo_t &GetVisibleShadow( int i ) const;
@@ -1146,7 +1146,7 @@ void CVisibleShadowList::PrioritySort()
 //-----------------------------------------------------------------------------
 // CVisibleShadowList - Main entry point for finding shadows in the leaf list
 //-----------------------------------------------------------------------------
-int CVisibleShadowList::FindShadows( const CViewSetup *pView, int nLeafCount, LeafIndex_t *pLeafList )
+int CVisibleShadowList::FindShadows( const CViewSetup *pView, int nLeafCount, WorldListLeafData_t *pLeafList )
 {
 	VPROF_BUDGET( "CVisibleShadowList::FindShadows", VPROF_BUDGETGROUP_SHADOW_RENDERING );
 
@@ -3993,7 +3993,7 @@ static void SetupBonesOnBaseAnimating( C_BaseAnimating *&pBaseAnimating )
 }
 
 
-void CClientShadowMgr::ComputeShadowTextures( const CViewSetup &view, int leafCount, LeafIndex_t* pLeafList )
+void CClientShadowMgr::ComputeShadowTextures( const CViewSetup &view, int leafCount, WorldListLeafData_t* pLeafList )
 {
 	VPROF_BUDGET( "CClientShadowMgr::ComputeShadowTextures", VPROF_BUDGETGROUP_SHADOW_RENDERING );
 
