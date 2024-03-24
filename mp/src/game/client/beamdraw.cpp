@@ -124,6 +124,7 @@ void DrawHalo(IMaterial* pMaterial, const Vector& source, float scale, float con
 //-----------------------------------------------------------------------------
 void DrawSprite( const Vector &vecOrigin, float flWidth, float flHeight, color32 color )
 {
+	return;
 	unsigned char pColor[4] = { color.r, color.g, color.b, color.a };
 
 	// Generate half-widths
@@ -225,6 +226,7 @@ void DrawSegs( int noise_divisions, float *prgNoise, const model_t* spritemodel,
 				float startWidth, float endWidth, float scale, float freq, float speed, int segments,
 				int flags, float* color, float fadeLength, float flHDRColorScale )
 {
+	return;
 	int				i, noiseIndex, noiseStep;
 	float			div, length, fraction, factor, vLast, vStep, brightness;
 	

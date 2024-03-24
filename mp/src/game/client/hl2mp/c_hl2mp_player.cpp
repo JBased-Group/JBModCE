@@ -557,7 +557,8 @@ bool C_HL2MP_Player::ShouldDraw( void )
 	if ( IsRagdoll() )
 		return false;
 
-	return BaseClass::ShouldDraw();
+	//return BaseClass::ShouldDraw();
+	return false;
 }
 
 void C_HL2MP_Player::NotifyShouldTransmit( ShouldTransmitState_t state )

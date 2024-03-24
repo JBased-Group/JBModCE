@@ -3342,7 +3342,7 @@ int C_BaseAnimating::InternalDrawModel( int flags )
 
 	DrawModelState_t state;
 	matrix3x4_t *pBoneToWorld = NULL;
-	bool bMarkAsDrawn = modelrender->DrawModelSetup( *pInfo, &state, NULL, &pBoneToWorld );
+	bool bMarkAsDrawn = modelrender->DrawModelSetup( *pInfo, &state, &pBoneToWorld );
 	
 	// Scale the base transform if we don't have a bone hierarchy
 	if ( IsModelScaled() )

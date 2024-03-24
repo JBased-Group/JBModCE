@@ -3667,7 +3667,7 @@ bool CClientShadowMgr::DrawShadowHierarchy( IClientRenderable *pRenderable, cons
 		if ( bDrawModelShadow )
 		{
 			DrawModelInfo_t info;
-			matrix3x4_t *pBoneToWorld = modelrender->DrawModelShadowSetup( pRenderable, pRenderable->GetBody(), pRenderable->GetSkin(), &info );
+			matrix3x4a_t *pBoneToWorld = modelrender->DrawModelShadowSetup( pRenderable, pRenderable->GetBody(), pRenderable->GetSkin(), &info );
 			if ( pBoneToWorld )
 			{
 				modelrender->DrawModelShadow( pRenderable, info, pBoneToWorld );

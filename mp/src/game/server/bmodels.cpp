@@ -1412,7 +1412,10 @@ void CFuncVPhysicsClip::Spawn( void )
 	SetModel( STRING( GetModelName() ) );
 	AddEffects( EF_NODRAW );
 	CreateVPhysics();
-	VPhysicsGetObject()->EnableCollisions( !m_bDisabled );
+	if (VPhysicsGetObject())
+	{
+		VPhysicsGetObject()->EnableCollisions(!m_bDisabled);
+	}
 }
 
 

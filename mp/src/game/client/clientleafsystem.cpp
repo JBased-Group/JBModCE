@@ -1593,7 +1593,7 @@ void CClientLeafSystem::AddRenderableToLeaves( ClientRenderHandle_t handle, int 
 	{
 		AddRenderableToLeaf( pLeaves[j], handle ); 
 	}
-	//m_Renderables[handle].m_Area = GetRenderableArea( handle );
+	m_Renderables[handle].m_Area = engine->GetLeavesArea(pLeaves, nLeafCount);
 }
 
 
@@ -1626,7 +1626,7 @@ void CClientLeafSystem::InsertIntoTree( ClientRenderHandle_t &handle )
 		m_ShadowEnum++;
 	}
 
-	EnumResultList_t list = { NULL, handle };
+	unsigned short leafList[1024];
 
 	// NOTE: The render bounds here are relative to the renderable's coordinate system
 	IClientRenderable* pRenderable = m_Renderables[handle].m_pRenderable;
@@ -1636,12 +1636,9 @@ void CClientLeafSystem::InsertIntoTree( ClientRenderHandle_t &handle )
 	Assert( absMins.IsValid() && absMaxs.IsValid() );
 
 	ISpatialQuery* pQuery = engine->GetBSPTreeQuery();
-	pQuery->EnumerateLeavesInBox( absMins, absMaxs, this, (int)&list );
+	int leafCount = pQuery->ListLeavesInBox( absMins, absMaxs, leafList, 1024 );
 
-	if ( list.pHead )
-	{
-		m_DeferredInserts.PushItem( list );
-	}
+	AddRenderableToLeaves(handle, leafCount, leafList);
 }
 
 //-----------------------------------------------------------------------------
@@ -2028,8 +2025,8 @@ void CClientLeafSystem::CollateRenderablesInLeaf( int leaf, int worldListLeafInd
 
 			// Translucent entities already have had ComputeTranslucentRenderLeaf called on them
 			// so m_RenderLeaf should be set to the nearest leaf, so that's what we want here.
-			if ( renderable.m_RenderLeaf != leaf )
-				continue;
+			//if ( renderable.m_RenderLeaf != leaf )
+			//	continue;
 		}
 
 		unsigned char nAlpha = 255;

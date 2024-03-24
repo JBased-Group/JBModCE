@@ -409,6 +409,7 @@ float CPixelVisibilityQuery::GetFractionVisible( float fadeTimeInv )
 
 void CPixelVisibilityQuery::IssueQuery( IMatRenderContext *pRenderContext, float proxySize, float proxyAspect, IMaterial *pMaterial, bool sizeIsScreenSpace )
 {
+	return;
 	if ( !m_failed )
 	{
 		Assert( IsValid() );
@@ -440,6 +441,7 @@ void CPixelVisibilityQuery::IssueQuery( IMatRenderContext *pRenderContext, float
 
 void CPixelVisibilityQuery::IssueCountingQuery( IMatRenderContext *pRenderContext, float proxySize, float proxyAspect, IMaterial *pMaterial, bool sizeIsScreenSpace )
 {
+	return;
 	if ( !m_failed )
 	{
 		Assert( IsValid() );

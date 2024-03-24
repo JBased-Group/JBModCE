@@ -1052,6 +1052,7 @@ void C_BaseEntity::Clear( void )
 //-----------------------------------------------------------------------------
 void C_BaseEntity::Spawn( void )
 {
+	
 }
 
 //-----------------------------------------------------------------------------
@@ -1392,7 +1393,7 @@ void C_BaseEntity::UpdateVisibility()
 	}
 #endif
 
-	if ( ShouldDraw() && !IsDormant() && ( !ToolsEnabled() || IsEnabledInToolView() ) )
+	if ( ShouldDraw() /* && !IsDormant()*/ && (!ToolsEnabled() || IsEnabledInToolView()))
 	{
 		// add/update leafsystem
 		AddToLeafSystem();
@@ -3649,11 +3650,11 @@ void C_BaseEntity::AddColoredStudioDecal( const Ray_t& ray, int hitbox, int deca
 		VectorSubtract( tr.endpos, tr.plane.normal, temp );
 		Ray_t betterRay;
 		betterRay.Init( tr.endpos, temp );
-		modelrender->AddColoredDecal( m_ModelInstance, betterRay, up, decalIndex, GetStudioBody(), cColor, true, maxLODToDecal );
+		modelrender->AddDecal( m_ModelInstance, betterRay, up, decalIndex, GetStudioBody(), true, maxLODToDecal );
 	}
 	else
 	{
-		modelrender->AddColoredDecal( m_ModelInstance, ray, up, decalIndex, GetStudioBody(), cColor, false, maxLODToDecal );
+		modelrender->AddDecal( m_ModelInstance, ray, up, decalIndex, GetStudioBody(), false, maxLODToDecal );
 	}
 }
 
@@ -3902,7 +3903,7 @@ void C_BaseEntity::AddToLeafSystem( RenderGroup_t group )
 	if( m_hRender == INVALID_CLIENT_RENDER_HANDLE )
 	{
 		// create new renderer handle
-		ClientLeafSystem()->AddRenderable( this, RENDER_GROUP_TRANSLUCENT_ENTITY);
+		ClientLeafSystem()->AddRenderable( this, RENDER_GROUP_OPAQUE_ENTITY);
 		ClientLeafSystem()->EnableAlternateSorting( m_hRender, m_bAlternateSorting );
 	}
 	else

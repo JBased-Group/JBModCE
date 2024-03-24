@@ -45,6 +45,7 @@ static unsigned int s_nHDRColorScaleCache = 0;
 void DrawSpriteModel( IClientEntity *baseentity, CEngineSprite *psprite, const Vector &origin, float fscale, float frame, 
 	int rendermode, int r, int g, int b, int a, const Vector& forward, const Vector& right, const Vector& up, float flHDRColorScale )
 {
+	return;
 	float		scale;
 	IMaterial	*material;
 	

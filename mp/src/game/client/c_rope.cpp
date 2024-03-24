@@ -686,6 +686,7 @@ int CRopeManager::GetHolidayLightStyle( void )
 //-----------------------------------------------------------------------------
 void CRopeManager::RenderNonSolidRopes( IMatRenderContext *pRenderContext, IMaterial *pMaterial, int nVertCount, int nIndexCount )
 {
+	return;
 	// Render the solid portion of the ropes.
 	CMeshBuilder meshBuilder;
 	IMesh *pMesh = pRenderContext->GetDynamicMesh( true, NULL, NULL, pMaterial );
