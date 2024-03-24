@@ -22,7 +22,7 @@ public:
 	virtual RenderGroup_t GetRenderGroup( void );
 
 	virtual void	OnDataChanged( DataUpdateType_t updateType );
-	virtual int		DrawModel( int flags );
+	virtual int		DrawModel( int flags,  RenderableInstance_t instance);
 
 protected:
 

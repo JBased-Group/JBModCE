@@ -70,6 +70,29 @@ public:
 };
 
 
+class CViewModelRenderablesList
+{
+public:
+	enum
+	{
+		VM_GROUP_OPAQUE = 0,
+		VM_GROUP_TRANSLUCENT,
+		VM_GROUP_COUNT,
+	};
+
+	struct CEntry
+	{
+		IClientRenderable* m_pRenderable;
+		RenderableInstance_t m_InstanceData;
+	};
+
+	typedef CUtlVectorFixedGrowable< CEntry, 32 > RenderGroups_t;
+
+	// The leaves for the entries are in the order of the leaves you call CollateRenderablesInLeaf in.
+	RenderGroups_t	m_RenderGroups[VM_GROUP_COUNT];
+};
+
+
 //-----------------------------------------------------------------------------
 // Used by CollateRenderablesInLeaf
 //-----------------------------------------------------------------------------
@@ -130,6 +153,7 @@ public:
 
 
 
+
 //-----------------------------------------------------------------------------
 // The client leaf system
 //-----------------------------------------------------------------------------
@@ -146,7 +170,6 @@ public:
 	virtual void SetSubSystemDataInLeaf( int leaf, int nSubSystemIdx, CClientLeafSubSystemData *pData ) =0;
 	virtual CClientLeafSubSystemData *GetSubSystemDataInLeaf( int leaf, int nSubSystemIdx ) =0;
 
-
 	virtual void SetDetailObjectsInLeaf( int leaf, int firstDetailObject, int detailObjectCount ) = 0;
 	virtual void GetDetailObjectsInLeaf( int leaf, int& firstDetailObject, int& detailObjectCount ) = 0;
 
@@ -160,17 +183,11 @@ public:
 	// Call this when a renderable origin/angles/bbox parameters has changed
 	virtual void RenderableChanged( ClientRenderHandle_t handle ) = 0;
 
-	// Set a render group
-	virtual void SetRenderGroup( ClientRenderHandle_t handle, RenderGroup_t group ) = 0;
-
-	// Computes which leaf translucent objects should be rendered in
-	virtual void ComputeTranslucentRenderLeaf( int count, const LeafIndex_t *pLeafList, const LeafFogVolume_t *pLeafFogVolumeList, int frameNumber, int viewID ) = 0;
-
 	// Put renderables into their appropriate lists.
 	virtual void BuildRenderablesList( const SetupRenderInfo_t &info ) = 0;
 
 	// Put renderables in the leaf into their appropriate lists.
-	virtual void CollateViewModelRenderables( CUtlVector< IClientRenderable * >& opaqueList, CUtlVector< IClientRenderable * >& translucentList ) = 0;
+	virtual void CollateViewModelRenderables(CViewModelRenderablesList* pList) = 0;
 
 	// Call this to deactivate static prop rendering..
 	virtual void DrawStaticProps( bool enable ) = 0;

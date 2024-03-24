@@ -19,6 +19,16 @@
 #include "client_render_handle.h"
 
 
+enum RenderableModelType_t
+{
+	RENDERABLE_MODEL_UNKNOWN_TYPE = -1,
+	RENDERABLE_MODEL_ENTITY = 0,
+	RENDERABLE_MODEL_STUDIOMDL,
+	RENDERABLE_MODEL_STATIC_PROP,
+	RENDERABLE_MODEL_BRUSH,
+};
+
+
 //-----------------------------------------------------------------------------
 // Render groups
 //-----------------------------------------------------------------------------
@@ -61,10 +71,10 @@ abstract_class IClientLeafSystemEngine
 public:
 	// Adds and removes renderables from the leaf lists
 	// CreateRenderableHandle stores the handle inside pRenderable.
-	virtual void CreateRenderableHandle( IClientRenderable* pRenderable, bool bIsStaticProp = false ) = 0;
+	virtual void CreateRenderableHandle( IClientRenderable* pRenderable, bool bRenderWithViewModels, RenderableTranslucencyType_t nType, RenderableModelType_t nModelType, uint32 nSplitscreenEnabled = 0xFFFFFFFF ) = 0; // = RENDERABLE_MODEL_UNKNOWN_TYPE ) = 0;
 	virtual void RemoveRenderable( ClientRenderHandle_t handle ) = 0;
 	virtual void AddRenderableToLeaves( ClientRenderHandle_t renderable, int nLeafCount, unsigned short *pLeaves ) = 0;
-	virtual void ChangeRenderableRenderGroup( ClientRenderHandle_t handle, RenderGroup_t group ) = 0;
+	virtual void SetTranslucencyType( ClientRenderHandle_t handle, RenderableTranslucencyType_t nType ) = 0;
 };
 
 

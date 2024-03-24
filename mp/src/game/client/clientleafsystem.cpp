@@ -53,7 +53,7 @@ static void FrameUnlock()
 
 static void CallComputeFXBlend( IClientRenderable *&pRenderable )
 {
-	pRenderable->ComputeFxBlend();
+	//pRenderable->ComputeFxBlend();
 }
 
 enum ClientAlphaDistanceFadeMode_t
@@ -150,9 +150,9 @@ public:
 	
 	virtual void AddRenderable( IClientRenderable* pRenderable, RenderGroup_t group );
 	virtual bool IsRenderableInPVS( IClientRenderable *pRenderable );
-	virtual void CreateRenderableHandle( IClientRenderable* pRenderable, bool bIsStaticProp );
+	virtual void CreateRenderableHandle(IClientRenderable* pRenderable, bool bRenderWithViewModels, RenderableTranslucencyType_t nType, RenderableModelType_t nModelType, uint32 nSplitscreenEnabled = 0xFFFFFFFF);
 	virtual void RemoveRenderable( ClientRenderHandle_t handle );
-
+	virtual void SetTranslucencyType(ClientRenderHandle_t handle, RenderableTranslucencyType_t nType) { return; }
 
 	virtual void SetSubSystemDataInLeaf( int leaf, int nSubSystemIdx, CClientLeafSubSystemData *pData );
 	virtual CClientLeafSubSystemData *GetSubSystemDataInLeaf( int leaf, int nSubSystemIdx );
@@ -166,7 +166,7 @@ public:
 	virtual void RenderableChanged( ClientRenderHandle_t handle );
 	virtual void SetRenderGroup( ClientRenderHandle_t handle, RenderGroup_t group );
 	virtual void ComputeTranslucentRenderLeaf( int count, const LeafIndex_t *pLeafList, const LeafFogVolume_t *pLeafFogVolumeList, int frameNumber, int viewID );
-	virtual void CollateViewModelRenderables( CUtlVector< IClientRenderable * >& opaque, CUtlVector< IClientRenderable * >& translucent );
+	virtual void CollateViewModelRenderables(CViewModelRenderablesList* pList);
 	virtual void BuildRenderablesList( const SetupRenderInfo_t &info );
 			void CollateRenderablesInLeaf( int leaf, int worldListLeafIndex, const SetupRenderInfo_t &info );
 	virtual void DrawStaticProps( bool enable );
@@ -1007,7 +1007,7 @@ void CClientLeafSystem::PreRender()
 			RenderableInfo_t& renderable = m_Renderables[ handle ];
 
 			renderable.m_Flags &= ~RENDER_FLAGS_HASCHANGED;
-			m_Renderables[handle].m_Area = GetRenderableArea( handle );
+			//m_Renderables[handle].m_Area = GetRenderableArea( handle );
 		}
 
 		m_DirtyRenderables.RemoveMultiple( 0, nDirty );
@@ -1056,7 +1056,7 @@ void CClientLeafSystem::NewRenderable( IClientRenderable* pRenderable, RenderGro
 	pRenderable->RenderHandle() = handle;
 }
 
-void CClientLeafSystem::CreateRenderableHandle( IClientRenderable* pRenderable, bool bIsStaticProp )
+void CClientLeafSystem::CreateRenderableHandle(IClientRenderable* pRenderable, bool bRenderWithViewModels, RenderableTranslucencyType_t nType, RenderableModelType_t nModelType, uint32 nSplitscreenEnabled )
 {
 	// FIXME: The argument is unnecessary if we could get this next line to work
 	// the reason why we can't is because currently there are IClientRenderables
@@ -1065,6 +1065,7 @@ void CClientLeafSystem::CreateRenderableHandle( IClientRenderable* pRenderable, 
 	//bool bIsStaticProp = staticpropmgr->IsStaticProp( pRenderable->GetIClientUnknown() );
 
 	// Add the prop to all the leaves it lies in
+	/*
 	RenderGroup_t group = pRenderable->IsTransparent() ? RENDER_GROUP_TRANSLUCENT_ENTITY : RENDER_GROUP_OPAQUE_ENTITY;
 
 	bool bTwoPass = false;
@@ -1087,8 +1088,9 @@ void CClientLeafSystem::CreateRenderableHandle( IClientRenderable* pRenderable, 
 	{
 		flags |= RENDER_FLAGS_TWOPASS;
 	}
+	*/
 
-	NewRenderable( pRenderable, group, flags );
+	NewRenderable( pRenderable, RENDER_GROUP_TRANSLUCENT_ENTITY, 0 );
 }
 
 
@@ -1133,7 +1135,7 @@ void CClientLeafSystem::AddRenderable( IClientRenderable* pRenderable, RenderGro
 		flags |= RENDER_FLAGS_TWOPASS;
 	}
 
-	NewRenderable( pRenderable, group, flags );
+ 	NewRenderable( pRenderable, group, flags );
 	ClientRenderHandle_t handle = pRenderable->RenderHandle();
 	m_DirtyRenderables.AddToTail( handle );
 }
@@ -1268,10 +1270,10 @@ bool CClientLeafSystem::IsRenderableInPVS( IClientRenderable *pRenderable )
 	// Ask the engine if this guy is visible.
 	return render->AreAnyLeavesVisible( leaves, nLeaves );
 }
-
+/*
 short CClientLeafSystem::GetRenderableArea( ClientRenderHandle_t handle )
 {
-	int leaves[128];
+	unsigned short leaves[128];
 	int nLeaves = GetRenderableLeaves( handle, leaves );
 	if ( nLeaves == -1 )
 		return 0;
@@ -1279,6 +1281,7 @@ short CClientLeafSystem::GetRenderableArea( ClientRenderHandle_t handle )
 	// Now ask the 
 	return engine->GetLeavesArea( leaves, nLeaves );
 }
+*/
 
 
 void CClientLeafSystem::SetSubSystemDataInLeaf( int leaf, int nSubSystemIdx, CClientLeafSubSystemData *pData )
@@ -1590,7 +1593,7 @@ void CClientLeafSystem::AddRenderableToLeaves( ClientRenderHandle_t handle, int 
 	{
 		AddRenderableToLeaf( pLeaves[j], handle ); 
 	}
-	m_Renderables[handle].m_Area = GetRenderableArea( handle );
+	//m_Renderables[handle].m_Area = GetRenderableArea( handle );
 }
 
 
@@ -1822,7 +1825,7 @@ void CClientLeafSystem::ComputeTranslucentRenderLeaf( int count, const LeafIndex
 				}
 				else
 				{
-					info.m_pRenderable->ComputeFxBlend();
+					//info.m_pRenderable->ComputeFxBlend();
 				}
 				info.m_TranslucencyCalculated = globalFrameCount;
 				info.m_TranslucencyCalculatedView = viewID;
@@ -1910,24 +1913,35 @@ inline void AddRenderableToRenderList( CClientRenderablesList &renderList, IClie
 // Input  : renderList - 
 //			renderGroup - 
 //-----------------------------------------------------------------------------
-void CClientLeafSystem::CollateViewModelRenderables( CUtlVector< IClientRenderable * >& opaque, CUtlVector< IClientRenderable * >& translucent )
+void CClientLeafSystem::CollateViewModelRenderables(CViewModelRenderablesList* pList )
 {
-	for ( int i = m_ViewModels.Count()-1; i >= 0; --i )
+	
+	CViewModelRenderablesList::RenderGroups_t& opaqueList = pList->m_RenderGroups[CViewModelRenderablesList::VM_GROUP_OPAQUE];
+	CViewModelRenderablesList::RenderGroups_t& translucentList = pList->m_RenderGroups[CViewModelRenderablesList::VM_GROUP_TRANSLUCENT];
+
+	for (int i = m_ViewModels.Count() - 1; i >= 0; --i)
 	{
 		ClientRenderHandle_t handle = m_ViewModels[i];
 		RenderableInfo_t& renderable = m_Renderables[handle];
 
-		// NOTE: In some cases, this removes the entity from the view model list
-		renderable.m_pRenderable->ComputeFxBlend();
-		
+		int nAlpha = 255;
+		bool bIsTransparent = (nAlpha != 255);
+
 		// That's why we need to test RENDER_GROUP_OPAQUE_ENTITY - it may have changed in ComputeFXBlend()
-		if ( renderable.m_RenderGroup == RENDER_GROUP_VIEW_MODEL_OPAQUE || renderable.m_RenderGroup == RENDER_GROUP_OPAQUE_ENTITY )
+		if (!bIsTransparent)
 		{
-			opaque.AddToTail( renderable.m_pRenderable );
+			int i = opaqueList.AddToTail();
+			CViewModelRenderablesList::CEntry* pEntry = &opaqueList[i];
+			pEntry->m_pRenderable = renderable.m_pRenderable;
+			pEntry->m_InstanceData.m_nAlpha = 255;
 		}
 		else
 		{
-			translucent.AddToTail( renderable.m_pRenderable );
+			int i = translucentList.AddToTail();
+			CViewModelRenderablesList::CEntry* pEntry = &translucentList[i];
+			pEntry->m_pRenderable = renderable.m_pRenderable;
+			pEntry->m_InstanceData.m_nAlpha = nAlpha;
+
 		}
 	}
 }
@@ -2019,15 +2033,15 @@ void CClientLeafSystem::CollateRenderablesInLeaf( int leaf, int worldListLeafInd
 		}
 
 		unsigned char nAlpha = 255;
-		if ( info.m_bDrawTranslucentObjects ) 
-		{
+		//if ( info.m_bDrawTranslucentObjects ) 
+		//{
 			// Prevent culling if the renderable is invisible
 			// NOTE: OPAQUE objects can have alpha == 0. 
 			// They are made to be opaque because they don't have to be sorted.
-			nAlpha = renderable.m_pRenderable->GetFxBlend();
-			if ( nAlpha == 0 )
-				continue;
-		}
+		//	nAlpha = renderable.m_pRenderable->GetFxBlend();
+		//	if ( nAlpha == 0 )
+		//		continue;
+		//}
 
 		Vector absMins, absMaxs;
 		CalcRenderableWorldSpaceAABB( renderable.m_pRenderable, absMins, absMaxs );
@@ -2125,6 +2139,7 @@ void CClientLeafSystem::CollateRenderablesInLeaf( int leaf, int worldListLeafInd
 			// FIXME: This if check here is necessary because the detail object system also maintains lists of sprites...
 			if (pRenderable)
 			{
+				/*
 				if( pRenderable->IsTransparent() )
 				{
 					if ( info.m_bDrawTranslucentObjects )	// Don't draw translucent objects into shadow depth maps
@@ -2137,7 +2152,7 @@ void CClientLeafSystem::CollateRenderablesInLeaf( int leaf, int worldListLeafInd
 						}
 					}
 				}
-				else
+				else*/
 				{
 					AddRenderableToRenderList( *info.m_pRenderList, pRenderable, 
 						worldListLeafIndex, RENDER_GROUP_OPAQUE_ENTITY, DETAIL_PROP_RENDER_HANDLE );

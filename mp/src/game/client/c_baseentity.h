@@ -302,13 +302,18 @@ public:
 	virtual bool					UsesFullFrameBufferTexture();
 	virtual bool					IgnoresZBuffer( void ) const;
 	virtual const model_t			*GetModel( void ) const;
-	virtual int						DrawModel( int flags );
+	virtual int						DrawModel(int flags, const RenderableInstance_t& instance) { return DrawModel(flags); }
+	virtual int						DrawModel(int flags);
 	virtual void					ComputeFxBlend( void );
 	virtual int						GetFxBlend( void );
 	virtual bool					LODTest() { return true; }   // NOTE: UNUSED
 	virtual void					GetRenderBounds( Vector& mins, Vector& maxs );
 	virtual IPVSNotify*				GetPVSNotifyInterface();
 	virtual void					GetRenderBoundsWorldspace( Vector& absMins, Vector& absMaxs );
+
+	virtual int GetRenderFlags() { return 0; }
+	virtual uint8	OverrideAlphaModulation(uint8 nAlpha) { return nAlpha; }
+	virtual uint8	OverrideShadowAlphaModulation(uint8 nAlpha) { return nAlpha; }
 
 	virtual void					GetShadowRenderBounds( Vector &mins, Vector &maxs, ShadowType_t shadowType );
 
@@ -334,6 +339,7 @@ public:
 // IClientNetworkable implementation.
 public:
 	virtual void					NotifyShouldTransmit( ShouldTransmitState_t state );
+	virtual bool					ShouldDrawForSplitScreenUser(int nSlot) { return true; };
 
 	// save out interpolated values
 	virtual void					PreDataUpdate( DataUpdateType_t updateType );
@@ -452,7 +458,7 @@ public:
 
 // IClientEntity implementation.
 public:
-	virtual bool					SetupBones( matrix3x4_t *pBoneToWorldOut, int nMaxBones, int boneMask, float currentTime );
+	virtual bool					SetupBones( matrix3x4a_t *pBoneToWorldOut, int nMaxBones, int boneMask, float currentTime );
 	virtual void					SetupWeights( const matrix3x4_t *pBoneToWorld, int nFlexWeightCount, float *pFlexWeights, float *pFlexDelayedWeights );
 	virtual bool					UsesFlexDelayedWeights() { return false; }
 	virtual void					DoAnimationEvents( void );

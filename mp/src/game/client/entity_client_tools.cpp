@@ -233,12 +233,11 @@ void CClientTools::AddClientRenderable( IClientRenderable *pRenderable, int rend
 	if ( INVALID_CLIENT_RENDER_HANDLE == handle )
 	{
 		// create new renderer handle
-		ClientLeafSystem()->AddRenderable( pRenderable, (RenderGroup_t)renderGroup );
+		ClientLeafSystem()->AddRenderable( pRenderable, RENDER_GROUP_TRANSLUCENT_ENTITY);
 	}
 	else
 	{
 		// handle already exists, just update group & origin
-		ClientLeafSystem()->SetRenderGroup( pRenderable->RenderHandle(), (RenderGroup_t)renderGroup );
 		ClientLeafSystem()->RenderableChanged( pRenderable->RenderHandle() );
 	}
 
@@ -275,7 +274,6 @@ void CClientTools::SetRenderGroup( IClientRenderable *pRenderable, int renderGro
 	else
 	{
 		// handle already exists, just update group & origin
-		ClientLeafSystem()->SetRenderGroup( pRenderable->RenderHandle(), (RenderGroup_t)renderGroup );
 		ClientLeafSystem()->RenderableChanged( pRenderable->RenderHandle() );
 	}
 }

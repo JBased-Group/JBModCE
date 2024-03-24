@@ -227,7 +227,7 @@ public:
 	// Given an input text buffer data pointer, parses a single token into the variable token and returns the new
 	//  reading position
 	virtual const char			*ParseFile( const char *data, char *token, int maxlen ) = 0;
-	virtual bool				CopyLocalFile( const char *source, const char *destination ) = 0;
+	virtual bool				CopyFile( const char *source, const char *destination ) = 0;
 
 	// Gets the dimensions of the game window
 	virtual void				GetScreenSize( int& width, int& height ) = 0;
@@ -281,7 +281,7 @@ public:
 	virtual	const char			*Key_LookupBinding( const char *pBinding ) = 0;
 
 	// Given the name of the key "mouse1", "e", "tab", etc., return the string it is bound to "+jump", "impulse 50", etc.
-	virtual const char			*Key_BindingForKey( ButtonCode_t code ) = 0;
+	virtual const char			*Key_BindingForKey( ButtonCode_t &code ) = 0;
 
 	// key trapping (for binding keys)
 	virtual void				StartKeyTrapMode( void ) = 0;
@@ -293,13 +293,13 @@ public:
 	virtual bool				IsConnected( void ) = 0;
 	// Returns true if the loading plaque should be drawn
 	virtual bool				IsDrawingLoadingImage( void ) = 0;
-	virtual void				HideLoadingPlaque(void) = 0;
+	virtual void				HideLoadingPlaque( void ) = 0;
 
 	// Prints the formatted string to the notification area of the screen ( down the right hand edge
 	//  numbered lines starting at position 0
-	virtual void				Con_NPrintf( int pos, PRINTF_FORMAT_STRING const char *fmt, ... ) = 0;
+	virtual void				Con_NPrintf( int pos, const char *fmt, ... ) = 0;
 	// Similar to Con_NPrintf, but allows specifying custom text color and duration information
-	virtual void				Con_NXPrintf( const struct con_nprint_s *info, PRINTF_FORMAT_STRING const char *fmt, ... ) = 0;
+	virtual void				Con_NXPrintf( const struct con_nprint_s *info, const char *fmt, ... ) = 0;
 
 	// Is the specified world-space bounding box inside the view frustum?
 	virtual int					IsBoxVisible( const Vector& mins, const Vector& maxs ) = 0;
@@ -364,7 +364,7 @@ public:
 	// Get the name of the current map
 	virtual void GetChapterName( char *pchBuff, int iMaxLength ) = 0;
 	virtual char const	*GetLevelName( void ) = 0;
-	virtual int	GetLevelVersion( void ) = 0;
+	virtual char const	*GetLevelNameShort( void ) = 0;
 #if !defined( NO_VOICE )
 	// Obtain access to the voice tweaking API
 	virtual struct IVoiceTweak_s *GetVoiceTweakAPI( void ) = 0;
@@ -378,11 +378,11 @@ public:
 	virtual void		FireEvents() = 0;
 
 	// Returns an area index if all the leaves are in the same area. If they span multple areas, then it returns -1.
-	virtual int			GetLeavesArea( int *pLeaves, int nLeaves ) = 0;
+	virtual int			GetLeavesArea( unsigned short *pLeaves, int nLeaves ) = 0;
 
 	// Returns true if the box touches the specified area's frustum.
 	virtual bool		DoesBoxTouchAreaFrustum( const Vector &mins, const Vector &maxs, int iArea ) = 0;
-	virtual int			GetFrustumList(Frustum_t** pList, int listMax) = 0;
+	virtual int			GetFrustumList( Frustum_t **pList, int listMax ) = 0;
 
 	// Sets the hearing origin (i.e., the origin and orientation of the listener so that the sound system can spatialize 
 	//  sound appropriately ).
@@ -416,7 +416,7 @@ public:
 
 	// Debugging functionality:
 	// Very slow routine to draw a physics model
-	virtual void		DebugDrawPhysCollide( const CPhysCollide *pCollide, IMaterial *pMaterial, matrix3x4_t& transform, const color32 &color ) = 0;
+	virtual void		DebugDrawPhysCollide( const CPhysCollide *pCollide, IMaterial *pMaterial, const matrix3x4_t& transform, const color32 &color ) = 0;
 	// This can be used to notify test scripts that we're at a particular spot in the code.
 	virtual void		CheckPoint( const char *pName ) = 0;
 	// Draw portals if r_DrawPortals is set (Debugging only)
@@ -433,18 +433,19 @@ public:
 	// Is the game paused?
 	virtual bool		IsPaused( void ) = 0;
 
-	virtual float GetTimescale(void) const = 0;
+	// What is the game timescale multiplied with the host_timescale?
+	virtual float GetTimescale( void ) const = 0;
+
 	// Is the game currently taking a screenshot?
 	virtual bool		IsTakingScreenshot( void ) = 0;
 	// Is this a HLTV broadcast ?
 	virtual bool		IsHLTV( void ) = 0;
 	// Is this a Replay demo?
-	virtual bool		IsReplay(void) = 0;
+	virtual bool		IsReplay( void ) = 0;
 	// is this level loaded as just the background to the main menu? (active, but unplayable)
 	virtual bool		IsLevelMainMenuBackground( void ) = 0;
 	// returns the name of the background level
 	virtual void		GetMainMenuBackgroundName( char *dest, int destlen ) = 0;
-
 
 	// Occlusion system control
 	virtual void		SetOcclusionParameters( const OcclusionParams_t &params ) = 0;
@@ -462,7 +463,7 @@ public:
 	virtual bool		IsInEditMode( void ) = 0;
 
 	// current screen aspect ratio (eg. 4.0f/3.0f, 16.0f/9.0f)
-	virtual float		GetScreenAspectRatio() = 0;
+	virtual float		GetScreenAspectRatio( int viewportWidth, int viewportHeight ) = 0;
 
 	// allow the game UI to login a user
 	virtual bool		REMOVED_SteamRefreshLogin( const char *password, bool isSecure ) = 0;
@@ -512,7 +513,7 @@ public:
 	virtual bool			CopyFrameBufferToMaterial( const char *pMaterialName ) = 0;
 
 	// Causes the engine to read in the user's configuration on disk
-	virtual void			ReadConfiguration( const bool readDefault = false ) = 0; 
+	virtual void			ReadConfiguration( const int iController, const bool readDefault ) = 0; 
 
 	virtual void SetAchievementMgr( IAchievementMgr *pAchievementMgr ) = 0;
 	virtual IAchievementMgr *GetAchievementMgr() = 0;
@@ -526,40 +527,41 @@ public:
 
 	virtual void			StartXboxExitingProcess() = 0;
 	virtual bool			IsSaveInProgress() = 0;
-	virtual uint			OnStorageDeviceAttached( void ) = 0;
-	virtual void			OnStorageDeviceDetached( void ) = 0;
+	virtual uint			OnStorageDeviceAttached( int iController ) = 0;
+	virtual void			OnStorageDeviceDetached( int iController ) = 0;
 
 	// generic screenshot writing
-	virtual void		WriteScreenshot(const char* pFilename) = 0;
+	virtual void		WriteScreenshot( const char *pFilename ) = 0;
 
 	virtual void			ResetDemoInterpolation( void ) = 0;
 
+// For non-split screen games this will always be zero
 	virtual int				GetActiveSplitScreenPlayerSlot() = 0;
-	virtual int				SetActiveSplitScreenPlayerSlot(int slot) = 0;
+	virtual int				SetActiveSplitScreenPlayerSlot( int slot ) = 0;
 
 	// This is the current # of players on the local host
-	virtual bool			SetLocalPlayerIsResolvable(char const* pchContext, int nLine, bool bResolvable) = 0;
+	virtual bool			SetLocalPlayerIsResolvable( char const *pchContext, int nLine, bool bResolvable ) = 0;
 	virtual bool			IsLocalPlayerResolvable() = 0;
 
-	virtual int				GetSplitScreenPlayer(int nSlot) = 0;
+	virtual int				GetSplitScreenPlayer( int nSlot ) = 0;
 	virtual bool			IsSplitScreenActive() = 0;
-	virtual bool			IsValidSplitScreenSlot(int nSlot) = 0;
+	virtual bool			IsValidSplitScreenSlot( int nSlot ) = 0;
 	virtual int				FirstValidSplitScreenSlot() = 0; // -1 == invalid
-	virtual int				NextValidSplitScreenSlot(int nPreviousSlot) = 0; // -1 == invalid
+	virtual int				NextValidSplitScreenSlot( int nPreviousSlot ) = 0; // -1 == invalid
 
 	//Finds or Creates a shared memory space, the returned pointer will automatically be AddRef()ed
-	virtual ISPSharedMemory* GetSinglePlayerSharedMemorySpace(const char* szName, int ent_num = MAX_EDICTS) = 0;
+	virtual ISPSharedMemory *GetSinglePlayerSharedMemorySpace( const char *szName, int ent_num = MAX_EDICTS ) = 0;
 
 	// Computes an ambient cube that includes ALL dynamic lights
-	virtual void ComputeLightingCube(const Vector& pt, bool bClamp, Vector* pBoxColors) = 0;
+	virtual void ComputeLightingCube( const Vector& pt, bool bClamp, Vector *pBoxColors ) = 0;
 
 	//All callbacks have to be registered before demo recording begins. TODO: Macro'ize a way to do it at startup
-	virtual void RegisterDemoCustomDataCallback(string_t szCallbackSaveID, pfnDemoCustomDataCallback pCallback) = 0;
-	virtual void RecordDemoCustomData(pfnDemoCustomDataCallback pCallback, const void* pData, size_t iDataLength) = 0;
+	virtual void RegisterDemoCustomDataCallback( string_t szCallbackSaveID, pfnDemoCustomDataCallback pCallback ) = 0;
+	virtual void RecordDemoCustomData( pfnDemoCustomDataCallback pCallback, const void *pData, size_t iDataLength ) = 0;
 
 	// global sound pitch scaling
-	virtual void SetPitchScale(float flPitchScale) = 0;
-	virtual float GetPitchScale(void) = 0;
+	virtual void SetPitchScale( float flPitchScale ) = 0;
+	virtual float GetPitchScale( void ) = 0;
 
 	// Load/unload the SFM - used by Replay
 	virtual bool		LoadFilmmaker() = 0;
@@ -568,24 +570,24 @@ public:
 	// leaf flag management. Allows fast leaf enumeration of leaves that have a flag set
 
 	// set a bit in a leaf flag
-	virtual void SetLeafFlag(int nLeafIndex, int nFlagBits) = 0;
+	virtual void SetLeafFlag( int nLeafIndex, int nFlagBits ) = 0;
 
 	// you must call this once done modifying flags. Not super fast.
-	virtual void RecalculateBSPLeafFlags(void) = 0;
+	virtual void RecalculateBSPLeafFlags( void ) = 0;
 
 	virtual bool DSPGetCurrentDASRoomNew(void) = 0;
 	virtual bool DSPGetCurrentDASRoomChanged(void) = 0;
 	virtual bool DSPGetCurrentDASRoomSkyAbove(void) = 0;
 	virtual float DSPGetCurrentDASRoomSkyPercent(void) = 0;
-	virtual void SetMixGroupOfCurrentMixer(const char* szgroupname, const char* szparam, float val, int setMixerType) = 0;
-	virtual int GetMixLayerIndex(const char* szmixlayername) = 0;
-	virtual void SetMixLayerLevel(int index, float level) = 0;
+	virtual void SetMixGroupOfCurrentMixer( const char *szgroupname, const char *szparam, float val, int setMixerType) = 0;
+	virtual int GetMixLayerIndex( const char *szmixlayername ) = 0;
+	virtual void SetMixLayerLevel(int index, float level ) = 0;
 
 
 	virtual bool IsCreatingReslist() = 0;
 	virtual bool IsCreatingXboxReslist() = 0;
 
-	virtual void SetTimescale(float flTimescale) = 0;
+	virtual void SetTimescale( float flTimescale ) = 0;
 
 	// Methods to set/get a gamestats data container so client & server running in same process can send combined data
 	virtual void SetGamestatsData( CGamestatsData *pGamestatsData ) = 0;
@@ -595,10 +597,10 @@ public:
 	//  returns the string name of the key to which this string is bound. Returns NULL if no such binding exists
 	// Increment start count to iterate through multiple keys bound to the same binding
 	// iAllowJoystick defaults to -1 witch returns joystick and non-joystick binds, 0 returns only non-joystick, 1 returns only joystick
-	virtual	const char* Key_LookupBindingEx(const char* pBinding, int iUserId = -1, int iStartCount = 0, int iAllowJoystick = -1) = 0;
+	virtual	const char *Key_LookupBindingEx( const char *pBinding, int iUserId = -1, int iStartCount = 0, int iAllowJoystick = -1 ) = 0;
 
 	// Updates dynamic light state. Necessary for light cache to work properly for d- and elights
-	virtual void UpdateDAndELights(void) = 0;
+	virtual void UpdateDAndELights( void ) = 0;
 
 	// Methods to get bug count for internal dev work stat tracking.
 	// Will get the bug count and clear it every map transition
@@ -611,38 +613,38 @@ public:
 	// How much time was spent in server simulation?
 	virtual float	GetServerSimulationFrameTime() const = 0;
 
-	virtual void SolidMoved(class IClientEntity* pSolidEnt, class ICollideable* pSolidCollide, const Vector* pPrevAbsOrigin, bool accurateBboxTriggerChecks) = 0;
-	virtual void TriggerMoved(class IClientEntity* pTriggerEnt, bool accurateBboxTriggerChecks) = 0;
+	virtual void SolidMoved( class IClientEntity *pSolidEnt, class ICollideable *pSolidCollide, const Vector* pPrevAbsOrigin, bool accurateBboxTriggerChecks ) = 0;
+	virtual void TriggerMoved( class IClientEntity *pTriggerEnt, bool accurateBboxTriggerChecks ) = 0;
 
 	// Using area bits, check whether the area of the specified point flows into the other areas
-	virtual void ComputeLeavesConnected(const Vector& vecOrigin, int nCount, const int* pLeafIndices, bool* pIsConnected) = 0;
+	virtual void ComputeLeavesConnected( const Vector &vecOrigin, int nCount, const int *pLeafIndices, bool *pIsConnected ) = 0;
 
 	// Is the engine in Commentary mode?
-	virtual bool IsInCommentaryMode(void) = 0;
+	virtual bool IsInCommentaryMode( void ) = 0;
 
-	virtual void SetBlurFade(float amount) = 0;
+	virtual void SetBlurFade( float amount ) = 0; 
 	virtual bool IsTransitioningToLoad() = 0;
 
 	virtual void SearchPathsChangedAfterInstall() = 0;
 
-	virtual void ConfigureSystemLevel(int nCPULevel, int nGPULevel) = 0;
+	virtual void ConfigureSystemLevel( int nCPULevel, int nGPULevel ) = 0;
 
-	virtual void SetConnectionPassword(char const* pchCurrentPW) = 0;
+	virtual void SetConnectionPassword( char const *pchCurrentPW ) = 0;
 
 	virtual CSteamAPIContext* GetSteamAPIContext() = 0;
 
-	virtual void SubmitStatRecord(char const* szMapName, uint uiBlobVersion, uint uiBlobSize, const void* pvBlob) = 0;
+	virtual void SubmitStatRecord( char const *szMapName, uint uiBlobVersion, uint uiBlobSize, const void *pvBlob ) = 0;
 
 	// Sends a key values server command, not allowed from scripts execution
 	// Params:
 	//	pKeyValues	- key values to be serialized and sent to server
 	//				  the pointer is deleted inside the function: pKeyValues->deleteThis()
-	virtual void ServerCmdKeyValues(KeyValues* pKeyValues) = 0;
+	virtual void ServerCmdKeyValues( KeyValues *pKeyValues ) = 0;
 	// Tells the engine what and where to paint
-	virtual void PaintSurface(const model_t* model, const Vector& position, const Color& color, float radius) = 0;
+	virtual void PaintSurface( const model_t *model, const Vector& position, const Color& color, float radius ) = 0;
 	// Enable paint in the engine for project Paint
 	virtual void EnablePaintmapRender() = 0;
-	virtual void TracePaintSurface(const model_t* model, const Vector& position, float radius, CUtlVector<Color>& surfColors) = 0;
+	virtual void TracePaintSurface( const model_t *model, const Vector& position, float radius, CUtlVector<Color>& surfColors ) = 0;
 	virtual void RemoveAllPaint() = 0;
 
 	virtual bool IsActiveApp() = 0;
@@ -654,10 +656,10 @@ public:
 	virtual void TickProgressBar() = 0;
 
 	// Returns the requested input context
-	virtual InputContextHandle_t GetInputContext(EngineInputContextId_t id) = 0;
+	virtual InputContextHandle_t GetInputContext( EngineInputContextId_t id ) = 0;
 
 	// let client lock mouse to the window bounds
-	virtual void SetMouseWindowLock(bool bLockToWindow) = 0;
+	virtual void SetMouseWindowLock( bool bLockToWindow ) = 0;
 
 	inline int GetProtocolVersion()
 	{

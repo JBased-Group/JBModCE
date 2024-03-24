@@ -51,6 +51,10 @@ enum ShadowType_t
 };
 
 
+#define ERENDERFLAGS_NEEDS_POWER_OF_TWO_FB  1				// needs refract texture
+#define ERENDERFLAGS_NEEDS_FULL_FB          2				// needs full framebuffer texture
+#define ERENDERFLAGS_REFRACT_ONLY_ONCE_PER_FRAME 4 // even if it needs a the refract texture, don't update it >once/ frame
+
 // This provides a way for entities to know when they've entered or left the PVS.
 // Normally, server entities can use NotifyShouldTransmit to get this info, but client-only
 // entities can use this. Store a CPVSNotifyInfo in your 
@@ -79,9 +83,8 @@ public:
 	virtual Vector const&			GetRenderOrigin( void ) = 0;
 	virtual QAngle const&			GetRenderAngles( void ) = 0;
 	virtual bool					ShouldDraw( void ) = 0;
-	virtual bool					IsTransparent( void ) = 0;
-	virtual bool					UsesPowerOfTwoFrameBufferTexture() = 0;
-	virtual bool					UsesFullFrameBufferTexture() = 0;
+	virtual int					    GetRenderFlags( void ) = 0; // ERENDERFLAGS_xxx
+	virtual void					Unused( void ) const {}
 
 	virtual ClientShadowHandle_t	GetShadowHandle() const = 0;
 
@@ -90,14 +93,10 @@ public:
 
 	// Render baby!
 	virtual const model_t*			GetModel( ) const = 0;
-	virtual int						DrawModel( int flags ) = 0;
+	virtual int						DrawModel( int flags, const RenderableInstance_t &instance ) = 0;
 
 	// Get the body parameter
 	virtual int		GetBody() = 0;
-
-	// Determine alpha and blend amount for transparent objects based on render state info
-	virtual void	ComputeFxBlend( ) = 0;
-	virtual int		GetFxBlend( void ) = 0;
 
 	// Determine the color modulation amount
 	virtual void	GetColorModulation( float* color ) = 0;
@@ -110,7 +109,7 @@ public:
 	// currentTime parameter will affect interpolation
 	// nMaxBones specifies how many matrices pBoneToWorldOut can hold. (Should be greater than or
 	// equal to studiohdr_t::numbones. Use MAXSTUDIOBONES to be safe.)
-	virtual bool	SetupBones( matrix3x4_t *pBoneToWorldOut, int nMaxBones, int boneMask, float currentTime ) = 0;
+	virtual bool	SetupBones( matrix3x4a_t *pBoneToWorldOut, int nMaxBones, int boneMask, float currentTime ) = 0;
 
 	virtual void	SetupWeights( const matrix3x4_t *pBoneToWorld, int nFlexWeightCount, float *pFlexWeights, float *pFlexDelayedWeights ) = 0;
 	virtual void	DoAnimationEvents( void ) = 0;
@@ -163,23 +162,32 @@ public:
 	// Rendering clip plane, should be 4 floats, return value of NULL indicates a disabled render clip plane
 	virtual float *GetRenderClipPlane( void ) = 0;
 
-	virtual void RecordToolMessage() {}
-
-	virtual bool	ShouldDrawForSplitScreenUser(int nSlot) { return true; }
-	virtual uint8	OverrideAlphaModulation(uint8 nAlpha) { return nAlpha; }
-	virtual uint8	OverrideShadowAlphaModulation(uint8 nAlpha) { return nAlpha; }
-
 	// Get the skin parameter
 	virtual int		GetSkin() = 0;
-
-	// Is this a two-pass renderable?
-	virtual bool	IsTwoPass( void ) = 0;
 
 	virtual void	OnThreadedDrawSetup() = 0;
 
 	virtual bool	UsesFlexDelayedWeights() = 0;
 
-	virtual bool	IgnoresZBuffer( void ) const = 0;
+	virtual void	RecordToolMessage() = 0;
+	virtual bool	ShouldDrawForSplitScreenUser( int nSlot ) = 0;
+
+	// NOTE: This is used by renderables to override the default alpha modulation,
+	// not including fades, for a renderable. The alpha passed to the function
+	// is the alpha computed based on the current renderfx.
+	virtual uint8	OverrideAlphaModulation( uint8 nAlpha ) = 0;
+
+	// NOTE: This is used by renderables to override the default alpha modulation,
+	// not including fades, for a renderable's shadow. The alpha passed to the function
+	// is the alpha computed based on the current renderfx + any override
+	// computed in OverrideAlphaModulation
+	virtual uint8	OverrideShadowAlphaModulation( uint8 nAlpha ) = 0;
+
+	inline int						DrawModel(int flags)
+	{
+		RenderableInstance_t instance;
+		return DrawModel(flags, instance);
+	}
 };
 
 
@@ -197,11 +205,8 @@ public:
 	virtual const QAngle &			GetRenderAngles( void ) = 0;
 	virtual const matrix3x4_t &		RenderableToWorldTransform() = 0;
 	virtual bool					ShouldDraw( void ) = 0;
-	virtual bool					IsTransparent( void ) = 0;
-	virtual bool					IsTwoPass( void ) { return false; }
 	virtual void					OnThreadedDrawSetup() {}
-	virtual bool					UsesPowerOfTwoFrameBufferTexture( void ) { return false; }
-	virtual bool					UsesFullFrameBufferTexture( void ) { return false; }
+	virtual int                     GetRenderFlags( void ) { return 0; }
 
 	virtual ClientShadowHandle_t	GetShadowHandle() const
 	{
@@ -218,11 +223,9 @@ public:
 	virtual bool					UsesFlexDelayedWeights() { return false; }
 
 	virtual const model_t*			GetModel( ) const		{ return NULL; }
-	virtual int						DrawModel( int flags )	{ return 0; }
-	virtual void					ComputeFxBlend( )		{ return; }
-	virtual int						GetFxBlend( )			{ return 255; }
+	virtual int						DrawModel( int flags, const RenderableInstance_t &instance )	{ return 0; }
 	virtual bool					LODTest()				{ return true; }
-	virtual bool					SetupBones( matrix3x4_t *pBoneToWorldOut, int nMaxBones, int boneMask, float currentTime )	{ return true; }
+	virtual bool					SetupBones( matrix3x4a_t *pBoneToWorldOut, int nMaxBones, int boneMask, float currentTime )	{ return true; }
 	virtual void					SetupWeights( const matrix3x4_t *pBoneToWorld, int nFlexWeightCount, float *pFlexWeights, float *pFlexDelayedWeights ) {}
 	virtual void					DoAnimationEvents( void )						{}
 	virtual IPVSNotify*				GetPVSNotifyInterface() { return NULL; }
@@ -256,6 +259,7 @@ public:
 	virtual IClientRenderable *FirstShadowChild(){ return NULL; }
 	virtual IClientRenderable *NextShadowPeer()  { return NULL; }
 	virtual ShadowType_t ShadowCastType()		 { return SHADOWS_NONE; }
+
 	virtual void CreateModelInstance()			 {}
 	virtual ModelInstanceHandle_t GetModelInstance() { return MODEL_INSTANCE_INVALID; }
 
@@ -268,7 +272,10 @@ public:
 	virtual float *GetRenderClipPlane() { return NULL; }
 
 	virtual void RecordToolMessage() {}
-	virtual bool IgnoresZBuffer( void ) const { return false; }
+
+	virtual bool	ShouldDrawForSplitScreenUser( int nSlot ) { return true; }
+	virtual uint8	OverrideAlphaModulation( uint8 nAlpha ) { return nAlpha; }
+	virtual uint8	OverrideShadowAlphaModulation( uint8 nAlpha ) { return nAlpha; }
 
 // IClientUnknown implementation.
 public:
@@ -282,9 +289,8 @@ public:
 	virtual IClientEntity*		GetIClientEntity()		{ return 0; }
 	virtual C_BaseEntity*		GetBaseEntity()			{ return 0; }
 	virtual IClientThinkable*	GetClientThinkable()	{ return 0; }
-	virtual IClientModelRenderable* GetClientModelRenderable() { return 0; }
-	virtual IClientAlphaProperty* GetClientAlphaProperty() { return 0; }
-
+	virtual IClientModelRenderable*	GetClientModelRenderable()	{ return 0; }
+	virtual IClientAlphaProperty*	GetClientAlphaProperty() { return 0; }
 
 public:
 	ClientRenderHandle_t m_hRenderHandle;

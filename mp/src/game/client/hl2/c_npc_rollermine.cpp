@@ -169,6 +169,5 @@ int C_RollerMine::DrawModel( int flags )
 			DrawHalo( pMaterial, attachOrigin, random->RandomFloat( 1.0f*scale, 1.5f*scale ), color );
 		}
 	}
-
 	return BaseClass::DrawModel( flags );
 }

@@ -998,9 +998,9 @@ void C_HL2MPRagdoll::CreateHL2MPRagdoll( void )
 	// Make us a ragdoll..
 	m_nRenderFX = kRenderFxRagdoll;
 
-	matrix3x4_t boneDelta0[MAXSTUDIOBONES];
-	matrix3x4_t boneDelta1[MAXSTUDIOBONES];
-	matrix3x4_t currentBones[MAXSTUDIOBONES];
+	matrix3x4a_t boneDelta0[MAXSTUDIOBONES];
+	matrix3x4a_t boneDelta1[MAXSTUDIOBONES];
+	matrix3x4a_t currentBones[MAXSTUDIOBONES];
 	const float boneDt = 0.05f;
 
 	if ( pPlayer && !pPlayer->IsDormant() )

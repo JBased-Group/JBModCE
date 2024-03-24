@@ -151,10 +151,11 @@ public:
 	virtual void				OnThreadedDrawSetup() {}
 	virtual bool				IsTransparent( void );
 	virtual const model_t*		GetModel( ) const;
+	virtual int						DrawModel(int flags, const RenderableInstance_t& instance) { return DrawModel(flags); }
 	virtual int					DrawModel( int flags );
 	virtual void				ComputeFxBlend( );
 	virtual int					GetFxBlend( );
-	virtual bool				SetupBones( matrix3x4_t *pBoneToWorldOut, int nMaxBones, int boneMask, float currentTime );
+	virtual bool				SetupBones( matrix3x4a_t *pBoneToWorldOut, int nMaxBones, int boneMask, float currentTime );
 	virtual void				SetupWeights( const matrix3x4_t *pBoneToWorld, int nFlexWeightCount, float *pFlexWeights, float *pFlexDelayedWeights );
 	virtual bool				UsesFlexDelayedWeights() { return false; }
 	virtual void				DoAnimationEvents( void );
@@ -186,6 +187,12 @@ public:
 	virtual float *				GetRenderClipPlane() { return NULL; }
 	virtual int					GetSkin() { return 0; }
 	virtual void				RecordToolMessage() {}
+
+	virtual bool					ShouldDrawForSplitScreenUser(int nSlot) { return true; };
+	virtual int GetRenderFlags() { return 0; }
+	virtual uint8	OverrideAlphaModulation(uint8 nAlpha) { return nAlpha; }
+	virtual uint8	OverrideShadowAlphaModulation(uint8 nAlpha) { return nAlpha; }
+
 
 	void GetColorModulation( float* color );
 
@@ -651,7 +658,7 @@ ClientRenderHandle_t& CDetailModel::RenderHandle()
 //-----------------------------------------------------------------------------
 // Render setup
 //-----------------------------------------------------------------------------
-bool CDetailModel::SetupBones( matrix3x4_t *pBoneToWorldOut, int nMaxBones, int boneMask, float currentTime )
+bool CDetailModel::SetupBones( matrix3x4a_t *pBoneToWorldOut, int nMaxBones, int boneMask, float currentTime )
 {
 	if (!m_pModel)
 		return false;

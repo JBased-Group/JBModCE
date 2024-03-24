@@ -215,7 +215,7 @@ int APIENTRY WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLi
 		MessageBox(0, "Install Source SDK 2013 Base Multiplayer to play this.", "Launcher error", MB_OK);
 	}
 	char gameParam[1024];
-	strncpy(gameParam, "-steam -game \"", 1024);
+	strncpy(gameParam, "-windowed -steam -game \"", 1024);
 	strncat(gameParam, g_szBasedir, 1024);
 	V_AppendSlash(gameParam, 1024);
 	strncat(gameParam, "jbmodce\" ", 1024);

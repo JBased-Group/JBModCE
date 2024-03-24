@@ -335,7 +335,7 @@ void ScreenToWorld( int mousex, int mousey, float fov,
 	float dist;
 	Vector vpn, vup, vright;
 
-	float scaled_fov = ScaleFOVByWidthRatio( fov, engine->GetScreenAspectRatio() * 0.75f );
+	float scaled_fov = ScaleFOVByWidthRatio( fov, engine->GetScreenAspectRatio(ScreenWidth(),ScreenHeight()) * 0.75f );
 
 	c_x = ScreenWidth() / 2;
 	c_y = ScreenHeight() / 2;

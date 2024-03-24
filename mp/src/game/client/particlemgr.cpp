@@ -1268,12 +1268,8 @@ void CParticleMgr::AddEffect( CNewParticleEffect *pEffect )
 	m_NewEffects.AddToHead( pEffect );
 
 #if !defined( PARTICLEPROTOTYPE_APP )
-	ClientLeafSystem()->CreateRenderableHandle( pEffect );
+	ClientLeafSystem()->CreateRenderableHandle( pEffect, true, RENDERABLE_IS_TRANSLUCENT, RENDERABLE_MODEL_ENTITY );
 #endif
-	if ( pEffect->IsValid() && pEffect->m_pDef->IsViewModelEffect() )
-	{
-		ClientLeafSystem()->SetRenderGroup( pEffect->RenderHandle(), RENDER_GROUP_VIEW_MODEL_TRANSLUCENT );
-	}
 }
 
 
@@ -1294,7 +1290,7 @@ bool CParticleMgr::AddEffect( CParticleEffectBinding *pEffect, IParticleEffect *
 
 	// Add it to the leaf system.
 #if !defined( PARTICLEPROTOTYPE_APP )
-	ClientLeafSystem()->CreateRenderableHandle( pEffect );
+	ClientLeafSystem()->CreateRenderableHandle( pEffect, true,  RENDERABLE_IS_TRANSLUCENT, RENDERABLE_MODEL_ENTITY);
 #endif
 
 	pEffect->m_ListIndex = m_Effects.AddToTail( pEffect );

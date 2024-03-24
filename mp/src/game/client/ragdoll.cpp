@@ -697,7 +697,7 @@ public:
 		m_vecOffset.Init();
 	}
 	DECLARE_CLIENTCLASS();
-	bool SetupBones( matrix3x4_t *pBoneToWorldOut, int nMaxBones, int boneMask, float currentTime )
+	bool SetupBones( matrix3x4a_t *pBoneToWorldOut, int nMaxBones, int boneMask, float currentTime )
 	{
 		if ( GetMoveParent() )
 		{

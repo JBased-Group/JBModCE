@@ -1966,7 +1966,7 @@ int C_BaseEntity::DrawBrushModel( bool bDrawingTranslucency, int nFlags, bool bT
 // Purpose: Draws the object
 // Input  : flags - 
 //-----------------------------------------------------------------------------
-int C_BaseEntity::DrawModel( int flags )
+int C_BaseEntity::DrawModel( int flags)
 {
 	if ( !m_bReadyToDraw )
 		return 0;
@@ -2005,7 +2005,7 @@ int C_BaseEntity::DrawModel( int flags )
 //-----------------------------------------------------------------------------
 // Purpose: Setup the bones for drawing
 //-----------------------------------------------------------------------------
-bool C_BaseEntity::SetupBones( matrix3x4_t *pBoneToWorldOut, int nMaxBones, int boneMask, float currentTime )
+bool C_BaseEntity::SetupBones( matrix3x4a_t *pBoneToWorldOut, int nMaxBones, int boneMask, float currentTime )
 {
 	return true;
 }
@@ -3506,11 +3506,6 @@ void C_BaseEntity::ComputeFxBlend( void )
 	m_nRenderFXBlend = blend;
 	m_nFXComputeFrame = gpGlobals->framecount;
 
-	// Update the render group
-	if ( GetRenderHandle() != INVALID_CLIENT_RENDER_HANDLE )
-	{
-		ClientLeafSystem()->SetRenderGroup( GetRenderHandle(), GetRenderGroup() );
-	}
 
 	// Tell our shadow
 	if ( m_ShadowHandle != CLIENTSHADOW_INVALID_HANDLE )
@@ -3907,13 +3902,12 @@ void C_BaseEntity::AddToLeafSystem( RenderGroup_t group )
 	if( m_hRender == INVALID_CLIENT_RENDER_HANDLE )
 	{
 		// create new renderer handle
-		ClientLeafSystem()->AddRenderable( this, group );
+		ClientLeafSystem()->AddRenderable( this, RENDER_GROUP_TRANSLUCENT_ENTITY);
 		ClientLeafSystem()->EnableAlternateSorting( m_hRender, m_bAlternateSorting );
 	}
 	else
 	{
 		// handle already exists, just update group & origin
-		ClientLeafSystem()->SetRenderGroup( m_hRender, group );
 		ClientLeafSystem()->RenderableChanged( m_hRender );
 	}
 }

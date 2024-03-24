@@ -1099,7 +1099,7 @@ void CViewRender::Render( vrect_t *rect )
 		#endif
 
 	    static ConVarRef sv_restrict_aspect_ratio_fov( "sv_restrict_aspect_ratio_fov" );
-	    float aspectRatio = engine->GetScreenAspectRatio() * 0.75f;	 // / (4/3)
+	    float aspectRatio = engine->GetScreenAspectRatio(view.width, view.height) * 0.75f;	 // / (4/3)
 	    float limitedAspectRatio = aspectRatio;
 	    if ( ( sv_restrict_aspect_ratio_fov.GetInt() > 0 && gpGlobals->maxClients > 1 ) ||
 		    sv_restrict_aspect_ratio_fov.GetInt() == 2 )
@@ -1136,7 +1136,7 @@ void CViewRender::Render( vrect_t *rect )
 				view.width			= vr.width * flViewportScale;
 				view.height			= vr.height * flViewportScale;
 #endif
-			    float engineAspectRatio = engine->GetScreenAspectRatio();
+			    float engineAspectRatio = engine->GetScreenAspectRatio(view.width,view.height);
 			    view.m_flAspectRatio	= ( engineAspectRatio > 0.0f ) ? engineAspectRatio : ( (float)view.width / (float)view.height );
 			}
 			break;

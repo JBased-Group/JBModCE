@@ -228,7 +228,7 @@ void DrawHaloOriented( const Vector& source, float scale, float const *color, fl
 // Input  : flags - 
 // Output : int
 //-----------------------------------------------------------------------------
-int C_PropCombineBall::DrawModel( int flags )
+int C_PropCombineBall::DrawModel( int flags, RenderableInstance_t instance )
 {
 	if ( !m_bEmit )
 		return 0;

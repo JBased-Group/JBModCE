@@ -153,7 +153,7 @@ void C_AI_BaseNPC::OnDataChanged( DataUpdateType_t type )
 	}
 }
 
-bool C_AI_BaseNPC::GetRagdollInitBoneArrays( matrix3x4_t *pDeltaBones0, matrix3x4_t *pDeltaBones1, matrix3x4_t *pCurrentBones, float boneDt )
+bool C_AI_BaseNPC::GetRagdollInitBoneArrays( matrix3x4a_t *pDeltaBones0, matrix3x4a_t *pDeltaBones1, matrix3x4a_t *pCurrentBones, float boneDt )
 {
 	bool bRet = true;
 

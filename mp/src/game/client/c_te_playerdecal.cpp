@@ -183,8 +183,8 @@ IMaterial *CreateTempMaterialForPlayerLogo( int iPlayerIndex, player_info_t *inf
 		// copy from download folder to materials/temp folder
 		// this is done since material system can access only materials/*.vtf files
 
-		if ( !engine->CopyLocalFile( custname, fulltexname) )
-			return NULL;
+		//if ( !engine->CopyLocalFile( custname, fulltexname) )
+		return NULL;
 	}
 
 	return logo;

@@ -691,7 +691,7 @@ public:
 //-----------------------------------------------------------------------------
 static inline unsigned long BuildEngineDrawWorldListFlags( unsigned nDrawFlags )
 {
-	unsigned long nEngineFlags = 0;
+	unsigned long nEngineFlags = DRAWWORLDLISTS_DRAW_WORLD_GEOMETRY;
 
 	if ( nDrawFlags & DF_DRAWSKYBOX )
 	{
@@ -737,7 +737,7 @@ static inline unsigned long BuildEngineDrawWorldListFlags( unsigned nDrawFlags )
 
 	if( nDrawFlags & DF_SSAO_DEPTH_PASS )
 	{
-		nEngineFlags |= DRAWWORLDLISTS_DRAW_SSAO | DRAWWORLDLISTS_DRAW_STRICTLYUNDERWATER | DRAWWORLDLISTS_DRAW_INTERSECTSWATER | DRAWWORLDLISTS_DRAW_STRICTLYABOVEWATER ;
+		nEngineFlags |= DRAWWORLDLISTS_DRAW_STRICTLYUNDERWATER | DRAWWORLDLISTS_DRAW_INTERSECTSWATER | DRAWWORLDLISTS_DRAW_STRICTLYABOVEWATER ;
 		nEngineFlags &= ~( DRAWWORLDLISTS_DRAW_WATERSURFACE | DRAWWORLDLISTS_DRAW_REFRACTION | DRAWWORLDLISTS_DRAW_REFLECTION );
 	}
 
@@ -989,7 +989,28 @@ bool CViewRender::UpdateRefractIfNeededByList( CUtlVector< IClientRenderable * >
 		IClientRenderable *pRenderable = pUnk->GetClientRenderable();
 		Assert( pRenderable );
 
-		if ( pRenderable->UsesPowerOfTwoFrameBufferTexture() )
+		if ( pRenderable->GetRenderFlags() & ERENDERFLAGS_NEEDS_POWER_OF_TWO_FB )
+		{
+			UpdateRefractTexture();
+			return true;
+		}
+	}
+
+	return false;
+}
+
+
+//-----------------------------------------------------------------------------
+// Purpose: 
+//-----------------------------------------------------------------------------
+bool CViewRender::UpdateRefractIfNeededByList(CViewModelRenderablesList::RenderGroups_t& list)
+{
+	int nCount = list.Count();
+	for (int i = 0; i < nCount; ++i)
+	{
+		IClientRenderable* pRenderable = list[i].m_pRenderable;
+
+		if (pRenderable->GetRenderFlags() & ERENDERFLAGS_NEEDS_POWER_OF_TWO_FB)
 		{
 			UpdateRefractTexture();
 			return true;
@@ -1002,23 +1023,49 @@ bool CViewRender::UpdateRefractIfNeededByList( CUtlVector< IClientRenderable * >
 //-----------------------------------------------------------------------------
 // Purpose: 
 //-----------------------------------------------------------------------------
-void CViewRender::DrawRenderablesInList( CUtlVector< IClientRenderable * > &list, int flags )
+void CViewRender::DrawRenderablesInList( CViewModelRenderablesList::RenderGroups_t &list, int flags )
 {
 	Assert( m_pCurrentlyDrawingEntity == NULL );
 	int nCount = list.Count();
 	for( int i=0; i < nCount; ++i )
 	{
-		IClientUnknown *pUnk = list[i]->GetIClientUnknown();
-		Assert( pUnk );
 
-		IClientRenderable *pRenderable = pUnk->GetClientRenderable();
+		IClientRenderable *pRenderable = list[i].m_pRenderable;
 		Assert( pRenderable );
 
 		// Non-view models wanting to render in view model list...
 		if ( pRenderable->ShouldDraw() )
 		{
+			m_pCurrentlyDrawingEntity = pRenderable->GetIClientUnknown()->GetBaseEntity();
+			RenderableInstance_t instance;
+			pRenderable->DrawModel( STUDIO_RENDER | flags, instance);
+		}
+	}
+	m_pCurrentlyDrawingEntity = NULL;
+}
+
+
+//-----------------------------------------------------------------------------
+// Purpose: 
+//-----------------------------------------------------------------------------
+void CViewRender::DrawRenderablesInList(CUtlVector< IClientRenderable* >& list, int flags)
+{
+	Assert(m_pCurrentlyDrawingEntity == NULL);
+	int nCount = list.Count();
+	for (int i = 0; i < nCount; ++i)
+	{
+		IClientUnknown* pUnk = list[i]->GetIClientUnknown();
+		Assert(pUnk);
+
+		IClientRenderable* pRenderable = pUnk->GetClientRenderable();
+		Assert(pRenderable);
+
+		// Non-view models wanting to render in view model list...
+		if (pRenderable->ShouldDraw())
+		{
 			m_pCurrentlyDrawingEntity = pUnk->GetBaseEntity();
-			pRenderable->DrawModel( STUDIO_RENDER | flags );
+			RenderableInstance_t instance;
+			pRenderable->DrawModel(STUDIO_RENDER | flags, instance);
 		}
 	}
 	m_pCurrentlyDrawingEntity = NULL;
@@ -1053,7 +1100,7 @@ void CViewRender::DrawViewModels( const CViewSetup &view, bool drawViewmodel )
 	viewModelSetup.zNear = view.zNearViewmodel;
 	viewModelSetup.zFar = view.zFarViewmodel;
 	viewModelSetup.fov = view.fovViewmodel;
-	viewModelSetup.m_flAspectRatio = engine->GetScreenAspectRatio();
+	viewModelSetup.m_flAspectRatio = engine->GetScreenAspectRatio(view.width, view.height);
 
 	ITexture *pRTColor = NULL;
 	ITexture *pRTDepth = NULL;
@@ -1082,43 +1129,45 @@ void CViewRender::DrawViewModels( const CViewSetup &view, bool drawViewmodel )
 	if ( bShouldDrawPlayerViewModel || bShouldDrawToolViewModels )
 	{
 
-		CUtlVector< IClientRenderable * > opaqueViewModelList( 32 );
-		CUtlVector< IClientRenderable * > translucentViewModelList( 32 );
+		CViewModelRenderablesList list;
+		ClientLeafSystem()->CollateViewModelRenderables(&list);
+		CViewModelRenderablesList::RenderGroups_t& opaqueList = list.m_RenderGroups[CViewModelRenderablesList::VM_GROUP_OPAQUE];
+		CViewModelRenderablesList::RenderGroups_t& translucentList = list.m_RenderGroups[CViewModelRenderablesList::VM_GROUP_TRANSLUCENT];
 
-		ClientLeafSystem()->CollateViewModelRenderables( opaqueViewModelList, translucentViewModelList );
-
-		if ( ToolsEnabled() && ( !bShouldDrawPlayerViewModel || !bShouldDrawToolViewModels ) )
+		if (ToolsEnabled() && (!bShouldDrawPlayerViewModel || !bShouldDrawToolViewModels))
 		{
-			int nOpaque = opaqueViewModelList.Count();
-			for ( int i = nOpaque-1; i >= 0; --i )
+			int nOpaque = opaqueList.Count();
+			for (int i = nOpaque - 1; i >= 0; --i)
 			{
-				IClientRenderable *pRenderable = opaqueViewModelList[ i ];
-				bool bEntity = pRenderable->GetIClientUnknown()->GetBaseEntity();
-				if ( ( bEntity && !bShouldDrawPlayerViewModel ) || ( !bEntity && !bShouldDrawToolViewModels ) )
+				IClientRenderable* pRenderable = opaqueList[i].m_pRenderable;
+				bool bEntity = pRenderable->GetIClientUnknown()->GetBaseEntity() ? true : false;
+				if ((bEntity && !bShouldDrawPlayerViewModel) || (!bEntity && !bShouldDrawToolViewModels))
 				{
-					opaqueViewModelList.FastRemove( i );
+					opaqueList.FastRemove(i);
 				}
 			}
 
-			int nTranslucent = translucentViewModelList.Count();
-			for ( int i = nTranslucent-1; i >= 0; --i )
+			int nTranslucent = translucentList.Count();
+			for (int i = nTranslucent - 1; i >= 0; --i)
 			{
-				IClientRenderable *pRenderable = translucentViewModelList[ i ];
-				bool bEntity = pRenderable->GetIClientUnknown()->GetBaseEntity();
-				if ( ( bEntity && !bShouldDrawPlayerViewModel ) || ( !bEntity && !bShouldDrawToolViewModels ) )
+				IClientRenderable* pRenderable = translucentList[i].m_pRenderable;
+				bool bEntity = pRenderable->GetIClientUnknown()->GetBaseEntity() ? true : false;
+				if ((bEntity && !bShouldDrawPlayerViewModel) || (!bEntity && !bShouldDrawToolViewModels))
 				{
-					translucentViewModelList.FastRemove( i );
+					translucentList.FastRemove(i);
 				}
 			}
 		}
 
-		if ( !UpdateRefractIfNeededByList( opaqueViewModelList ) )
-		{
-			UpdateRefractIfNeededByList( translucentViewModelList );
-		}
+		bool bUpdatedRefractForOpaque = UpdateRefractIfNeededByList(opaqueList);
+		DrawRenderablesInList(opaqueList);
 
-		DrawRenderablesInList( opaqueViewModelList );
-		DrawRenderablesInList( translucentViewModelList, STUDIO_TRANSPARENCY );
+		// Update refract for translucent models (if we didn't already update it above) & draw
+		if (!bUpdatedRefractForOpaque) // Only do this once for better perf
+		{
+			UpdateRefractIfNeededByList(translucentList);
+		}
+		DrawRenderablesInList(translucentList, STUDIO_TRANSPARENCY);
 	}
 
 	// Reset the depth range to the original values
@@ -2815,7 +2864,7 @@ void CViewRender::ViewDrawScene_Intro( const CViewSetup &view, int nClearFlags, 
 		playerView.angles = introData.m_vecCameraViewAngles;
 		if ( introData.m_playerViewFOV )
 		{
-			playerView.fov = ScaleFOVByWidthRatio( introData.m_playerViewFOV, engine->GetScreenAspectRatio() / ( 4.0f / 3.0f ) );
+			playerView.fov = ScaleFOVByWidthRatio( introData.m_playerViewFOV, engine->GetScreenAspectRatio(view.width, view.height) / ( 4.0f / 3.0f ) );
 		}
 
 		g_pClientShadowMgr->PreRender();
@@ -3742,7 +3791,8 @@ static inline void DrawOpaqueRenderable( IClientRenderable *pEnt, bool bTwoPass,
 			DrawClippedDepthBox( pEnt, pRenderClipPlane );
 		Assert( view->GetCurrentlyDrawingEntity() == NULL );
 		view->SetCurrentlyDrawingEntity( pEnt->GetIClientUnknown()->GetBaseEntity() );
-		pEnt->DrawModel( flags );
+		RenderableInstance_t instance;
+		pEnt->DrawModel( flags,instance );
 		view->SetCurrentlyDrawingEntity( NULL );
 		if( pRenderClipPlane && !materials->UsingFastClipping() )	
 			pRenderContext->PopCustomClipPlane();
@@ -3751,7 +3801,8 @@ static inline void DrawOpaqueRenderable( IClientRenderable *pEnt, bool bTwoPass,
 	{
 		Assert( view->GetCurrentlyDrawingEntity() == NULL );
 		view->SetCurrentlyDrawingEntity( pEnt->GetIClientUnknown()->GetBaseEntity() );
-		pEnt->DrawModel( flags );
+		RenderableInstance_t instance;
+		pEnt->DrawModel( flags, instance);
 		view->SetCurrentlyDrawingEntity( NULL );
 	}
 }
@@ -4133,17 +4184,18 @@ void CRendering3dView::DrawTranslucentWorldAndDetailPropsInLeaves( int iCurLeafI
 static inline void DrawTranslucentRenderable( IClientRenderable *pEnt, bool twoPass, bool bShadowDepth, bool bIgnoreDepth )
 {
 	// Determine blending amount and tell engine
-	float blend = (float)( pEnt->GetFxBlend() / 255.0f );
+	//float blend = (float)( pEnt->GetFxBlend() / 255.0f );
 
 	// Totally gone
-	if ( blend <= 0.0f )
-		return;
+	//if ( blend <= 0.0f )
+	//	return;
 
-	if ( pEnt->IgnoresZBuffer() != bIgnoreDepth )
-		return;
+	//if ( pEnt->IgnoresZBuffer() != bIgnoreDepth )
+	//	return;
 
 	// Tell engine
-	render->SetBlend( blend );
+	//render->SetBlend( blend );
+	render->SetBlend(255.0f);
 
 	float color[3];
 	pEnt->GetColorModulation( color );
@@ -4169,7 +4221,8 @@ static inline void DrawTranslucentRenderable( IClientRenderable *pEnt, bool twoP
 			DrawClippedDepthBox( pEnt, pRenderClipPlane );
 		Assert( view->GetCurrentlyDrawingEntity() == NULL );
 		view->SetCurrentlyDrawingEntity( pEnt->GetIClientUnknown()->GetBaseEntity() );
-		pEnt->DrawModel( flags );
+		RenderableInstance_t instance;
+		pEnt->DrawModel( flags, instance );
 		view->SetCurrentlyDrawingEntity( NULL );
 
 		if( pRenderClipPlane && !materials->UsingFastClipping() )	
@@ -4179,7 +4232,8 @@ static inline void DrawTranslucentRenderable( IClientRenderable *pEnt, bool twoP
 	{
 		Assert( view->GetCurrentlyDrawingEntity() == NULL );
 		view->SetCurrentlyDrawingEntity( pEnt->GetIClientUnknown()->GetBaseEntity() );
-		pEnt->DrawModel( flags );
+		RenderableInstance_t instance;
+		pEnt->DrawModel( flags, instance );
 		view->SetCurrentlyDrawingEntity( NULL );
 	}
 }
@@ -4206,12 +4260,14 @@ void CRendering3dView::DrawTranslucentRenderablesNoWorld( bool bInSkybox )
 	while( iCurTranslucentEntity >= 0 )
 	{
 		IClientRenderable *pRenderable = pEntities[iCurTranslucentEntity].m_pRenderable;
-		if ( pRenderable->UsesPowerOfTwoFrameBufferTexture() )
+		int nRenderFlags = pRenderable->GetRenderFlags();
+		
+		if ( nRenderFlags & ERENDERFLAGS_NEEDS_POWER_OF_TWO_FB )
 		{
 			UpdateRefractTexture();
 		}
 
-		if ( pRenderable->UsesFullFrameBufferTexture() )
+		if ( nRenderFlags & ERENDERFLAGS_NEEDS_FULL_FB )
 		{
 			UpdateScreenEffectTexture();
 		}
@@ -4243,12 +4299,13 @@ void CRendering3dView::DrawNoZBufferTranslucentRenderables( void )
 	while( iCurTranslucentEntity >= 0 )
 	{
 		IClientRenderable *pRenderable = pEntities[iCurTranslucentEntity].m_pRenderable;
-		if ( pRenderable->UsesPowerOfTwoFrameBufferTexture() )
+		int nRenderFlags = pRenderable->GetRenderFlags();
+		if ( nRenderFlags & ERENDERFLAGS_NEEDS_POWER_OF_TWO_FB )
 		{
 			UpdateRefractTexture();
 		}
 
-		if ( pRenderable->UsesFullFrameBufferTexture() )
+		if ( nRenderFlags & ERENDERFLAGS_NEEDS_FULL_FB )
 		{
 			UpdateScreenEffectTexture();
 		}
@@ -4451,10 +4508,9 @@ void CRendering3dView::DrawTranslucentRenderables( bool bInSkybox, bool bShadowD
 				{
 					IClientRenderable *pRenderable = pEntities[iCurTranslucentEntity].m_pRenderable;
 
-					bool bUsesPowerOfTwoFB = pRenderable->UsesPowerOfTwoFrameBufferTexture();
-					bool bUsesFullFB       = pRenderable->UsesFullFrameBufferTexture();
+					int nRenderFlags = pRenderable->GetRenderFlags();
 
-					if ( ( bUsesPowerOfTwoFB || bUsesFullFB )&& !bShadowDepth )
+					if ((nRenderFlags & (ERENDERFLAGS_NEEDS_POWER_OF_TWO_FB | ERENDERFLAGS_NEEDS_FULL_FB)) && !bShadowDepth )
 					{
 						if( bRenderingWaterRenderTargets )
 						{
@@ -4466,18 +4522,18 @@ void CRendering3dView::DrawTranslucentRenderables( bool bInSkybox, bool bShadowD
 
 						if ( rt )
 						{
-							if ( bUsesFullFB )
+							if ( nRenderFlags & ERENDERFLAGS_NEEDS_FULL_FB)
 							{
 								UpdateScreenEffectTexture( 0, 0, 0, rt->GetActualWidth(), rt->GetActualHeight(), true );
 							}
-							else if ( bUsesPowerOfTwoFB )
+							else if (nRenderFlags & ERENDERFLAGS_NEEDS_POWER_OF_TWO_FB)
 							{
 								UpdateRefractTexture(0, 0, rt->GetActualWidth(), rt->GetActualHeight());
 							}
 						}
 						else
 						{
-							if ( bUsesPowerOfTwoFB )
+							if (nRenderFlags & ERENDERFLAGS_NEEDS_POWER_OF_TWO_FB)
 							{
 								UpdateRefractTexture();
 							}

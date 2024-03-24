@@ -1,0 +1,1 @@
+jbmodce.exe -console +gl_clear 1 +sv_disable_querycache 1

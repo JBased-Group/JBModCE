@@ -464,7 +464,9 @@ private:
 	void			DetermineWaterRenderInfo( const VisibleFogVolumeInfo_t &fogVolumeInfo, WaterRenderInfo_t &info );
 
 	bool			UpdateRefractIfNeededByList( CUtlVector< IClientRenderable * > &list );
+	bool			UpdateRefractIfNeededByList( CViewModelRenderablesList::RenderGroups_t &list );
 	void			DrawRenderablesInList( CUtlVector< IClientRenderable * > &list, int flags = 0 );
+	void			DrawRenderablesInList( CViewModelRenderablesList::RenderGroups_t&list, int flags = 0 );
 
 	// Sets up, cleans up the main 3D view
 	void			SetupMain3DView( const CViewSetup &view, int &nClearFlags );
