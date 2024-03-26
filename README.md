@@ -17,10 +17,6 @@ JBMod CE is a Community Edition of JBMod that has more advanced features such as
 # Info
 There is a Wiki for JBMod CE [here](https://jbased-group.github.io/wiki)
 
-# Requirements 
-To be able to play JBModCE as of now you need:
-* Source SDK Base 2013 Multiplayer
-
 # Contributing
 We appreciate any form of help so ideally if you want to help this project out the best way would be to make a pull request.
 This is based off [Source SDK 2013 CE](https://github.com/Nbc66/source-sdk-2013-ce)
