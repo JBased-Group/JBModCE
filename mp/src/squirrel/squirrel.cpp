@@ -146,7 +146,7 @@ bool CSquirrel::GetArgs(SquirrelScript script, const char* types, ...)
 		{
 		case 'i':
 			if (type == OT_INTEGER)
-			{
+			{ 
 				sq_getinteger(v, i+1, (va_arg(args, int*)));
 			}
 			else if (type == OT_FLOAT)
